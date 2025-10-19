@@ -35,7 +35,7 @@ import { remarkReadingTime } from "./src/plugins/remark-reading-time.mjs";
 const adapter = process.env.CF_PAGES ? cloudflarePages() : vercel({ mode: "serverless" });
 
 export default defineConfig({
-	site: "https://twilight.spr-aachen.com",
+	site: "https://twilight.spr-aachen.com", // Change it to your own site URL
 
 	base: "/",
 	trailingSlash: "always",
@@ -43,8 +43,7 @@ export default defineConfig({
 	integrations: [
 		decapCmsOauth({
 			decapCMSVersion: "3.3.3",
-			adminDisabled: false,
-			oauthDisabled: false,
+			oauthDisabled: true, // Disable it to use oauth, requires .env configuration
 		}),
 		tailwind({
 			nesting: true,
@@ -52,21 +51,20 @@ export default defineConfig({
 		swup({
 			theme: false,
 			animationClass: "transition-swup-", // see https://swup.js.org/options/#animationselector
-			// the default value `transition-` cause transition delay
-			// when the Tailwind class `transition-all` is used
+			// The default value `transition-` cause transition delay when the Tailwind class `transition-all` is used
 			containers: ["main"],
-			smoothScrolling: false, // 禁用平滑滚动以提升性能，避免与锚点导航冲突
 			cache: true,
-			preload: false, // 禁用预加载以减少网络请求
+			preload: false, // Disable preloading to reduce network requests
 			accessibility: true,
 			updateHead: true,
 			updateBodyClass: false,
 			globalInstance: true,
-			// 滚动相关配置优化
+			// Scroll related configuration optimization
+			smoothScrolling: false, // Disable smooth scrolling to improve performance and avoid conflicts with anchor navigation
 			resolveUrl: (url) => url,
 			animateHistoryBrowsing: false,
 			skipPopStateHandling: (event) => {
-				// 跳过锚点链接的处理，让浏览器原生处理
+				// Skip anchor link handling, let the browser handle it natively
 				return event.state && event.state.url && event.state.url.includes("#");
 			},
 		}),
