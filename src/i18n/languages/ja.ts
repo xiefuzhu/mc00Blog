@@ -60,7 +60,6 @@ export const ja: Translation = {
 	[Key.animeStudio]: "スタジオ",
 	[Key.animeEmpty]: "アニメデータなし",
 	[Key.animeEmptyBangumi]: "Bangumiの設定またはネットワーク接続を確認してください",
-	[Key.animeEmptyLocal]: "src/data/anime.tsファイルにアニメ情報を追加してください",
 
 	// 日記ページ
 	[Key.diarySubtitle]: "いつでもどこでも、生活を共有する",

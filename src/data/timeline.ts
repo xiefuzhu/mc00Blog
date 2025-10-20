@@ -1,5 +1,6 @@
 // Timeline data configuration file
 // Used to manage data for the timeline page
+const timelineModules = import.meta.glob('./timeline/*.json', { eager: true });
 
 export interface TimelineItem {
 	id: string;
@@ -23,38 +24,11 @@ export interface TimelineItem {
 	featured?: boolean;
 }
 
-
-export const timelineData: TimelineItem[] = [
-	{
-		id: "first-blog-template-project",
-		title: "Twilight",
-		description:
-			"A blog theme built with Astro framework.",
-		type: "project",
-		startDate: "2025-10-01",
-		endDate: "2025-10-10",
-		skills: ["Astro", "Svelte", "Tailwind CSS"],
-		achievements: [
-			"First Blog Template Project",
-		],
-		links: [
-			{
-				name: "GitHub Repository",
-				url: "https://github.com/Spr-Aachen/Twilight",
-				type: "project",
-			},
-			{
-				name: "Online Demo",
-				url: "https://blog.spr-aachen.com",
-				type: "other",
-			},
-		],
-		icon: "material-symbols:code",
-		color: "#7C3AED",
-		featured: false,
-	},
-];
-
+export const timelineData: TimelineItem[] = Object.entries(timelineModules).map(([path, mod]: [string, any]) => {
+  const id = path.split('/').pop()?.replace('.json', '') || '';
+  const data = mod.default;
+  return { id, ...data } as TimelineItem;
+});
 
 // Get timeline statistics
 export const getTimelineStats = () => {

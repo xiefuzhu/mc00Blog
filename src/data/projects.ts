@@ -1,5 +1,6 @@
 // Project data configuration file
 // Used to manage data for the project display page
+const projectModules = import.meta.glob('./projects/*.json', { eager: true });
 
 export interface Project {
 	id: string;
@@ -17,24 +18,11 @@ export interface Project {
 	tags?: string[];
 }
 
-export const projectsData: Project[] = [
-	{
-		id: "blog-twilight",
-		title: "Twilight Blog Template",
-		description:
-			"A blog theme built with Astro framework.",
-		image: "",
-		category: "website",
-		techStack: ["Astro", "Svelte", "Tailwind CSS"],
-		status: "completed",
-		liveDemo: "https://blog.spr-aachen.com",
-		sourceCode: "https://github.com/Spr-Aachen/Twilight",
-		startDate: "2025-10-01",
-		endDate: "2025-10-10",
-		featured: false,
-		tags: ["Open Source Project"],
-	},
-];
+export const projectsData: Project[] = Object.entries(projectModules).map(([path, mod]: [string, any]) => {
+  const id = path.split('/').pop()?.replace('.json', '') || '';
+  const data = mod.default;
+  return { id, ...data } as Project;
+});
 
 // Get project statistics
 export const getProjectStats = () => {

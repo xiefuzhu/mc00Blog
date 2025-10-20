@@ -3,18 +3,13 @@ export const prerender = true;
 
 import ImageWrapper from "../components/misc/ImageWrapper.astro";
 import { siteConfig } from "../config";
-import localAnimeList from "../data/anime";
 import I18nKey from "../i18n/i18nKey";
 import { i18n } from "../i18n/translation";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
-import { siteConfig } from "../config";
 
 // Bangumi API配置
 const BANGUMI_USER_ID = siteConfig.bangumi?.userId || "your-user-id"; // 用户ID
 const BANGUMI_API_BASE = "https://api.bgm.tv";
-
-// 获取番剧数据模式(不需要更改，请在主配置src/config.ts中修改)
-const ANIME_MODE = siteConfig.anime?.mode || "bangumi";
 
 // 获取单个条目相关人员信息
 async function fetchSubjectPersons(subjectId: number) {
@@ -130,26 +125,18 @@ async function processBangumiData(data: any, status: string) {
 	return detailedItems;
 }
 
-// 根据模式获取番剧列表
-let animeList = [];
-if (ANIME_MODE === "local") {
-	// 使用本地配置
-	animeList = localAnimeList;
-} else {
-	// 使用Bangumi API（默认模式）
-	// 获取与处理在看列表（type=3）看过列表（type=2）
-	const watchingData = await fetchBangumiCollection(BANGUMI_USER_ID, 2, 3);
-	const completedData = await fetchBangumiCollection(BANGUMI_USER_ID, 2, 2);
+// 获取Bangumi番剧列表
+const watchingData = await fetchBangumiCollection(BANGUMI_USER_ID, 2, 3);
+const completedData = await fetchBangumiCollection(BANGUMI_USER_ID, 2, 2);
 
-	const watchingList = watchingData
-		? await processBangumiData(watchingData, "watching")
-		: [];
-	const completedList = completedData
-		? await processBangumiData(completedData, "completed")
-		: [];
+const watchingList = watchingData
+	? await processBangumiData(watchingData, "watching")
+	: [];
+const completedList = completedData
+	? await processBangumiData(completedData, "completed")
+	: [];
 
-	animeList = [...watchingList, ...completedList];
-}
+const animeList = [...watchingList, ...completedList];
 
 // 获取状态的翻译文本和样式
 function getStatusInfo(status: string) {
@@ -198,6 +185,7 @@ const stats = {
 		).toFixed(1);
 	})(),
 };
+
 ---
 
 <MainGridLayout title={i18n(I18nKey.anime)} description={i18n(I18nKey.animeSubtitle)}>
@@ -257,7 +245,7 @@ const stats = {
           {i18n(I18nKey.animeList)}
         </h2>
         
-        {ANIME_MODE !== 'local' && BANGUMI_USER_ID === 'your-user-id' ? (
+        {BANGUMI_USER_ID === 'your-user-id' ? (
           <div class="text-center py-12">
             <div class="text-5xl mb-4">😢</div>
             <h3 class="text-xl font-medium text-black/80 dark:text-white/80 mb-2">
@@ -354,7 +342,7 @@ const stats = {
               {i18n(I18nKey.animeEmpty)}
             </h3>
             <p class="text-black/60 dark:text-white/60">
-              {ANIME_MODE === 'local' ? i18n(I18nKey.animeEmptyLocal) : i18n(I18nKey.animeEmptyBangumi)}
+              {i18n(I18nKey.animeEmptyBangumi)}
             </p>
           </div>
         )}
