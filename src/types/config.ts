@@ -5,18 +5,6 @@ export type SiteConfig = {
 	subtitle: string;
 	keywords?: string[]; // 站点关键词，用于生成 <meta name="keywords">
 
-	lang:
-		| "en"
-		| "zh_CN"
-		| "zh_TW"
-		| "ja"
-		| "ko"
-		| "es"
-		| "th"
-		| "vi"
-		| "tr"
-		| "id";
-
 	themeColor: {
 		hue: number;
 		fixed: boolean;
@@ -32,6 +20,21 @@ export type SiteConfig = {
 			enable: boolean; // 是否使用 Hanalei 作为全局字体
 		};
 	};
+
+	lang:
+		| "zh"
+		| "en"
+		| "ko"
+		| "ja"
+		| "es"
+		| "th"
+		| "vi"
+		| "tr"
+		| "id"
+		| "fr"
+		| "de"
+		| "ru"
+		| "ar";
 
 	translate?: {
 		enable: boolean; // 是否启用翻译功能

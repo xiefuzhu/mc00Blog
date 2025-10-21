@@ -3,23 +3,14 @@ import Icon from "@iconify/svelte";
 import { onDestroy, onMount } from "svelte";
 import { siteConfig } from "@/config";
 import { getTranslateLanguageFromConfig } from "@/utils/language-utils";
+import { getSupportedTranslateLanguages } from "@/i18n/language";
 
 let isOpen = false;
 let translatePanel: HTMLElement;
 let currentLanguage = "";
 
-// 支持的语言列表
-const languages = [
-	{ code: "chinese_simplified", name: "中文", icon: "🇨🇳" },
-	{ code: "english", name: "English", icon: "🇺🇸" },
-	{ code: "japanese", name: "日本語", icon: "🇯🇵" },
-	{ code: "korean", name: "한국어", icon: "🇰🇷" },
-	{ code: "french", name: "Français", icon: "🇫🇷" },
-	{ code: "german", name: "Deutsch", icon: "🇩🇪" },
-	{ code: "spanish", name: "Español", icon: "🇪🇸" },
-	{ code: "russian", name: "Русский", icon: "🇷🇺" },
-	{ code: "arabic", name: "العربية", icon: "🇸🇦" },
-];
+// 从统一配置动态获取支持的语言列表
+const languages = getSupportedTranslateLanguages();
 
 // 根据配置文件的语言设置获取默认翻译语言
 const defaultTranslateLanguage = getTranslateLanguageFromConfig(
@@ -35,50 +26,33 @@ function togglePanel() {
 
 async function changeLanguage(languageCode: string) {
 	try {
-		// 懒加载翻译脚本
-		if (typeof window.loadTranslateScript === "function") {
+		// 如果翻译脚本未加载，先加载
+		if (!window.translateScriptLoaded && typeof window.loadTranslateScript === "function") {
 			await window.loadTranslateScript();
 		}
 
-		if (
-			typeof window.translate !== "undefined" &&
-			window.translate.language &&
-			typeof window.translate.language.getLocal === "function"
-		) {
-			// 检查是否选择的是简体中文，且当前本地语言也是简体中文
-			const localLang = window.translate.language.getLocal();
+		if (!window.translate) {
+			console.warn("translate.js is not loaded");
+			return;
+		}
 
-			if (
-				languageCode === "chinese_simplified" &&
-				localLang === "chinese_simplified"
-			) {
-				// 如果选择简体中文且本地语言也是简体中文，先重置翻译状态
-				if (typeof window.translate.reset === "function") {
-					window.translate.reset();
-				}
-				// 强制设置允许翻译本地语种
-				if (window.translate.language) {
-					window.translate.language.translateLocal = true;
-				}
-			}
-
+		// 检查是否选择的是本地语言
+		const localLang = window.translate.language.getLocal();
+		if (languageCode === localLang) {
+			// 如果选择本地语言，重置翻译状态
+			window.translate.reset();
+			// 强制设置允许翻译本地语种（用于下次切换）
+			window.translate.language.translateLocal = true;
+		} else {
 			// 设置目标语言并执行翻译
 			window.translate.to = languageCode;
-			if (typeof window.translate.execute === "function") {
-				window.translate.execute();
-			}
-
-			// 由于我们隐藏了默认的select选择框，不需要更新select.value
-		} else {
-			console.warn(
-				"translate.js is not fully loaded or language API is not available",
-			);
+			window.translate.execute();
 		}
 
 		// 更新当前语言状态
 		currentLanguage = languageCode;
 	} catch (error) {
-		console.error("Failed to load or execute translation:", error);
+		console.error("Failed to execute translation:", error);
 	}
 
 	// 关闭面板
@@ -116,9 +90,8 @@ onMount(() => {
 	currentLanguage = defaultTranslateLanguage;
 
 	// 如果翻译功能已加载，设置默认语言
-	if (typeof window.translate !== "undefined") {
+	if (window.translate) {
 		window.translate.to = defaultTranslateLanguage;
-		// 由于我们隐藏了默认的select选择框，不需要设置select.value
 	}
 });
 

@@ -15,8 +15,8 @@ const map: { [key: string]: Translation } = {
 	en_us: en,
 	en_gb: en,
 	en_au: en,
+	zh: zh,
 	zh_cn: zh,
-	zh_tw: zh,
 	ja: ja,
 	ja_jp: ja,
 };
