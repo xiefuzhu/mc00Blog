@@ -26,14 +26,7 @@ export const siteConfig: SiteConfig = {
 	title: "Twilight",
 	subtitle: "Blog Template",
 
-	themeColor: {
-		hue: 255, // 主题色的默认色相，范围从 0 到 360。例如：红色：0，青色：200，蓝绿色：250，粉色：345
-		fixed: false, // 对访问者隐藏主题色选择器
-	},
-    defaultTheme: "dark", // "system" 跟随系统， "light" 浅色， "dark" 深色
-
 	lang: SITE_LANG, // 自动检测的浏览器语言
-
 	translate: {
 		enable: true, // 启用翻译功能
 		service: "client.edge", // 使用 Edge 浏览器翻译服务
@@ -44,9 +37,11 @@ export const siteConfig: SiteConfig = {
 		ignoreTags: ["script", "style", "code", "pre"], // 翻译时忽略的 HTML 标签
 	},
 
-	bangumi: {
-		userId: "your-bangumi-id", // 在此处设置你的Bangumi用户ID，可以设置为 "sai" 测试
+	themeColor: {
+		hue: 255, // 主题色的默认色相，范围从 0 到 360。例如：红色：0，青色：200，蓝绿色：250，粉色：345
+		fixed: false, // 对访问者隐藏主题色选择器
 	},
+    defaultTheme: "dark", // "system" 跟随系统， "light" 浅色， "dark" 深色
 
 	banner: {
 		enable: true, // 是否启动Banner壁纸模式
@@ -104,11 +99,14 @@ export const siteConfig: SiteConfig = {
 			transparentMode: "semifull", // 导航栏透明模式："semi" 半透明加圆角，"full" 完全透明，"semifull" 动态透明
 		},
 	},
+
 	toc: {
 		enable: true, // 启用目录功能
 		depth: 3, // 目录深度，1-6，1 表示只显示 h1 标题，2 表示显示 h1 和 h2 标题，依此类推
 	},
+
 	generateOgImages: false, // 启用生成OpenGraph图片功能,注意开启后要渲染很长时间，不建议本地调试的时候开启
+
 	favicon: [
 		// 留空以使用默认 favicon
 		// {
@@ -127,7 +125,12 @@ export const siteConfig: SiteConfig = {
 			enable: false, // 启用 Hanalei 字体作为全局字体，适合中文去使用
 		},
 	},
+
 	showLastModified: true, // 控制“上次编辑”卡片显示的开关
+
+	bangumi: {
+		userId: "your-bangumi-id", // 在此处设置你的Bangumi用户ID，可以设置为 "sai" 测试
+	},
 };
 
 
