@@ -484,9 +484,7 @@ export const widgetConfigs = {
 
 export const umamiConfig = {
 	enabled: false, // 是否显示Umami统计
-	apiKey: "api_", // API密钥
+	apiKey: import.meta.env.UMAMI_API_KEY, // API密钥
 	baseUrl: "https://api.umami.is", // UmamiCloudAPI地址
-	scripts: `
-		<script defer src="..." data-website-id="..."></script>
-	`.trim(), // 要插入的Script
+	scripts: import.meta.env.UMAMI_TRACKING_CODE, // 要插入的Script
 } as const;

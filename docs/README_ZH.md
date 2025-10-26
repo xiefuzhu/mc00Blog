@@ -46,6 +46,7 @@
 3. **配置博客**
    - [编辑 `src/config.ts` 自定义博客设置](https://docs.twilight.spr-aachen.com/config/core)
    - [配置 `.env` 支持 CMS 功能](https://docs.twilight.spr-aachen.com/config/cms)
+   - [配置 `.env` 支持站点统计功能](https://docs.twilight.spr-aachen.com/config/analytics)
    - [更新 `src/data` 中的站点信息](https://docs.twilight.spr-aachen.com/config/data)
 
 4. **本地调试**

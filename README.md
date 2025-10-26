@@ -46,6 +46,7 @@ English | [**中文**](docs/README_ZH.md)
 3. **Configure your blog:**
    - [Edit `src/config.ts` to customize blog settings](https://docs.twilight.spr-aachen.com/config/core)
    - [Configure `.env` to support CMS functionality](https://docs.twilight.spr-aachen.com/config/cms)
+   - [Configure Umami analytics in `.env`](https://docs.twilight.spr-aachen.com/config/analytics)
    - [Update site information inside `src/data`](https://docs.twilight.spr-aachen.com/config/data)
 
 4. **Start the development server:**
