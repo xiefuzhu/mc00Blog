@@ -460,11 +460,45 @@
         border: 1px solid rgba(0, 0, 0, 0.55) !important;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
     }
-    
+
     /* 搜索面板暗色主题半透明效果 */
     :root.dark body:has(#banner-wrapper) #navbar[data-is-home="true"] #search-panel {
         background: rgba(0, 0, 0, 0.55) !important;
         border: 1px solid rgba(0, 0, 0, 0.55) !important;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+    }
+}
+
+/* 响应式按钮布局优化 */
+/* 超小屏幕优化 - 只显示菜单按钮 */
+@media (max-width: 359px) {
+    #navbar-buttons {
+        gap: 0 !important;
+        justify-content: flex-end !important;
+    }
+
+    #navbar-buttons button:not(#nav-menu-switch),
+    #navbar-buttons > *:not(#nav-menu-switch) {
+        display: none !important;
+    }
+
+    #navbar-buttons #nav-menu-switch {
+        width: 2.75rem !important;
+        height: 2.75rem !important;
+        margin-left: auto !important;
+    }
+}
+
+/* 超小屏幕优化 - 进一步减少按钮间距 */
+@media (min-width: 360px) and (max-width: 480px) {
+    #navbar-buttons {
+        gap: 0.125rem !important;
+    }
+
+    #navbar-buttons button,
+    #navbar-buttons > * {
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+        padding: 0 !important;
     }
 }

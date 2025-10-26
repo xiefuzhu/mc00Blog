@@ -28,14 +28,14 @@ const hasChildren = processedLink.children && processedLink.children.length > 0;
 <div class:list={["dropdown-container", className]} data-dropdown>
 	{hasChildren ? (
 		<button 
-			class="btn-plain scale-animation rounded-lg h-11 font-bold px-5 active:scale-95 dropdown-trigger"
+			class="btn-plain scale-animation rounded-lg h-11 font-bold px-3 active:scale-95 dropdown-trigger"
 			aria-expanded="false"
 			aria-haspopup="true"
 			data-dropdown-trigger
 		>
 			<div class="flex items-center">
 				{processedLink.icon && <Icon name={processedLink.icon} class="text-[1.1rem] mr-2" />}
-				{processedLink.name}
+				<span class="dropdown-text hidden lg:inline">{processedLink.name}</span>
 				<Icon name="material-symbols:keyboard-arrow-down-rounded" class="text-[1.25rem] transition-transform duration-200 dropdown-arrow ml-1" />
 			</div>
 		</button>
@@ -64,11 +64,12 @@ const hasChildren = processedLink.children && processedLink.children.length > 0;
 			aria-label={processedLink.name} 
 			href={processedLink.external ? processedLink.url : url(processedLink.url)} 
 			target={processedLink.external ? "_blank" : null}
-			class="btn-plain scale-animation rounded-lg h-11 font-bold px-5 active:scale-95"
+			class="btn-plain scale-animation rounded-lg h-11 font-bold px-3 active:scale-95 nav-link-item"
+			data-link-name={processedLink.name}
 		>
 			<div class="flex items-center">
-				{processedLink.icon && <Icon name={processedLink.icon} class="text-[1.1rem] mr-2" />}
-				{processedLink.name}
+				{processedLink.icon && <Icon name={processedLink.icon} class="text-[1.1rem] nav-link-icon" />}
+				<span class="nav-link-text ml-2 hidden lg:inline">{processedLink.name}</span>
 				{processedLink.external && <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.875rem] transition -translate-y-[1px] ml-1 text-black/[0.2] dark:text-white/[0.2]" />}
 			</div>
 		</a>
@@ -99,7 +100,7 @@ const hasChildren = processedLink.children && processedLink.children.length > 0;
 	}
 
 	.dropdown-item {
-		@apply flex items-center justify-between px-4 py-2.5 text-black/75 dark:text-white/75 hover:text-[var(--primary)] hover:bg-[var(--btn-plain-bg-hover)] transition-colors duration-150 font-medium;
+		@apply flex items-center justify-between px-3 py-2 text-sm text-black/75 dark:text-white/75 hover:text-[var(--primary)] hover:bg-[var(--btn-plain-bg-hover)] transition-colors duration-150 font-medium;
 	}
 
 	.dropdown-item:first-child {
@@ -110,10 +111,27 @@ const hasChildren = processedLink.children && processedLink.children.length > 0;
 		@apply rounded-b-[calc(var(--radius-large)-0.5rem)];
 	}
 
-	/* 移动端隐藏下拉菜单 */
-	@media (max-width: 768px) {
-		.dropdown-container {
+	/* 小屏幕时只显示图标 */
+	@media (max-width: 1023px) {
+		.nav-link-item {
+			@apply px-2;
+		}
+
+		.nav-link-text,
+		.dropdown-text {
 			@apply hidden;
+		}
+	}
+
+	/* 大屏幕时显示图标+文字 */
+	@media (min-width: 1024px) {
+		.nav-link-item {
+			@apply px-3;
+		}
+
+		.nav-link-text,
+		.dropdown-text {
+			@apply inline;
 		}
 	}
 </style>
