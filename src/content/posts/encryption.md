@@ -3,7 +3,7 @@ title: Encryption Example
 published: 2020-02-02
 description: This is an article for testing the page encryption feature
 encrypted: true
-pinned: true
+pinned: false
 password: "123456"
 tags: [Encryption]
 category: Examples
