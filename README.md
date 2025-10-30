@@ -17,8 +17,11 @@
 
 A CMS integrated static blog template built with [Astro](https://astro.build) framework.
 
+[![Bilibili](https://img.shields.io/badge/Bilibili-v1.0%20Intro-blue?logo=Bilibili&style=for-the-badge)](https://www.bilibili.com/video/BV18VsUzNEmL)&nbsp;
+[![YouTube](https://img.shields.io/badge/YouTube-v1.0%20Intro-red?logo=YouTube&style=for-the-badge)](https://www.youtube.com/watch?v=VVEiOK8WAK0)
+
 [**🖥️ Live Demo**](https://twilight.spr-aachen.com)
-[**📝 Documentation**](https://docs.twilight.spr-aachen.com)
+[**📝 Documentation**](https://docs.twilight.spr-aachen.com/en)
 
 English | [**中文**](docs/README_ZH.md)
 
@@ -78,6 +81,6 @@ Deploy your blog to any static hosting platform
 ## 🙏 Acknowledgements
 
 - Based on the original [Fuwari](https://github.com/saicaca/fuwari) template
-- Inspired by [Mizuki](https://github.com/matsuzaka-yuki/Mizuki) template
+- Inspired by [Yukina](https://github.com/WhitePaper233/yukina) & [Mizuki](https://github.com/matsuzaka-yuki/Mizuki) templates
 - CMS functionality powered by [astro-decap-cms-oauth](https://github.com/dorukgezici/astro-decap-cms-oauth)
 - Translation functionality powered by [translate](https://gitee.com/mail_osc/translate)

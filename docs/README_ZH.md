@@ -15,7 +15,10 @@
    </tr>
 </table>
 
-一个带后台管理系统的静态博客模板，基于 [Astro](https://astro.build) 框架打造
+一个支持后台管理的静态博客模板
+
+[![Bilibili](https://img.shields.io/badge/Bilibili-v1.0%20Intro-blue?logo=Bilibili&style=for-the-badge)](https://www.bilibili.com/video/BV18VsUzNEmL)&nbsp;
+[![YouTube](https://img.shields.io/badge/YouTube-v1.0%20Intro-red?logo=YouTube&style=for-the-badge)](https://www.youtube.com/watch?v=VVEiOK8WAK0)
 
 [**🖥️ 演示**](https://twilight.spr-aachen.com)
 [**📝 文档**](https://docs.twilight.spr-aachen.com)
@@ -78,6 +81,6 @@
 ## 🙏 致谢
 
 - 基于原版的 [Fuwari](https://github.com/saicaca/fuwari) 模板二次开发
-- 灵感来源于 [Mizuki](https://github.com/matsuzaka-yuki/Mizuki) 模板
+- 灵感来源于 [Yukina](https://github.com/WhitePaper233/yukina) & [Mizuki](https://github.com/matsuzaka-yuki/Mizuki)  模板
 - CMS 功能由 [astro-decap-cms-oauth](https://github.com/dorukgezici/astro-decap-cms-oauth) 提供
 - 翻译功能由 [translate](https://gitee.com/mail_osc/translate) 提供
