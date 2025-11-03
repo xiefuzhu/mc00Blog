@@ -109,7 +109,7 @@ onDestroy(() => {
         id="translate-switch"
         on:click={togglePanel}
     >
-        <Icon icon="material-symbols:translate" class="text-[1.25rem] transition text-black/75 dark:text-white/75 hover:text-[var(--primary)]" />
+        <Icon icon="material-symbols:translate" class="text-[1.25rem] transition" />
     </button>
 
     <!-- 翻译面板 -->
@@ -124,13 +124,14 @@ onDestroy(() => {
         <div class="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto">
             {#each languages as lang}
                 <button
-                    class="flex items-center gap-3 p-2 rounded-lg hover:bg-[var(--btn-plain-bg-hover)] transition-colors text-left w-full {currentLanguage === lang.code ? 'bg-[var(--btn-plain-bg-hover)] border-1 border-[var(--primary)]' : ''}"
+                    class="btn-plain flex items-center gap-3 p-2 rounded-lg transition-colors text-left w-full"
+                    class:current-theme-btn={currentLanguage === lang.code}
                     on:click={() => changeLanguage(lang.code)}
                 >
-                    <span class="text-lg transition text-black/75 dark:text-white/75">{lang.icon}</span>
-                    <span class="text-sm transition text-black/75 dark:text-white/75 {currentLanguage === lang.code ? 'font-medium text-[var(--primary)]' : ''}">{lang.name}</span>
+                    <span class="text-lg transition">{lang.icon}</span>
+                    <span class="text-sm transition">{lang.name}</span>
                     {#if currentLanguage === lang.code}
-                        <span class="ml-auto text-[var(--primary)]">✓</span>
+                        <span class="ml-auto">✓</span>
                     {/if}
                 </button>
             {/each}

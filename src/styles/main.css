@@ -8,6 +8,7 @@
 /* 导入加密内容样式 */
 @import './encrypted-content.css';
 
+
 /* 导入 ZenMaruGothic-Medium 字体 */
 @font-face {
   font-family: 'ZenMaruGothic-Medium';
@@ -15,8 +16,6 @@
   font-weight: 500;
   font-display: swap;
 }
-
-
 
 /* 导入 Hanalei 字体 */
 @font-face {
@@ -27,9 +26,11 @@
 	font-display: swap;
 }
 
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 
 /* 确保平滑滚动 */
 html {
@@ -204,9 +205,19 @@ html {
             @apply expand-animation;
         }
     }
+    .btn-plain:hover .iconify, .btn-plain:hover svg, .btn-plain:hover span {
+        @apply text-[var(--primary)] !important;
+    }
     .btn-regular {
         @apply transition-colors duration-150 flex items-center justify-center bg-[var(--btn-regular-bg)] hover:bg-[var(--btn-regular-bg-hover)] active:bg-[var(--btn-regular-bg-active)]
         text-[var(--btn-content)] dark:text-white/75
+    }
+    .current-theme-btn {
+        @apply text-[var(--primary)] bg-[var(--btn-plain-bg-hover)] hover:bg-[var(--btn-plain-bg-hover)] active:bg-[var(--btn-plain-bg-hover)] !important;
+    }
+    .current-theme-btn .iconify, .current-theme-btn svg, .current-theme-btn span, 
+    .current-theme-btn .text-sm, .current-theme-btn .text-lg {
+        @apply text-[var(--primary)] !important;
     }
 
     .link-underline {
