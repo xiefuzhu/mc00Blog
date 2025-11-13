@@ -23,6 +23,7 @@ const SITE_LANG = detectBrowserLanguage("en");
 
 
 export const siteConfig: SiteConfig = {
+	siteURL: "https://twilight.spr-aachen.com/", // 请替换为你的站点 URL 并以斜杠结尾
 	title: "Twilight",
 	subtitle: "Blog Template",
 
