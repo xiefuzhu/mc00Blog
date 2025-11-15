@@ -1,4 +1,5 @@
 ---
+import { siteConfig } from "../config";
 import I18nKey from "../i18n/i18nKey";
 import { i18n } from "../i18n/translation";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
@@ -16,12 +17,14 @@ const moments = [
 
 // 时间格式化函数
 function formatTime(dateString: string): string {
+    var TG = 8;
+    if (siteConfig.timeZone >= -12 && siteConfig.timeZone <= 12) TG = siteConfig.timeZone;
+    const timeGap = TG;
 	const now = new Date();
 	const date = new Date(dateString);
 	const diffInMinutes = Math.floor(
-		(now.getTime()-now.getTimezoneOffset()*60*1000 - date.getTime()) / (1000 * 60),
+		(now.getTime() + timeGap*60*60*1000 - date.getTime()) / (1000 * 60),
 	);
-
 	if (diffInMinutes < 60) {
 		return `${diffInMinutes}${i18n(I18nKey.diaryMinutesAgo)}`;
 	}

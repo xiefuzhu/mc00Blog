@@ -21,6 +21,9 @@ const SITE_LANG = detectBrowserLanguage("en");
 // 如果需要强制使用特定语言，可以取消注释下面一行并设置语言代码
 // const SITE_LANG = "zh"; // 强制使用的语言代码，'zh', 'en', 'ja' 等
 
+// 设置网站时区
+const SITE_TIMEZONE = 8; // from -12 to 12 default in UTC+8
+
 
 export const siteConfig: SiteConfig = {
 	siteURL: "https://twilight.spr-aachen.com/", // 请替换为你的站点 URL 并以斜杠结尾
@@ -37,7 +40,8 @@ export const siteConfig: SiteConfig = {
 		ignoreClasses: ["ignore", "banner-title", "banner-subtitle"], // 翻译时忽略的 CSS 类名
 		ignoreTags: ["script", "style", "code", "pre"], // 翻译时忽略的 HTML 标签
 	},
-
+	// 时区配置
+	timeZone: SITE_TIMEZONE,
 	themeColor: {
 		hue: 255, // 主题色的默认色相，范围从 0 到 360。例如：红色：0，青色：200，蓝绿色：250，粉色：345
 		fixed: false, // 对访问者隐藏主题色选择器
