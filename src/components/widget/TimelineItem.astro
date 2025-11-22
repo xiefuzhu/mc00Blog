@@ -19,7 +19,7 @@ export interface Props {
 		links?: {
 			name: string;
 			url: string;
-			type: "website" | "certificate" | "project" | "other";
+			type: "certificate" | "project" | "other";
 		}[];
 		icon?: string;
 		color?: string;
@@ -91,11 +91,11 @@ const getLinkIcon = (type: string) => {
 		case "certificate":
 			return "🏆";
 		case "project":
+			return "📑";
+		case "other":
 			return "🔗";
-		case "website":
-			return "🌐";
 		default:
-			return "📄";
+			return "🔗";
 	}
 };
 
@@ -262,7 +262,7 @@ const itemColor = item.color || "#3B82F6";
                 href={link.url} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                class={`text-blue-600 dark:text-blue-400 hover:underline font-medium flex items-center gap-1 transition-colors ${sizeClasses.meta}`}
+                class={`inline-flex items-center px-3 py-1.5 rounded-md border border-[var(--primary)] text-[var(--primary)] bg-[color-mix(in_oklch,_var(--primary)_8%,_transparent)] hover:bg-[color-mix(in_oklch,_var(--primary)_14%,_transparent)] active:bg-[color-mix(in_oklch,_var(--primary)_20%,_transparent)] text-sm font-medium transition-colors flex items-center gap-1 ${sizeClasses.meta}`}
               >
                 {getLinkIcon(link.type)}
                 {link.name}
@@ -280,7 +280,13 @@ const itemColor = item.color || "#3B82F6";
       <!-- 图标和标题 -->
       <div class="flex items-start gap-4 mb-3">
         <div class={`rounded-lg flex items-center justify-center shrink-0 ${sizeClasses.node}`} style={`background-color: ${itemColor}20`}>
-          <iconify-icon icon={item.icon || getTypeIcon(item.type)} class={sizeClasses.nodeIcon} style={`color: ${itemColor}`}></iconify-icon>
+          <Icon 
+            icon={item.icon || getTypeIcon(item.type)} 
+            class={sizeClasses.nodeIcon} 
+            color={itemColor}
+            fallback={item.title.charAt(0)}
+            loading="eager"
+          />
         </div>
         <div class="flex-1">
           <div class="flex items-start justify-between mb-2">
@@ -363,7 +369,7 @@ const itemColor = item.color || "#3B82F6";
                 href={link.url} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                class={`text-blue-600 dark:text-blue-400 hover:underline font-medium transition-colors ${sizeClasses.meta}`}
+                class={`inline-flex items-center px-3 py-1.5 rounded-md border border-[var(--primary)] text-[var(--primary)] bg-[color-mix(in_oklch,_var(--primary)_8%,_transparent)] hover:bg-[color-mix(in_oklch,_var(--primary)_14%,_transparent)] active:bg-[color-mix(in_oklch,_var(--primary)_20%,_transparent)] text-sm font-medium transition-colors ${sizeClasses.meta}`}
               >
                 {getLinkIcon(link.type)} {link.name}
               </a>
@@ -374,13 +380,3 @@ const itemColor = item.color || "#3B82F6";
     </div>
   </div>
 )}
-
-<script>
-  // 加载 Iconify 图标库
-  if (typeof window !== 'undefined' && !window.iconifyLoaded) {
-    const script = document.createElement('script');
-    script.src = 'https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js';
-    document.head.appendChild(script);
-    window.iconifyLoaded = true;
-  }
-</script>
