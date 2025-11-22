@@ -146,7 +146,7 @@ export const en: Translation = {
 	[Key.diaryDaysAgo]: "days ago",
 
 	// Albums Page
-	[Key.gallery]: "Gallery",
+	[Key.albums]: "Albums",
 	[Key.albumsSubtitle]: "Record beautiful moments in life",
 	[Key.albumsEmpty]: "No content",
 	[Key.albumsEmptyDesc]: "No albums have been created yet. Go add some beautiful memories!",

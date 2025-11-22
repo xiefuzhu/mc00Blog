@@ -195,7 +195,7 @@ export const navBarConfig: NavBarConfig = {
 				LinkPreset.Skills,
 				LinkPreset.Timeline,
 				LinkPreset.Diary,
-				LinkPreset.Gallery,
+				LinkPreset.Albums,
 				LinkPreset.Anime,
 			],
 		},

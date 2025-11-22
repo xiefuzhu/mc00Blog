@@ -146,7 +146,7 @@ export const ja: Translation = {
 	[Key.diaryDaysAgo]: "日前",
 
 	// アルバムページ
-	[Key.gallery]: "アルバム",
+	[Key.albums]: "アルバム",
 	[Key.albumsSubtitle]: "生活の美しい瞬間を記録する",
 	[Key.albumsEmpty]: "コンテンツなし",
 	[Key.albumsEmptyDesc]: "アルバムがまだ作成されていません。美しい思い出を追加してください！",

@@ -144,7 +144,7 @@ enum I18nKey {
 	diaryDaysAgo = "diaryDaysAgo",
 
 	// 相册页面
-	gallery = "gallery",
+	albums = "albums",
 	albumsSubtitle = "albumsSubtitle",
 	albumsEmpty = "albumsEmpty",
 	albumsEmptyDesc = "albumsEmptyDesc",
