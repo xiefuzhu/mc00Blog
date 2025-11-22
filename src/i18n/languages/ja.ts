@@ -3,10 +3,9 @@ import type { Translation } from "../translation";
 
 export const ja: Translation = {
 	[Key.home]: "ホーム",
-	[Key.about]: "について",
 	[Key.archive]: "アーカイブ",
+	[Key.about]: "について",
 	[Key.search]: "検索",
-	[Key.other]: "その他",
 
 	[Key.tags]: "タグ",
 	[Key.categories]: "カテゴリ",
@@ -19,7 +18,6 @@ export const ja: Translation = {
 	[Key.announcementClose]: "閉じる",
 
 	[Key.comments]: "コメント",
-	[Key.friends]: "友達",
 	[Key.untitled]: "無題",
 	[Key.uncategorized]: "未分類",
 	[Key.noTags]: "タグなし",
@@ -47,53 +45,12 @@ export const ja: Translation = {
 	[Key.author]: "著者",
 	[Key.publishedAt]: "公開日",
 	[Key.license]: "ライセンス",
-	[Key.anime]: "アニメ",
-	[Key.diary]: "日記",
-	[Key.gallery]: "ギャラリー",
-
-	// アニメページ
-	[Key.animeTitle]: "私のアニメリスト",
-	[Key.animeSubtitle]: "私の二次元の旅を記録する",
-	[Key.animeList]: "アニメリスト",
-	[Key.animeTotal]: "合計",
-	[Key.animeWatching]: "視聴中",
-	[Key.animeCompleted]: "完了",
-	[Key.animeAvgRating]: "平均評価",
-	[Key.animeStatusWatching]: "視聴中",
-	[Key.animeStatusCompleted]: "完了",
-	[Key.animeStatusPlanned]: "予定",
-	[Key.animeYear]: "年",
-	[Key.animeStudio]: "スタジオ",
-	[Key.animeEmpty]: "アニメデータなし",
-	[Key.animeEmptyBangumi]: "Bangumiの設定またはネットワーク接続を確認してください",
-
-	// 日記ページ
-	[Key.diarySubtitle]: "いつでもどこでも、生活を共有する",
-	[Key.diaryCount]: "日記エントリ",
-	[Key.diaryImage]: "画像",
-	[Key.diaryReply]: "返信",
-	[Key.diaryTips]: "最新の30件の日記エントリのみを表示",
-	[Key.diaryMinutesAgo]: "分前",
-	[Key.diaryHoursAgo]: "時間前",
-	[Key.diaryDaysAgo]: "日前",
 
 	// 404ページ
 	[Key.notFound]: "404",
 	[Key.notFoundTitle]: "ページが見つかりません",
 	[Key.notFoundDescription]: "申し訳ありませんが、アクセスしたページは存在しないか、移動されています。",
 	[Key.backToHome]: "ホームに戻る",
-
-	// 音楽プレーヤー
-	[Key.playlist]: "プレイリスト",
-
-	// アルバムページ
-	[Key.albums]: "アルバム",
-	[Key.albumsSubtitle]: "生活の美しい瞬間を記録する",
-	[Key.albumsEmpty]: "コンテンツなし",
-	[Key.albumsEmptyDesc]: "アルバムがまだ作成されていません。美しい思い出を追加してください！",
-	[Key.albumsBackToList]: "アルバムに戻る",
-	[Key.albumsPhotoCount]: "写真",
-	[Key.albumsPhotosCount]: "写真",
 
 	// プロジェクトページ
 	[Key.projects]: "プロジェクト",
@@ -119,46 +76,6 @@ export const ja: Translation = {
 	[Key.projectsPlanned]: "予定",
 	[Key.projectsDemo]: "ライブデモ",
 	[Key.projectsSource]: "ソースコード",
-
-	// RSSページ
-	[Key.rss]: "RSSフィード",
-	[Key.rssDescription]: "最新の更新を購読する",
-	[Key.rssSubtitle]: "RSSで購読して、最新の記事と更新を第一时间で取得する",
-	[Key.rssLink]: "RSSリンク",
-	[Key.rssCopyToReader]: "RSSリンクをリーダーにコピー",
-	[Key.rssCopyLink]: "リンクをコピー",
-	[Key.rssLatestPosts]: "最新の投稿",
-	[Key.rssWhatIsRSS]: "RSSとは？",
-	[Key.rssWhatIsRSSDescription]:
-		"RSS（Really Simple Syndication）は、頻繁に更新されるコンテンツを公開するための標準形式です。RSSを使用すると：",
-	[Key.rssBenefit1]: "手動で訪問することなく、最新のウェブサイトコンテンツを及时に取得",
-	[Key.rssBenefit2]: "1か所で複数のウェブサイトの購読を管理",
-	[Key.rssBenefit3]: "重要な更新や記事を見逃すことを回避",
-	[Key.rssBenefit4]: "広告なしのクリーンな読書体験を楽しむ",
-	[Key.rssHowToUse]: "Feedly、Inoreaderまたは他のRSSリーダーを使用してこのサイトを購読することを推奨します。",
-	[Key.rssCopied]: "RSSリンクがクリップボードにコピーされました！",
-	[Key.rssCopyFailed]: "コピーに失敗しました。手動でリンクをコピーしてください",
-
-	// Atomページ
-	[Key.atom]: "Atomフィード",
-	[Key.atomDescription]: "最新の更新を購読する",
-	[Key.atomSubtitle]: "Atomで購読して、最新の記事と更新を第一时间で取得する",
-	[Key.atomLink]: "Atomリンク",
-	[Key.atomCopyToReader]: "Atomリンクをリーダーにコピー",
-	[Key.atomCopyLink]: "リンクをコピー",
-	[Key.atomLatestPosts]: "最新の投稿",
-	[Key.atomWhatIsAtom]: "Atomとは？",
-	[Key.atomWhatIsAtomDescription]:
-		"Atom連合フォーマット（Atom Syndication Format）は、フィードとそのアイテムを記述するためのXMLベースの標準です。Atomを使用すると：",
-	[Key.atomBenefit1]:
-		"手動で訪問することなく、最新のウェブサイトコンテンツを及时に取得",
-	[Key.atomBenefit2]: "1か所で複数のウェブサイトの購読を管理",
-	[Key.atomBenefit3]: "重要な更新や記事を見逃すことを回避",
-	[Key.atomBenefit4]: "広告なしのクリーンな読書体験を楽しむ",
-	[Key.atomHowToUse]:
-		"Feedly、Inoreaderまたは他のAtomリーダーを使用してこのサイトを購読することを推奨します。",
-	[Key.atomCopied]: "Atomリンクがクリップボードにコピーされました！",
-	[Key.atomCopyFailed]: "コピーに失敗しました。手動でリンクをコピーしてください",
 
 	// スキルページ
 	[Key.skills]: "スキル",
@@ -217,6 +134,82 @@ export const ja: Translation = {
 	[Key.timelineEmployed]: "在職中",
 	[Key.timelineAvailable]: "入社可能",
 
+	// 日記ページ
+	[Key.diary]: "日記",
+	[Key.diarySubtitle]: "いつでもどこでも、生活を共有する",
+	[Key.diaryCount]: "日記エントリ",
+	[Key.diaryImage]: "画像",
+	[Key.diaryReply]: "返信",
+	[Key.diaryTips]: "最新の30件の日記エントリのみを表示",
+	[Key.diaryMinutesAgo]: "分前",
+	[Key.diaryHoursAgo]: "時間前",
+	[Key.diaryDaysAgo]: "日前",
+
+	// アルバムページ
+	[Key.gallery]: "アルバム",
+	[Key.albumsSubtitle]: "生活の美しい瞬間を記録する",
+	[Key.albumsEmpty]: "コンテンツなし",
+	[Key.albumsEmptyDesc]: "アルバムがまだ作成されていません。美しい思い出を追加してください！",
+	[Key.albumsBackToList]: "アルバムに戻る",
+	[Key.albumsPhotoCount]: "写真",
+	[Key.albumsPhotosCount]: "写真",
+
+	// アニメページ
+	[Key.anime]: "アニメ",
+	[Key.animeTitle]: "私のアニメリスト",
+	[Key.animeSubtitle]: "私の二次元の旅を記録する",
+	[Key.animeList]: "アニメリスト",
+	[Key.animeTotal]: "合計",
+	[Key.animeWatching]: "視聴中",
+	[Key.animeCompleted]: "完了",
+	[Key.animeAvgRating]: "平均評価",
+	[Key.animeStatusWatching]: "視聴中",
+	[Key.animeStatusCompleted]: "完了",
+	[Key.animeStatusPlanned]: "予定",
+	[Key.animeYear]: "年",
+	[Key.animeStudio]: "スタジオ",
+	[Key.animeEmpty]: "アニメデータなし",
+	[Key.animeEmptyBangumi]: "Bangumiの設定またはネットワーク接続を確認してください",
+
+	// 友達ページ
+	[Key.friends]: "友達",
+
+	// RSSページ
+	[Key.rss]: "RSSフィード",
+	[Key.rssDescription]: "最新の更新を購読する",
+	[Key.rssSubtitle]: "RSSで購読して、最新の記事と更新を第一时间で取得する",
+	[Key.rssLink]: "RSSリンク",
+	[Key.rssCopyToReader]: "RSSリンクをリーダーにコピー",
+	[Key.rssCopyLink]: "リンクをコピー",
+	[Key.rssLatestPosts]: "最新の投稿",
+	[Key.rssWhatIsRSS]: "RSSとは？",
+	[Key.rssWhatIsRSSDescription]: "RSS（Really Simple Syndication）は、頻繁に更新されるコンテンツを公開するための標準形式です。RSSを使用すると：",
+	[Key.rssBenefit1]: "手動で訪問することなく、最新のウェブサイトコンテンツを及时に取得",
+	[Key.rssBenefit2]: "1か所で複数のウェブサイトの購読を管理",
+	[Key.rssBenefit3]: "重要な更新や記事を見逃すことを回避",
+	[Key.rssBenefit4]: "広告なしのクリーンな読書体験を楽しむ",
+	[Key.rssHowToUse]: "Feedly、Inoreaderまたは他のRSSリーダーを使用してこのサイトを購読することを推奨します。",
+	[Key.rssCopied]: "RSSリンクがクリップボードにコピーされました！",
+	[Key.rssCopyFailed]: "コピーに失敗しました。手動でリンクをコピーしてください",
+
+	// Atomページ
+	[Key.atom]: "Atomフィード",
+	[Key.atomDescription]: "最新の更新を購読する",
+	[Key.atomSubtitle]: "Atomで購読して、最新の記事と更新を第一时间で取得する",
+	[Key.atomLink]: "Atomリンク",
+	[Key.atomCopyToReader]: "Atomリンクをリーダーにコピー",
+	[Key.atomCopyLink]: "リンクをコピー",
+	[Key.atomLatestPosts]: "最新の投稿",
+	[Key.atomWhatIsAtom]: "Atomとは？",
+	[Key.atomWhatIsAtomDescription]: "Atom連合フォーマット（Atom Syndication Format）は、フィードとそのアイテムを記述するためのXMLベースの標準です。Atomを使用すると：",
+	[Key.atomBenefit1]: "手動で訪問することなく、最新のウェブサイトコンテンツを及时に取得",
+	[Key.atomBenefit2]: "1か所で複数のウェブサイトの購読を管理",
+	[Key.atomBenefit3]: "重要な更新や記事を見逃すことを回避",
+	[Key.atomBenefit4]: "広告なしのクリーンな読書体験を楽しむ",
+	[Key.atomHowToUse]: "Feedly、Inoreaderまたは他のAtomリーダーを使用してこのサイトを購読することを推奨します。",
+	[Key.atomCopied]: "Atomリンクがクリップボードにコピーされました！",
+	[Key.atomCopyFailed]: "コピーに失敗しました。手動でリンクをコピーしてください",
+
 	// パスワード保護
 	[Key.passwordProtected]: "パスワード保護",
 	[Key.passwordProtectedTitle]: "このコンテンツはパスワードで保護されています",
@@ -245,4 +238,7 @@ export const ja: Translation = {
 	[Key.hour]: "時間",
 	[Key.minute]: "分",
 	[Key.second]: "秒",
+
+	// 音楽プレーヤー
+	[Key.playlist]: "プレイリスト",
 };

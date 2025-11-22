@@ -8,35 +8,10 @@ export const LinkPresets: { [key in LinkPreset]: NavBarLink } = {
 		url: "/",
 		icon: "material-symbols:home",
 	},
-	[LinkPreset.About]: {
-		name: i18n(I18nKey.about),
-		url: "/about/",
-		icon: "material-symbols:person",
-	},
 	[LinkPreset.Archive]: {
 		name: i18n(I18nKey.archive),
 		url: "/archive/",
 		icon: "material-symbols:archive",
-	},
-	[LinkPreset.Friends]: {
-		name: i18n(I18nKey.friends),
-		url: "/friends/",
-		icon: "material-symbols:group",
-	},
-	[LinkPreset.Anime]: {
-		name: i18n(I18nKey.anime),
-		url: "/anime/",
-		icon: "material-symbols:movie",
-	},
-	[LinkPreset.Diary]: {
-		name: i18n(I18nKey.diary),
-		url: "/diary/",
-		icon: "material-symbols:book",
-	},
-	[LinkPreset.Gallery]: {
-		name: i18n(I18nKey.gallery),
-		url: "/gallery/",
-		icon: "material-symbols:photo-library",
 	},
 	[LinkPreset.Projects]: {
 		name: i18n(I18nKey.projects),
@@ -52,5 +27,30 @@ export const LinkPresets: { [key in LinkPreset]: NavBarLink } = {
 		name: i18n(I18nKey.timeline),
 		url: "/timeline/",
 		icon: "material-symbols:timeline",
+	},
+	[LinkPreset.Diary]: {
+		name: i18n(I18nKey.diary),
+		url: "/diary/",
+		icon: "material-symbols:book",
+	},
+	[LinkPreset.Gallery]: {
+		name: i18n(I18nKey.gallery),
+		url: "/gallery/",
+		icon: "material-symbols:photo-library",
+	},
+	[LinkPreset.Anime]: {
+		name: i18n(I18nKey.anime),
+		url: "/anime/",
+		icon: "material-symbols:movie",
+	},
+	[LinkPreset.About]: {
+		name: i18n(I18nKey.about),
+		url: "/about/",
+		icon: "material-symbols:person",
+	},
+	[LinkPreset.Friends]: {
+		name: i18n(I18nKey.friends),
+		url: "/friends/",
+		icon: "material-symbols:group",
 	},
 };
