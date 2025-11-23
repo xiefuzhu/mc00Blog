@@ -16,7 +16,7 @@ import bcryptjs from "bcryptjs";
 import CryptoJS from "crypto-js";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { licenseConfig } from "src/config";
+import { postConfig } from "src/config";
 import ImageWrapper from "../../components/misc/ImageWrapper.astro";
 import PostMetadata from "../../components/PostMeta.astro";
 import { profileConfig, siteConfig } from "../../config";
@@ -160,7 +160,7 @@ const jsonLd = {
             <!-- metadata -->
             <div class="onload-animation">
                 <PostMetadata
-                    class="mb-5"
+                    className="mb-5"
                     published={entry.data.published}
                     updated={entry.data.updated}
                     tags={entry.data.tags}
@@ -168,7 +168,7 @@ const jsonLd = {
                     slug={entry.slug}
                 />
                 {
-                    !entry.data.image && (
+                    (!entry.data.image || (entry.data.image && !postConfig.showCoverInContent)) && (
                         <div class="mt-4 border-[var(--line-divider)] border-dashed border-b-[1px] mb-5" />
                     )
                 }
@@ -177,7 +177,7 @@ const jsonLd = {
             <!-- always show cover as long as it has one -->
 
             {
-                entry.data.image && (
+                entry.data.image && postConfig.showCoverInContent && (
                     <>
                         <div class="mt-4" />
                         <ImageWrapper
@@ -201,7 +201,7 @@ const jsonLd = {
                         <Markdown class="mb-6 markdown-content onload-animation">
                             <Content />
                         </Markdown>
-                        {licenseConfig.enable && (
+                        {postConfig.license.enable && (
                             <License
                                 title={entry.data.title}
                                 slug={entry.slug}
@@ -222,7 +222,7 @@ const jsonLd = {
     <!-- 评论 -->
     <Comment post={entry} />
 
-    {siteConfig.showLastModified && (
+    {postConfig.showLastModified && (
         <>
             <div 
                 id="last-modified" 
