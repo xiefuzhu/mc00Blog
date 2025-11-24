@@ -54,7 +54,7 @@ let showError = false;
 let currentSong = {
 	title: "Music",
 	artist: "Artist",
-	cover: "/favicon/favicon-light-192.png",
+	cover: "/favicon/icon-light.ico",
 	url: "",
 	duration: 0,
 };
