@@ -1,7 +1,6 @@
 ---
-export const prerender = true;
-
-import path from "node:path";
+import type { CollectionEntry } from "astro:content";
+import { render } from "astro:content";
 import Comment from "@components/comment/index.astro";
 import License from "@components/misc/License.astro";
 import Markdown from "@components/misc/Markdown.astro";
@@ -10,9 +9,8 @@ import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
 import { getSortedPosts } from "@utils/content-utils";
-import { getDir, getPostUrlBySlug } from "@utils/url-utils";
+import { getFileDirFromPath, getPostUrlBySlug, removeFileExtension} from "@utils/url-utils";
 import { Icon } from "astro-icon/components";
-import { render } from "astro:content";
 import bcryptjs from "bcryptjs";
 import CryptoJS from "crypto-js";
 import dayjs from "dayjs";
@@ -26,10 +24,37 @@ import { formatDateToYYYYMMDD } from "../../utils/date-utils";
 
 export async function getStaticPaths() {
 	const blogEntries = await getSortedPosts();
-	return blogEntries.map((entry) => ({
-		params: { slug: entry.id },
-		props: { entry },
-	}));
+	const paths: {
+		params: { slug: string };
+		props: { entry: CollectionEntry<"posts"> };
+	}[] = [];
+
+	for (const entry of blogEntries) {
+		// 将 id 转换为 slug（移除扩展名）以匹配路由参数
+		const slug = removeFileExtension(entry.id);
+		// 为每篇文章创建默认的 slug 路径
+		paths.push({
+			params: { slug },
+			props: { entry },
+		});
+		// 如果文章有自定义固定链接，也创建对应的路径
+		if (entry.data.permalink) {
+			// 移除开头的斜杠和结尾的斜杠
+			// 同时移除可能的 "posts/" 前缀，避免重复
+			let permalink = entry.data.permalink
+				.replace(/^\/+/, "")
+				.replace(/\/+$/, "");
+			if (permalink.startsWith("posts/")) {
+				permalink = permalink.replace(/^posts\//, "");
+			}
+			paths.push({
+				params: { slug: permalink },
+				props: { entry },
+			});
+		}
+	}
+
+	return paths;
 }
 
 
@@ -185,23 +210,12 @@ const jsonLd = {
                 entry.data.image && postConfig.showCoverInContent && (
                     <>
                         <div class="mt-4" />
-                        {
-                            (() => {
-                                let imgDir = getDir(entry.id);
-                                if (imgDir === "/") {
-                                    const nameWithoutExt = entry.id.replace(/\.[^/.]+$/, "");
-                                    imgDir = `${nameWithoutExt}/`;
-                                }
-                                return (
-                                    <ImageWrapper
-                                        id="post-cover"
-                                        src={entry.data.image}
-                                        basePath={path.join("content/posts/", imgDir)}
-                                        class="mb-8 rounded-xl banner-container onload-animation"
-                                    />
-                                );
-                            })()
-                        }
+                        <ImageWrapper
+                            id="post-cover"
+                            src={entry.data.image}
+                            basePath={getFileDirFromPath(entry.filePath || '')}
+                            class="mb-8 rounded-xl banner-container onload-animation"
+                        />
                     </>
                 )
             }

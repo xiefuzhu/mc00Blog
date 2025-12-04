@@ -5,6 +5,7 @@ import { parse as htmlParser } from "node-html-parser";
 import sanitizeHtml from "sanitize-html";
 import { siteConfig, profileConfig } from "@/config";
 import { getSortedPosts } from "@/utils/content-utils";
+import { getFileDirFromPath, getPostUrl } from "@/utils/url-utils";
 
 
 const markdownParser = new MarkdownIt();
@@ -54,36 +55,25 @@ export async function GET(context: APIContext) {
 			) {
 				let importPath: string | null = null;
 
+				// derive base directory from real file path to preserve casing
+				const contentDirRaw = post.filePath
+					? getFileDirFromPath(post.filePath)
+					: "src/content/posts";
+				const contentDir = contentDirRaw.startsWith("src/")
+					? contentDirRaw
+					: `src/${contentDirRaw}`;
+
 				if (src.startsWith("./")) {
 					// Path relative to the post file directory
 					const prefixRemoved = src.slice(2);
-					// Check if this post is in a subdirectory (like bestimageapi/index.md)
-					const postPath = post.id; // This gives us the full path like "bestimageapi/index.md"
-					const postDir = postPath.includes("/") ? postPath.split("/")[0] : "";
-
-					if (postDir) {
-						// For posts in subdirectories
-						importPath = `/src/content/posts/${postDir}/${prefixRemoved}`;
-					} else {
-						// For posts directly in posts directory
-						importPath = `/src/content/posts/${prefixRemoved}`;
-					}
+					importPath = `/${contentDir}/${prefixRemoved}`;
 				} else if (src.startsWith("../")) {
 					// Path like ../assets/images/xxx -> relative to /src/content/
 					const cleaned = src.replace(/^\.\.\//, "");
 					importPath = `/src/content/${cleaned}`;
 				} else {
-					// Handle direct filename (no ./ prefix) - assume it's in the same directory as the post
-					const postPath = post.id; // This gives us the full path like "bestimageapi/index.md"
-					const postDir = postPath.includes("/") ? postPath.split("/")[0] : "";
-
-					if (postDir) {
-						// For posts in subdirectories
-						importPath = `/src/content/posts/${postDir}/${src}`;
-					} else {
-						// For posts directly in posts directory
-						importPath = `/src/content/posts/${src}`;
-					}
+					// direct filename (no ./ prefix) - assume it's in the same directory as the post
+					importPath = `/${contentDir}/${src}`;
 				}
 
 				const imageMod = await imagesGlob[importPath]?.()?.then(
@@ -105,7 +95,7 @@ export async function GET(context: APIContext) {
 		}
 
 		// 添加Atom条目
-		const postUrl = new URL(`posts/${post.id}/`, context.site).href;
+		const postUrl = new URL(getPostUrl(post), context.site).href;
 		const content = sanitizeHtml(html.toString(), {
 			allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img"]),
 		});

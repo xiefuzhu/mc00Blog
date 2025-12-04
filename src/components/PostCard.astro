@@ -4,7 +4,7 @@ import path from "node:path";
 import { Icon } from "astro-icon/components";
 import I18nKey from "../i18n/i18nKey";
 import { i18n } from "../i18n/translation";
-import { getDir } from "../utils/url-utils";
+import { getFileDirFromPath } from "../utils/url-utils";
 import ImageWrapper from "./misc/ImageWrapper.astro";
 import PostMetadata from "./PostMeta.astro";
 import { render } from "astro:content";
@@ -47,12 +47,9 @@ const coverWidth = "28%";
 
 const { remarkPluginFrontmatter } = await render(entry);
 
-// derive image base path: if entry.id has no directory, fallback to filename without extension
-let imageBaseDir = getDir(entry.id);
-if (imageBaseDir === "/") {
-  const nameWithoutExt = entry.id.replace(/\.[^/.]+$/, "");
-  imageBaseDir = `${nameWithoutExt}/`;
-}
+// derive image base path from the real file path to preserve directory casing
+const imageBaseDir = getFileDirFromPath(entry.filePath || "");
+
 ---
 
 <div class:list={["card-base flex flex-col-reverse md:flex-col w-full rounded-[var(--radius-large)] overflow-hidden relative", className]} style={style}>
@@ -102,7 +99,7 @@ if (imageBaseDir === "/") {
                   class="transition opacity-0 group-hover:opacity-100 scale-50 group-hover:scale-100 text-white text-5xl">
             </Icon>
         </div>
-        <ImageWrapper src={image} basePath={path.join("content/posts/", imageBaseDir)} alt="Cover Image of the Post"
+        <ImageWrapper src={image} basePath={imageBaseDir} alt="Cover Image of the Post"
                   class="w-full h-full">
         </ImageWrapper>
     </a>}
