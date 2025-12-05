@@ -296,34 +296,13 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
         },
         {
             // 组件类型
-            type: "series", // 系列组件
-            // 是否启用该组件
-            enable: true,
-            // 组件所属侧边栏
-            side: "right",
-            // 组件显示顺序
-            order: 4,
-            // 组件位置
-            position: "sticky", // 粘性定位，可滚动
-            // CSS 类名
-            class: "onload-animation",
-            // 动画延迟时间
-            animationDelay: 200,
-            // 响应式配置
-            responsive: {
-                // 折叠阈值
-                collapseThreshold: 10, // 当系列数量超过10个时自动折叠
-            },
-        },
-        {
-            // 组件类型
             type: "tags", // 标签组件
             // 是否启用该组件
             enable: true,
             // 组件所属侧边栏
             side: "right",
             // 组件显示顺序
-            order: 5,
+            order: 4,
             // 组件位置
             position: "sticky", // 粘性定位，可滚动
             // CSS 类名

@@ -118,28 +118,3 @@ export async function getCategoryList(): Promise<Category[]> {
 	}
 	return ret;
 }
-
-export async function getPostSeries(
-  seriesName: string,
-): Promise<{ body: string; data: CollectionEntry<"posts">["data"]; slug: string }[]> {
-  const posts = await getCollection('posts', ({ data }) => {
-    return (
-      (import.meta.env.PROD ? data.draft !== true : true) &&
-      data.series === seriesName
-    )
-  });
-
-	const mappedPosts = posts.map((post) => ({
-		  body: post.body ?? "",
-		  data: post.data,
-		  slug: post.id,
-	}));
-
-  mappedPosts.sort((a, b) => {
-    const dateA = new Date(a.data.published)
-    const dateB = new Date(b.data.published)
-    return dateA > dateB ? 1 : -1
-  })
-
-  return mappedPosts
-}

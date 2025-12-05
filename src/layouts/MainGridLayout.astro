@@ -36,7 +36,6 @@ interface Props {
     setOGTypeArticle?: boolean;
     postSlug?: string;
     headings?: MarkdownHeading[];
-    series?: string;
 }
 
 // 类型守卫函数
@@ -105,7 +104,6 @@ const {
     setOGTypeArticle,
     postSlug,
     headings = [],
-    series,
 } = Astro.props;
 const hasBannerCredit = siteConfig.wallpaper.mode === "banner" && siteConfig.wallpaper.banner?.credit?.enable;
 const hasBannerLink = !!siteConfig.wallpaper.banner?.credit?.url;
@@ -372,7 +370,6 @@ const mainContentClass = `
                                 side="left"
                                 class={`${leftSidebarClass} ${transparentClass}`}
                                 headings={headings}
-                                series={series}
                             />
                         )
                 }
@@ -385,7 +382,6 @@ const mainContentClass = `
                                 side="right"
                                 class={`${rightSidebarClass} ${transparentClass}`}
                                 headings={headings}
-                                series={series}
                             />
                         )
                 }

@@ -7,7 +7,6 @@ pinned: true
 tags: []
 category: Guides
 draft: false
-series: "Twilight"
 ---
 
 
@@ -25,7 +24,6 @@ image: ./cover.webp
 tags: [Foo, Bar]
 category: Front-end
 draft: false
-series: "Twilight"
 ---
 ```
 

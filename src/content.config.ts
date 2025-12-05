@@ -27,8 +27,6 @@ const postsCollection = defineCollection({
         /* Custom permalink */
         permalink: z.string().optional(),
 
-        series: z.string().optional(),
-
         /* For internal use */
         prevTitle: z.string().default(""),
         prevSlug: z.string().default(""),

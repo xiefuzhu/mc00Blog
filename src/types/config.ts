@@ -233,7 +233,6 @@ export type WidgetComponentType =
     | "toc"
     | "music-player"
     | "pio"
-    | "series"
     | "custom";
 
 
@@ -354,7 +353,6 @@ export type BlogPostData = {
     prevSlug?: string;
     nextTitle?: string;
     nextSlug?: string;
-    series?: string;
 };
 
 
