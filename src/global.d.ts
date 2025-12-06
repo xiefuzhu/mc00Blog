@@ -49,6 +49,7 @@ declare global {
 	}
 }
 
+
 interface SearchResult {
 	url: string;
 	meta: {
@@ -75,4 +76,5 @@ interface SearchResult {
 	sub_results?: SearchResult[];
 }
 
-export {};
+
+export { SearchResult };
