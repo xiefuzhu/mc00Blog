@@ -150,7 +150,7 @@ export const siteConfig: SiteConfig = {
                 // 启用水波纹效果
                 enable: true,
                 // 启用性能模式 (简化波浪效果以提升性能)
-                performanceMode: true,
+                performanceMode: false,
             },
         },
         // Fullscreen 模式专属配置
