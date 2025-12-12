@@ -284,7 +284,7 @@
 }
 
 /* 小屏幕优化 - 减少按钮间距 */
-@media (min-width: 361px) and (max-width: 512px) {
+@media (min-width: 333px) and (max-width: 512px) {
     #navbar-buttons {
         gap: 0.123rem !important;
     }
@@ -301,7 +301,7 @@
 }
 
 /* 超小屏幕优化 - 只显示菜单按钮 */
-@media (max-width: 360px) {
+@media (max-width: 333px) {
     #navbar-buttons {
         gap: 0 !important;
         justify-content: flex-end !important;
