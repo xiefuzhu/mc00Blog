@@ -5,7 +5,7 @@
 A CMS integrated static blog template built with [Astro](https://astro.build) framework.
 
 [![Bilibili](https://img.shields.io/badge/Bilibili-v1.0%20Intro-blue?logo=Bilibili&style=for-the-badge)](https://www.bilibili.com/video/BV18VsUzNEmL)&nbsp;
-[![YouTube](https://img.shields.io/badge/YouTube-v1.0%20Intro-red?logo=YouTube&style=for-the-badge)](https://www.youtube.com/watch?v=VVEiOK8WAK0)
+[![YouTube](https://img.shields.io/badge/YouTube-v1.0%20Intro-red?logo=YouTube&style=for-the-badge)](https://www.youtube.com/watch?v=SdpYpg_EzNg)
 
 [**🖥️ Live Demo**](https://twilight.spr-aachen.com)
 [**📝 Documentation**](https://docs.twilight.spr-aachen.com/en)
@@ -68,11 +68,11 @@ English | [**中文**](docs/README_ZH.md)
 
 2. **Install dependencies:**
    ```bash
-   # Install pnpm if not already installed
-   npm install -g pnpm
+   # Install bun if not already installed
+   npm install -g bun
    
    # Install project dependencies
-   pnpm install
+   bun install
    ```
 
 3. **Configure your blog:**
@@ -83,7 +83,7 @@ English | [**中文**](docs/README_ZH.md)
 
 4. **Start the development server:**
    ```bash
-   pnpm dev
+   bun dev
    ```
 
 
@@ -94,17 +94,16 @@ Deploy your blog to any static hosting platform
 
 ## ⚡ Commands
 
-| Command                     | Action                      |
-|:----------------------------|:----------------------------|
-| `pnpm install`              | Install dependencies        |
-| `pnpm dev`                  | Start local dev server      |
-| `pnpm build`                | Build site to `./dist/`     |
-| `pnpm preview`              | Preview build locally       |
-| `pnpm check`                | Run Astro error checking    |
-| `pnpm lint`                 | Check and fix code issues   |
-| `pnpm format`               | Format code with Biome      |
-| `pnpm new-post <filename>`  | Create a new blog post      |
-| `pnpm astro ...`            | Run Astro CLI commands      |
+| Command                    | Action                     |
+|:---------------------------|:---------------------------|
+| `bun lint`                 | Check and fix code issues  |
+| `bun format`               | Format code with Biome     |
+| `bun check`                | Run Astro error checking   |
+| `bun dev`                  | Start local dev server     |
+| `bun build`                | Build site to `./dist/`    |
+| `bun preview`              | Preview build locally      |
+| `bun astro ...`            | Run Astro CLI commands     |
+| `bun new-post <filename>`  | Create a new blog post     |
 
 
 ## 🙏 Acknowledgements
