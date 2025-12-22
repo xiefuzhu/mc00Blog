@@ -1,4 +1,4 @@
-import type { ParticleConfig } from "../types/config";
+import type { ParticleConfig } from "@/types/config";
 
 
 // 粒子对象类

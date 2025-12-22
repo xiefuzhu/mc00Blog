@@ -1,10 +1,9 @@
 ---
 import "katex/dist/katex.css";
-// 只加载最常用的字体权重，减少加载时间
-import "@fontsource/roboto/400.css";
-import "@fontsource/roboto/700.css";
 
 import { siteConfig, profileConfig, umamiConfig, musicPlayerConfig, pioConfig } from "@/config";
+import type { Favicon } from "@/types/config";
+import { defaultFavicons } from "@constants/icon";
 import { BREAKPOINT_LG } from "@/constants/breakpoints";
 import {
     BANNER_HEIGHT,
@@ -15,9 +14,7 @@ import {
     SYSTEM_MODE,
     PAGE_WIDTH,
 } from "@constants/constants";
-import { defaultFavicons } from "@constants/icon";
 import { pathsEqual, url } from "@utils/url-utils";
-import type { Favicon } from "../types/config";
 import ConfigCarrier from "@components/ConfigCarrier.astro";
 import MusicPlayer from "@components/widget/MusicPlayer.svelte";
 import Pio from "@components/widget/Pio.svelte";

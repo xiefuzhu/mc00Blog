@@ -5,7 +5,7 @@ import type {
     WALLPAPER_FULLSCREEN,
     WALLPAPER_BANNER,
     WALLPAPER_NONE
-} from "../constants/constants";
+} from "@constants/constants";
 
 
 /**

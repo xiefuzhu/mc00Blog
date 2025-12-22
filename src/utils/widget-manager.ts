@@ -1,23 +1,22 @@
-import { sidebarLayoutConfig } from "@/config";
 import type {
     WidgetComponentConfig,
     WidgetComponentType,
     SidebarLayoutConfig,
-} from "../types/config";
+} from "@/types/config";
+import { sidebarLayoutConfig } from "@/config";
 
 
 /**
  * 组件映射表 - 将组件类型映射到实际的组件路径
  */
 export const WIDGET_COMPONENT_MAP = {
-    profile: "../components/widget/Profile.astro",
-    announcement: "../components/widget/Announcement.astro",
-    categories: "../components/widget/Categories.astro",
-    tags: "../components/widget/Tags.astro",
-    toc: "../components/widget/TOC.astro",
-    "music-player": "../components/widget/MusicPlayer.svelte",
-    pio: "../components/widget/Pio.astro", // 添加 Pio 组件映射
-    series: "../components/widget/Series.astro", // 添加 Series 组件映射
+    profile: "@components/widget/Profile.astro",
+    announcement: "@components/widget/Announcement.astro",
+    categories: "@components/widget/Categories.astro",
+    tags: "@components/widget/Tags.astro",
+    toc: "@components/widget/TOC.astro",
+    "music-player": "@components/widget/MusicPlayer.svelte",
+    pio: "@components/widget/Pio.svelte",
     custom: null, // 自定义组件需要在配置中指定路径
 } as const;
 

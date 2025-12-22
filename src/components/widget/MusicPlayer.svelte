@@ -3,11 +3,11 @@ import { onDestroy, onMount } from "svelte";
 import { slide } from "svelte/transition";
 import Icon from "@iconify/svelte";
 
+import type { MusicPlayerTrack } from "@/types/config";
 import { musicPlayerConfig } from "@/config";
-import type { MusicPlayerTrack } from "../../types/config";
 import { i18n } from "@i18n/translation";
 import Key from "@i18n/i18nKey";
-import "../../styles/musicplayer.css";
+import "@styles/musicplayer.css";
 
 
 // 音乐播放器模式，可选 "local" 或 "meting"
