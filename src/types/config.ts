@@ -231,8 +231,6 @@ export type WidgetComponentType =
     | "categories"
     | "tags"
     | "toc"
-    | "music-player"
-    | "pio"
     | "custom";
 
 

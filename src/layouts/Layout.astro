@@ -418,7 +418,7 @@ import {
 import { BREAKPOINT_LG } from "@constants/breakpoints";
 import {getHue, getStoredTheme, setHue, setTheme} from "@utils/setting-utils";
 import {pathsEqual, url} from "@utils/url-utils";
-import { siteConfig, widgetConfigs } from '@/config';
+import { siteConfig, particleConfig } from '@/config';
 import { initParticle } from "@/utils/particle-manager";
 import 'overlayscrollbars/overlayscrollbars.css';
 
@@ -555,7 +555,6 @@ if (siteConfig.translate?.enable) {
 
 // 初始化粒子特效
 function setupParticle() {
-    const particleConfig = (widgetConfigs as any)?.particle;
     if (!particleConfig || !particleConfig.enable) return;
     if ((window as any).particleInitialized) return;
     initParticle(particleConfig);

@@ -579,17 +579,3 @@ export const pioConfig: import("./types/config").PioConfig = {
         link: "https://nav.kungal.org",
     },
 };
-
-/**
- * 
- */
-
-// 导出所有配置的统一接口
-export const widgetConfigs = {
-    profile: profileConfig,
-    announcement: announcementConfig,
-    layout: sidebarLayoutConfig,
-    particle: particleConfig,
-    music: musicPlayerConfig,
-    pio: pioConfig,
-} as const;
