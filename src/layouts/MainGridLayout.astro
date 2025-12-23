@@ -102,18 +102,16 @@ const hasBannerLink = !!siteConfig.wallpaper.banner?.credit?.url;
 
 // 检查是否为首页
 const isHomePage = Astro.url.pathname === "/" || Astro.url.pathname === "";
-const showHomeText = siteConfig.wallpaper.banner?.homeText?.enable && isHomePage;
 // 手机端非首页不显示banner的CSS类
 const mobileNonHomeBannerClass = !isHomePage ? "mobile-hide-banner" : "";
 
-// 计算主内容区域位置，考虑手机端非首页时banner被隐藏
+// 计算主内容区域位置
 const mainPanelTop = siteConfig.wallpaper.mode === "banner"
     ? `calc(${BANNER_HEIGHT}vh - ${MAIN_PANEL_OVERLAPS_BANNER_HEIGHT}rem)`
-    : "5.5rem";
-const mobileNonHomeMainTop = !isHomePage ? "5.5rem" : mainPanelTop;
+    : "4.5rem";
 
 // 当banner被禁用时，主内容区域应该始终从顶栏下面开始
-const finalMainPanelTop = siteConfig.wallpaper.mode === "banner" ? mainPanelTop : "5.5rem";
+const finalMainPanelTop = siteConfig.wallpaper.mode === "banner" ? mainPanelTop : "4.5rem";
 
 // 检查是否应该启用半透明效果
 const shouldEnableTransparency = siteConfig.wallpaper.mode === "banner" || siteConfig.wallpaper.mode === "fullscreen";
@@ -149,8 +147,8 @@ const gridCols = `
     ${
         tabletShowSidebar
             ? hasLeftSidebar || hasRightSidebar
-                ? "md:grid-cols-[17.5rem_1fr]"
-                : "md:grid-cols-1"
+                    ? "md:grid-cols-[17.5rem_1fr]"
+                    : "md:grid-cols-1"
             : "md:grid-cols-1"
     }
     ${
@@ -158,10 +156,10 @@ const gridCols = `
             ? hasLeftSidebar && hasRightSidebar
                 ? "lg:grid-cols-[17.5rem_1fr_17.5rem]"
                 : hasLeftSidebar
-                  ? "lg:grid-cols-[17.5rem_1fr]"
-                  : hasRightSidebar
-                    ? "lg:grid-cols-[1fr_17.5rem]"
-                    : "lg:grid-cols-1"
+                    ? "lg:grid-cols-[17.5rem_1fr]"
+                    : hasRightSidebar
+                        ? "lg:grid-cols-[1fr_17.5rem]"
+                        : "lg:grid-cols-1"
             : "lg:grid-cols-1"
     }
 `
@@ -206,7 +204,9 @@ const rightSidebarClass = `
     }
     ${
         tabletShowSidebar && hasRightSidebar
-            ? "md:block md:row-start-2 md:row-end-3 md:max-w-[17.5rem] md:col-start-1 md:col-end-2"
+            ? hasLeftSidebar
+                ? "md:block md:row-start-1 md:row-end-2 md:max-w-[17.5rem] md:col-start-3 md:col-end-4"
+                : "md:block md:row-start-1 md:row-end-2 md:max-w-[17.5rem] md:col-start-2 md:col-end-3"
             : "md:hidden"
     }
     ${
@@ -229,9 +229,11 @@ const mainContentClass = `
     col-span-1 row-start-1 row-end-2
     ${
         tabletShowSidebar
-            ? hasLeftSidebar || hasRightSidebar
-                ? "md:col-start-2 md:col-end-3 md:row-start-1 md:row-end-3"
-                : "md:col-span-1"
+            ? hasLeftSidebar && hasRightSidebar
+                ? "md:col-start-2 md:col-end-3 md:row-start-1 md:row-end-2"
+                : hasLeftSidebar
+                    ? "md:col-start-2 md:col-end-3 md:row-start-1 md:row-end-2"
+                    : "md:col-start-1 md:col-end-2 md:row-start-1 md:row-end-2"
             : "md:col-span-1"
     }
     ${
@@ -239,10 +241,10 @@ const mainContentClass = `
             ? hasLeftSidebar && hasRightSidebar
                 ? "lg:col-start-2 lg:col-end-3 lg:row-start-1 lg:row-end-2"
                 : hasLeftSidebar
-                  ? "lg:col-start-2 lg:col-end-3"
-                  : hasRightSidebar
-                    ? "lg:col-start-1 lg:col-end-2"
-                    : "lg:col-span-1"
+                    ? "lg:col-start-2 lg:col-end-3 lg:row-start-1 lg:row-end-2"
+                    : hasRightSidebar
+                        ? "lg:col-start-1 lg:col-end-2 lg:row-start-1 lg:row-end-2"
+                        : "lg:col-span-1"
             : "lg:col-span-1"
     }
 `
@@ -312,7 +314,7 @@ const mainContentClass = `
         >
             <div
                 id="main-grid"
-                class={`transition duration-700 w-full left-0 right-0 grid ${gridCols} grid-rows-[auto_1fr_auto] lg:grid-rows-[auto] mx-auto gap-4 px-0 md:px-4 ${!mobileShowSidebar ? "mobile-no-sidebar" : ""} ${(hasLeftSidebar || hasRightSidebar) ? "mobile-both-sidebar" : ""}`}
+                class={`transition duration-700 w-full left-0 right-0 grid ${gridCols} grid-rows-[auto] mx-auto gap-4 px-0 md:px-4 ${!mobileShowSidebar ? "mobile-no-sidebar" : ""} ${(hasLeftSidebar || hasRightSidebar) ? "mobile-both-sidebar" : ""}`}
             >
                 <!-- Banner image credit -->
                 {
@@ -427,7 +429,7 @@ const mainContentClass = `
                     >
                         <div
                             id="toc-inner-wrapper"
-                            class="fixed top-14 w-[var(--toc-width)] h-[calc(100vh_-_20rem)] overflow-y-scroll overflow-x-hidden hide-scrollbar"
+                            class="fixed top-[4.5rem] w-[var(--toc-width)] h-[calc(100vh_-_20rem)] overflow-y-scroll overflow-x-hidden hide-scrollbar"
                         >
                             <div
                                 id="toc"

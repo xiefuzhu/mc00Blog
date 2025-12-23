@@ -66,8 +66,6 @@
         transition: top 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s;
         /* 硬件加速优化 */
         will-change: top;
-        transform: translateZ(0);
-        -webkit-transform: translateZ(0);
     }
 
     .absolute.w-full.z-30.mobile-main-no-banner {

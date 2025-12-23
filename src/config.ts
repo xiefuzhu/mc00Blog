@@ -260,11 +260,11 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
         {
             // 组件类型
             type: "announcement", // 公告组件
-            // 是否启用该组件 (现在通过统一配置控制)
+            // 是否启用该组件
             enable: true,
             // 组件所属侧边栏
             side: "left",
-            // 组件显示顺序
+            // 组件显示顺序 (数字越小越靠前)
             order: 2,
             // 组件位置
             position: "top", // 固定在顶部
@@ -279,8 +279,8 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
             // 是否启用该组件
             enable: true,
             // 组件所属侧边栏
-            side: "right",
-            // 组件显示顺序
+            side: "left",
+            // 组件显示顺序 (数字越小越靠前)
             order: 3,
             // 组件位置
             position: "sticky", // 粘性定位，可滚动
@@ -300,15 +300,15 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
             // 是否启用该组件
             enable: true,
             // 组件所属侧边栏
-            side: "right",
-            // 组件显示顺序
+            side: "left",
+            // 组件显示顺序 (数字越小越靠前)
             order: 4,
             // 组件位置
             position: "sticky", // 粘性定位，可滚动
             // CSS 类名
             class: "onload-animation",
             // 动画延迟时间
-            animationDelay: 250,
+            animationDelay: 200,
             // 响应式配置
             responsive: {
                 // 折叠阈值
