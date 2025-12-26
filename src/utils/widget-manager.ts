@@ -80,37 +80,12 @@ export class WidgetManager {
     }
 
     /**
-     * 获取组件的动画延迟时间
-     * @param component 组件配置
-     * @param index 组件在列表中的索引
-     */
-    getAnimationDelay(component: WidgetComponentConfig, index: number): number {
-        if (component.animationDelay !== undefined) {
-            return component.animationDelay;
-        }
-
-        if (this.config.defaultAnimation.enable) {
-            return (
-                this.config.defaultAnimation.baseDelay +
-                index * this.config.defaultAnimation.increment
-            );
-        }
-
-        return 0;
-    }
-
-    /**
      * 获取组件的CSS类名
      * @param component 组件配置
      * @param index 组件在列表中的索引
      */
     getComponentClass(component: WidgetComponentConfig, index: number): string {
         const classes: string[] = [];
-
-        // 添加基础类名
-        if (component.class) {
-            classes.push(component.class);
-        }
 
         // 添加响应式隐藏类名
         if (component.responsive?.hidden) {
@@ -143,12 +118,6 @@ export class WidgetManager {
         // 添加自定义样式
         if (component.style) {
             styles.push(component.style);
-        }
-
-        // 添加动画延迟样式
-        const animationDelay = this.getAnimationDelay(component, index);
-        if (animationDelay > 0) {
-            styles.push(`animation-delay: ${animationDelay}ms`);
         }
 
         return styles.join("; ");
@@ -189,11 +158,23 @@ export class WidgetManager {
     }
 
     /**
-     * 检查指定侧边栏是否有启用的组件
+     * 检查指定侧边栏是否具有实际可显示的内容
      * @param side 侧边栏位置：'left' | 'right'
+     * @param headings 页面标题列表，用于判断特殊组件是否显示
      */
-    hasEnabledSidebarOnSide(side: "left" | "right"): boolean {
-        return this.getEnabledComponentsBySide(side).length > 0;
+    hasContentOnSide(side: "left" | "right", headings: any[] = []): boolean {
+        const components = this.getEnabledComponentsBySide(side);
+        if (components.length === 0) return false;
+
+        // 只要有一个组件能显示内容，侧边栏就不是空的
+        return components.some((component) => {
+            // TOC 组件只有在有标题时才显示
+            if (component.type === "toc") {
+                return headings && headings.length > 0;
+            }
+            // 其他组件暂认为始终有内容
+            return true;
+        });
     }
 
     /**
