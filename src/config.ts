@@ -310,6 +310,11 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
             order: 1,
             // 组件位置
             position: "sticky", // 粘性定位，可滚动
+            // 自定义属性
+            customProps: {
+                // 目录深度 (1-6，1 表示只显示 h1 标题，2 表示显示 h1 和 h2 标题，依此类推)
+                depth: 3,
+            },
         },
     ],
     // 响应式布局配置
@@ -394,13 +399,6 @@ export const postConfig: PostConfig = {
     expressiveCode: {
         // 主题
         theme: "github-dark", // 深色背景
-    },
-    // 目录配置
-    toc: {
-        // 启用目录功能
-        enable: true,
-        // 目录深度 (1-6，1 表示只显示 h1 标题，2 表示显示 h1 和 h2 标题，依此类推)
-        depth: 3,
     },
     // 许可证配置
     license: {

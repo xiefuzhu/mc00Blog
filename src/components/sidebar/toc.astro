@@ -7,14 +7,15 @@ import WidgetLayout from "./widgetLayout.astro";
 interface Props {
     class?: string;
     style?: string;
+    depth?: number;
 }
 
-const { class: className, style } = Astro.props;
+const { class: className, style, depth = 3 } = Astro.props;
 ---
 
 <WidgetLayout name={i18n(I18nKey.tableOfContents)} id="toc-wrapper" class={className} style={`${style || ""}; display: none;`}>
     <div class="toc-scroll-container">
-        <table-of-contents class="group" id="toc">
+        <table-of-contents class="group" id="toc" data-depth={depth}>
             <!-- TOC内容将由JavaScript动态生成 -->
         </table-of-contents>
     </div>
@@ -305,7 +306,7 @@ class TableOfContents extends HTMLElement {
         }
         // 重新生成TOC HTML
         const minDepth = Math.min(...headings.map(h => h.depth));
-        const maxLevel = 3; // postConfig.toc.depth
+        const maxLevel = parseInt(this.dataset.depth || '3'); 
         let heading1Count = 1;
         const tocHTML = headings
             .filter(heading => heading.depth < minDepth + maxLevel)
