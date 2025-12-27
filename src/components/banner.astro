@@ -38,7 +38,7 @@ const isPerformanceMode = config.banner?.waves?.performanceMode;
 <!-- Banner Wrapper -->
 <div
     id="banner-wrapper"
-    class={`absolute z-10 w-full transition duration-700 overflow-hidden ${mobileNonHomeBannerClass} ${className || ''}`}
+    class={`absolute z-10 w-full transition duration-600 overflow-hidden ${mobileNonHomeBannerClass} ${className || ''}`}
     style={`top: -${BANNER_HEIGHT_EXTEND}vh`}
 >
     {/* 检查是否为轮播模式 */}
@@ -62,12 +62,12 @@ const isPerformanceMode = config.banner?.waves?.performanceMode;
                         return null;
                     }
                     return (
-                        <li class={`carousel-item absolute inset-0 transition-all duration-500 ${index === 0 ? 'opacity-100 scale-100' : 'opacity-0 scale-110'}`}>
+                        <li class={`carousel-item absolute inset-0 transition-all duration-600 ${index === 0 ? 'opacity-100 scale-100' : 'opacity-0 scale-110'}`}>
                             <!-- Mobile: use mobile-specific images with same logic as desktop -->
                             {hasMobileImage && (
                                 <ImageWrapper
                                     alt={`Mobile banner image ${index + 1}`}
-                                    class:list={["block lg:hidden object-cover h-full w-full transition-transform duration-500 ease-out"]}
+                                    class:list={["block lg:hidden object-cover h-full w-full transition-transform duration-600 ease-out"]}
                                     src={Array.isArray(bannerImages.mobile) ? bannerImages.mobile[index] : (typeof bannerImages.mobile === 'string' ? bannerImages.mobile : '')}
                                     position={config.position}
                                 />
@@ -76,7 +76,7 @@ const isPerformanceMode = config.banner?.waves?.performanceMode;
                             {hasDesktopImage && (
                                 <ImageWrapper
                                     alt={`Desktop banner image ${index + 1}`}
-                                    class:list={["hidden lg:block object-cover h-full w-full transition-transform duration-500 ease-out"]}
+                                    class:list={["hidden lg:block object-cover h-full w-full transition-transform duration-600 ease-out"]}
                                     src={Array.isArray(bannerImages.desktop) ? bannerImages.desktop[index] : (typeof bannerImages.desktop === 'string' ? bannerImages.desktop : '')}
                                     position={config.position}
                                 />
@@ -92,7 +92,7 @@ const isPerformanceMode = config.banner?.waves?.performanceMode;
             <!-- Mobile: use mobile-specific image with same logic as desktop -->
             <ImageWrapper
                 alt="Mobile banner image of the blog"
-                class:list={["block lg:hidden object-cover h-full w-full transition duration-700 opacity-100"]}
+                class:list={["block lg:hidden object-cover h-full w-full transition duration-600 opacity-100"]}
                 src={(Array.isArray(bannerImages.mobile) ? bannerImages.mobile[0] : (typeof bannerImages.mobile === 'string' ? bannerImages.mobile : '')) || (Array.isArray(bannerImages.desktop) ? bannerImages.desktop[0] : (typeof bannerImages.desktop === 'string' ? bannerImages.desktop : '')) || ''}
                 position={config.position}
             />
@@ -100,7 +100,7 @@ const isPerformanceMode = config.banner?.waves?.performanceMode;
             <ImageWrapper
                 id="banner"
                 alt="Desktop banner image of the blog"
-                class:list={["hidden lg:block object-cover h-full transition duration-700 opacity-100"]}
+                class:list={["hidden lg:block object-cover h-full transition duration-600 opacity-100"]}
                 src={(Array.isArray(bannerImages.desktop) ? bannerImages.desktop[0] : (typeof bannerImages.desktop === 'string' ? bannerImages.desktop : '')) || (Array.isArray(bannerImages.mobile) ? bannerImages.mobile[0] : (typeof bannerImages.mobile === 'string' ? bannerImages.mobile : '')) || ''}
                 position={config.position}
             />

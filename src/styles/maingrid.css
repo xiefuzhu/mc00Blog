@@ -63,7 +63,7 @@
 @media (max-width: 1023px) {
     /* 手机端非首页时主内容区域从顶部开始 - 延迟出现的动画 */
     .absolute.w-full.z-30 {
-        transition: top 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s;
+        transition: top 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s;
         /* 硬件加速优化 */
         will-change: top;
     }
@@ -72,7 +72,7 @@
         top: 5.5rem !important;
         min-height: calc(100vh - 5.5rem) !important;
         /* 内容区域快速上移 */
-        transition: top 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s !important;
+        transition: top 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s !important;
     }
 }
 

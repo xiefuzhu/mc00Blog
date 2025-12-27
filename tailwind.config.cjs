@@ -10,6 +10,10 @@ module.exports = {
             fontFamily: {
                 sans: ["Roboto", "sans-serif", ...defaultTheme.fontFamily.sans],
             },
+            transitionDuration: {
+                '300': '300ms',
+                '600': '600ms',
+            }, // Custom transition duration
         },
     },
     plugins: [require("@tailwindcss/typography")],

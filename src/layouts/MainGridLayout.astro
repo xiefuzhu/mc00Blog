@@ -262,7 +262,7 @@ const mainContentClass = `
     <slot slot="head" name="head" />
     <div
         id="top-row"
-        class="z-50 pointer-events-none relative transition-all duration-700 max-w-[var(--page-width)] px-0 md:px-4 mx-auto"
+        class="z-50 pointer-events-none relative transition-all duration-600 max-w-[var(--page-width)] px-0 md:px-4 mx-auto"
         class:list={[""]}
     >
         <div
@@ -292,9 +292,9 @@ const mainContentClass = `
             class="relative max-w-[var(--page-width)] mx-auto pointer-events-auto"
         >
             <div
-                id="main-grid"
-                class={`transition duration-700 w-full left-0 right-0 grid ${gridCols} grid-rows-[auto] mx-auto gap-4 px-0 md:px-4 ${!mobileShowSidebar ? "mobile-no-sidebar" : ""} ${(hasLeftSidebar || hasRightSidebar) ? "mobile-both-sidebar" : ""}`}
-            >
+                    id="main-grid"
+                    class={`transition-all duration-600 w-full left-0 right-0 grid ${gridCols} grid-rows-[auto] mx-auto gap-4 px-0 md:px-4 ${!mobileShowSidebar ? "mobile-no-sidebar" : ""} ${(hasLeftSidebar || hasRightSidebar) ? "mobile-both-sidebar" : ""}`}
+                >
                 <!-- Banner image credit -->
                 {
                     hasBannerCredit && (
