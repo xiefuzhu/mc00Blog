@@ -1,20 +1,10 @@
 ---
 import { siteConfig } from "@/config";
+import { sortedMoments } from "@/data/diary";
 import { i18n } from "@i18n/translation";
 import I18nKey from "@i18n/i18nKey";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
 
-
-// 示例即刻短文数据
-const moments = [
-    {
-        id: 1,
-        content:
-            "The Darkest Hour Is Just Before The Dawn",
-        date: "2020-02-02T00:00:00Z",
-        images: [],
-    },
-];
 
 // 时间格式化函数
 function formatTime(dateString: string): string {
@@ -52,7 +42,7 @@ function formatTime(dateString: string): string {
                         </div>
                         <div class="header-stats">
                             <div class="stat-item text-center">
-                                <span class="stat-number text-lg md:text-xl lg:text-2xl font-bold text-[var(--primary)]">{moments.length}</span>
+                                <span class="stat-number text-lg md:text-xl lg:text-2xl font-bold text-[var(--primary)]">{sortedMoments.length}</span>
                                 <span class="stat-label text-xs md:text-sm lg:text-base text-75">{i18n(I18nKey.diaryCount)}</span>
                             </div>
                         </div>
@@ -61,7 +51,7 @@ function formatTime(dateString: string): string {
                 <!-- 短文列表 -->
                 <div class="moments-timeline">
                     <div class="timeline-list space-y-4">
-                    {moments.map(moment => (
+                    {sortedMoments.map(moment => (
                         <div class="moment-item card-base p-4 md:p-6 lg:p-8 hover:shadow-lg transition-all">
                                 <div class="moment-content">
                                     <p class="moment-text text-sm md:text-base lg:text-lg text-90 leading-relaxed mb-3 md:mb-4">{moment.content}</p>
@@ -160,6 +150,11 @@ function formatTime(dateString: string): string {
 
     .action-btn:hover {
         color: var(--primary);
+    }
+
+    /* 让内容中的换行符生效（\n -> 换行） */
+    .moment-text {
+        white-space: pre-line;
     }
 
     /* 响应式设计 */
