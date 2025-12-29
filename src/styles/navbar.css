@@ -10,16 +10,12 @@
     min-width: 0;
     flex-shrink: 1;
     transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s, gap 0.3s ease;
-    display: flex;
-    gap: 0.36rem;
 }
 
 /* 按钮区域基础布局样式（避免 flex 子项溢出） */
 .navbar-buttons {
     min-width: 0;
     flex-shrink: 0;
-    display: flex;
-    gap: 0.24rem;
 }
 
 /* 无banner时使用原始card-base样式，不添加额外的透明效果 */
@@ -255,7 +251,7 @@
 
 /* 桌面端&平板端布局 */
 @media (min-width: 768px) {
-    /* 使用 Grid 布局替代简单的 Flex，确保中间区域在有空间时居中，空间不足时被两侧挤压而不重叠 */
+    /* 使用 Grid 布局确保中间区域在有空间时居中 */
     #navbar > div {
         display: grid !important;
         grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
