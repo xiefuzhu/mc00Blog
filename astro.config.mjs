@@ -20,7 +20,8 @@ import remarkMath from "remark-math";
 import remarkSectionize from "remark-sectionize";
 
 import { siteConfig } from "./src/config.ts";
-import { pluginCustomCopyButton } from "./src/plugins/expressive-code/custom-copy-button.js";
+import { pluginCollapseButton } from "./src/plugins/expressive-code/collapse-button.ts";
+import { pluginCopyButton } from "./src/plugins/expressive-code/copy-button.js";
 import { pluginLanguageBadge } from "./src/plugins/expressive-code/language-badge.ts";
 import { AdmonitionComponent } from "./src/plugins/rehype-component-admonition.mjs";
 import { GithubCardComponent } from "./src/plugins/rehype-component-github-card.mjs";
@@ -83,8 +84,9 @@ export default defineConfig({
             plugins: [
                 pluginCollapsibleSections(),
                 pluginLineNumbers(),
+                pluginCollapseButton(),
+                pluginCopyButton(),
                 pluginLanguageBadge(),
-                pluginCustomCopyButton(),
             ],
             defaultProps: {
                 wrap: true,
@@ -105,12 +107,12 @@ export default defineConfig({
                 frames: {
                     editorBackground: "var(--codeblock-bg)",
                     terminalBackground: "var(--codeblock-bg)",
-                    terminalTitlebarBackground: "var(--codeblock-topbar-bg)",
-                    editorTabBarBackground: "var(--codeblock-topbar-bg)",
+                    terminalTitlebarBackground: "var(--codeblock-bg)",
+                    editorTabBarBackground: "var(--codeblock-bg)",
                     editorActiveTabBackground: "none",
                     editorActiveTabIndicatorBottomColor: "var(--primary)",
                     editorActiveTabIndicatorTopColor: "none",
-                    editorTabBarBorderBottomColor: "var(--codeblock-topbar-bg)",
+                    editorTabBarBorderBottomColor: "var(--codeblock-bg)",
                     terminalTitlebarBorderBottomColor: "none",
                     copyButtonBackground: "var(--btn-regular-bg)",
                     copyButtonBackgroundHover: "var(--btn-regular-bg-hover)",

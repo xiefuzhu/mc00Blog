@@ -120,7 +120,6 @@ const umamiScripts = umamiConfig.scripts || ""; // 获取Umami scripts配置
 
 <!DOCTYPE html>
 <html lang={siteLang} class="bg-[var(--page-bg)] text-[14px] md:text-[16px]"
-      data-overlayscrollbars-initialize
 >
     <head>
         <!-- 延迟加载优化 -->
@@ -322,7 +321,6 @@ const umamiScripts = umamiConfig.scripts || ""; // 获取Umami scripts配置
 </head>
 
     <body class=" min-h-screen " class:list={[{"lg:is-home": isHomePage, "enable-banner": enableBanner, "zen-maru-gothic-enabled": siteConfig.font.zenMaruGothic.enable, "hanalei-enabled": siteConfig.font.hanalei.enable}]}
-          data-overlayscrollbars-initialize
     >
         <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KRX3XGVH" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
@@ -419,7 +417,7 @@ import { BREAKPOINT_LG } from "@constants/breakpoints";
 import {pathsEqual, url} from "@utils/url-utils";
 import { siteConfig, particleConfig } from '@/config';
 import { initParticle } from "@/utils/particle-manager";
-import 'overlayscrollbars/overlayscrollbars.css';
+import { initMarkdownActions } from "@/utils/markdown";
 
 
 const bannerEnabled = !!document.getElementById('banner-wrapper')
@@ -441,47 +439,6 @@ function setClickOutsideToClose(panel: string, ignores: string[]) {
 setClickOutsideToClose("display-setting", ["display-setting", "display-settings-switch"])
 setClickOutsideToClose("nav-menu-panel", ["nav-menu-panel", "nav-menu-switch"])
 setClickOutsideToClose("search-panel", ["search-panel", "search-bar", "search-switch"])
-
-function initCustomScrollbar() {
-    // 完全禁用OverlayScrollbars的body初始化，避免导致页面重新加载
-    // 只处理katex元素的滚动条
-    const katexElements = document.querySelectorAll('.katex-display:not([data-scrollbar-initialized])') as NodeListOf<HTMLElement>;
-    katexElements.forEach(element => {
-        if (!element.parentNode) return;
-        const container = document.createElement('div');
-        container.className = 'katex-display-container';
-        element.parentNode.insertBefore(container, element);
-        container.appendChild(element);
-        // 使用简单的CSS滚动条而不是OverlayScrollbars
-        container.style.cssText = `
-            overflow-x: auto;
-            scrollbar-width: thin;
-            scrollbar-color: rgba(0,0,0,0.3) transparent;
-        `;
-        // 为webkit浏览器添加自定义滚动条样式
-        const style = document.createElement('style');
-        style.textContent = `
-            .katex-display-container::-webkit-scrollbar {
-                height: 6px;
-            }
-            .katex-display-container::-webkit-scrollbar-track {
-                background: transparent;
-            }
-            .katex-display-container::-webkit-scrollbar-thumb {
-                background: rgba(0,0,0,0.3);
-                border-radius: 3px;
-            }
-            .katex-display-container::-webkit-scrollbar-thumb:hover {
-                background: rgba(0,0,0,0.5);
-            }
-        `;
-        if (!document.head.querySelector('style[data-katex-scrollbar]')) {
-            style.setAttribute('data-katex-scrollbar', 'true');
-            document.head.appendChild(style);
-        }
-        element.setAttribute('data-scrollbar-initialized', 'true');
-    });
-}
 
 function initTranslate() {
     if (!siteConfig.translate?.enable || !window.translate || window.translateInitialized) return;
@@ -576,8 +533,6 @@ const setup = () => {
         }
     })
     window.swup.hooks.on('content:replace', () => {
-        // 只处理新的katex元素的滚动条，使用原生CSS滚动条
-        initCustomScrollbar();
         // 初始化 TOC 组件
         const tocElement = document.querySelector('table-of-contents');
         if (tocElement && typeof (tocElement as any).init === 'function') {
@@ -703,9 +658,8 @@ if (window?.swup?.hooks) {
     document.addEventListener('swup:enable', setup)
 }
 
-let backToTopBtn = document.getElementById('back-to-top-btn');
-let toc = document.getElementById('toc-wrapper');
 let navbar = document.getElementById('navbar-wrapper')
+let backToTopBtn = document.getElementById('back-to-top-btn');
 
 // 节流函数
 function throttle(func: (...args: any[]) => void, limit: number) {
@@ -755,6 +709,8 @@ window.onresize = () => {
     document.documentElement.style.setProperty('--banner-height-extend', `${offset}px`);
 }
 
+// 初始化 Markdown 相关操作以防止因 Swup 无刷新跳转的机制限制而导致操作失效
+initMarkdownActions();
 </script>
 
 <script>

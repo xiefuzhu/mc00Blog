@@ -77,6 +77,135 @@
         });
     }
 
+    // 缩放平移
+    function attachZoomControls(element, svgElement) {
+        if (element.__zoomAttached) return;
+        element.__zoomAttached = true;
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "mermaid-zoom-wrapper";
+
+        const svgParent = svgElement.parentNode;
+        wrapper.appendChild(svgElement);
+        svgParent.appendChild(wrapper);
+
+        let scale = 1;
+        let tx = 0;
+        let ty = 0;
+        const MIN_SCALE = 0.2;
+        const MAX_SCALE = 6;
+
+        function applyTransform() {
+            wrapper.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+        }
+        const controls = document.createElement("div");
+        controls.className = "mermaid-zoom-controls";
+        controls.innerHTML = `
+            <button class="btn-regular rounded-lg h-10 w-10 active:scale-90" data-action="zoom-in" title="Zoom in">+</button>
+            <button class="btn-regular rounded-lg h-10 w-10 active:scale-90" data-action="zoom-out" title="Zoom out">−</button>
+            <button class="btn-regular rounded-lg h-10 w-10 active:scale-90" data-action="reset" title="Reset">⤾</button>
+        `;
+
+        controls.addEventListener("click", (ev) => {
+            const action =
+                ev.target.getAttribute && ev.target.getAttribute("data-action");
+            if (!action) return;
+            switch (action) {
+                case "zoom-in":
+                    scale = Math.min(MAX_SCALE, +(scale * 1.2).toFixed(3));
+                    applyTransform();
+                    break;
+                case "zoom-out":
+                    scale = Math.max(MIN_SCALE, +(scale / 1.2).toFixed(3));
+                    applyTransform();
+                    break;
+                case "reset":
+                    scale = 1;
+                    tx = 0;
+                    ty = 0;
+                    applyTransform();
+                    break;
+            }
+        });
+
+        element.appendChild(controls);
+
+        // 鼠标滚轮缩放
+        element.addEventListener(
+            "wheel",
+            (ev) => {
+                ev.preventDefault();
+                const delta = -ev.deltaY;
+                const zoomFactor = delta > 0 ? 1.12 : 1 / 1.12;
+                const prevScale = scale;
+                scale = Math.min(
+                    MAX_SCALE,
+                    Math.max(MIN_SCALE, +(scale * zoomFactor).toFixed(3)),
+                );
+                const rect = wrapper.getBoundingClientRect();
+                const cx = ev.clientX - rect.left;
+                const cy = ev.clientY - rect.top;
+                const worldX = cx / prevScale - tx;
+                const worldY = cy / prevScale - ty;
+                tx = cx / scale - worldX;
+                ty = cy / scale - worldY;
+                applyTransform();
+            },
+            { passive: false },
+        );
+
+        let isPanning = false;
+        let startX = 0;
+        let startY = 0;
+        let startTx = 0;
+        let startTy = 0;
+
+        wrapper.style.touchAction = "none";
+
+        wrapper.addEventListener("pointerdown", (ev) => {
+            if (ev.button !== 0) return; // 仅左键
+            isPanning = true;
+            wrapper.setPointerCapture(ev.pointerId);
+            startX = ev.clientX;
+            startY = ev.clientY;
+            startTx = tx;
+            startTy = ty;
+        });
+        wrapper.addEventListener("pointermove", (ev) => {
+            if (!isPanning) return;
+            const dx = ev.clientX - startX;
+            const dy = ev.clientY - startY;
+            tx = startTx + dx / scale; // 根据当前缩放调整灵敏度
+            ty = startTy + dy / scale;
+            applyTransform();
+        });
+        wrapper.addEventListener("pointerup", (ev) => {
+            isPanning = false;
+            try {
+                wrapper.releasePointerCapture(ev.pointerId);
+            } catch (e) { }
+        });
+        wrapper.addEventListener("pointercancel", () => {
+            isPanning = false;
+        });
+
+        // 双击重置
+        wrapper.addEventListener("dblclick", () => {
+            scale = 1;
+            tx = 0;
+            ty = 0;
+            applyTransform();
+        });
+        applyTransform();
+        let resizeTimer = null;
+        window.addEventListener("resize", () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                applyTransform();
+            }, 200);
+        });
+    }
+
     // 设置其他事件监听器
     function setupEventListeners() {
         // 监听页面切换
@@ -187,39 +316,40 @@
                     while (attempts < maxAttempts) {
                         try {
                             const code = element.getAttribute("data-mermaid-code");
-
                             if (!code) {
                                 break;
                             }
-
-                            // 显示加载状态
-                            element.innerHTML =
-                                '<div class="mermaid-loading">Rendering diagram...</div>';
-
                             // 渲染图表
                             const { svg } = await window.mermaid.render(
                                 `mermaid-${Date.now()}-${index}-${attempts}`,
                                 code,
                             );
-
-                            element.innerHTML = svg;
-
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(
+                                svg,
+                                "image/svg+xml",
+                            );
+                            const svgElement = doc.documentElement;
+                            element.innerHTML = "";
+                            element.__zoomAttached = false;
+                            element.appendChild(svgElement);
                             // 添加响应式支持
-                            const svgElement = element.querySelector("svg");
-                            if (svgElement) {
-                                svgElement.setAttribute("width", "100%");
-                                svgElement.removeAttribute("height");
-                                svgElement.style.maxWidth = "100%";
-                                svgElement.style.height = "auto";
-
+                            const insertedSvg = element.querySelector("svg");
+                            if (insertedSvg) {
+                                insertedSvg.setAttribute("width", "100%");
+                                insertedSvg.removeAttribute("height");
+                                insertedSvg.style.maxWidth = "100%";
+                                insertedSvg.style.height = "auto";
+                                //Todo 需要根据实际情况
+                                insertedSvg.style.minHeight = "300px";
                                 // 强制应用样式
                                 if (isDark) {
                                     svgElement.style.filter = "brightness(0.9) contrast(1.1)";
                                 } else {
                                     svgElement.style.filter = "none";
                                 }
+                                attachZoomControls(element, insertedSvg);
                             }
-
                             // 渲染成功，跳出重试循环
                             break;
                         } catch (error) {
@@ -228,7 +358,6 @@
                                 `Mermaid rendering attempt ${attempts} failed for element ${index}:`,
                                 error,
                             );
-
                             if (attempts >= maxAttempts) {
                                 console.error(
                                     `Failed to render Mermaid diagram after ${maxAttempts} attempts:`,
