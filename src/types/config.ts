@@ -38,8 +38,6 @@ export type SiteConfig = {
         enable: boolean;
         // 翻译服务类型，如 'client.edge'
         service?: string;
-        // 默认语言
-        defaultLanguage?: string;
         // 显示语言选择下拉框
         showSelectTag?: boolean;
         // 自动识别用户语言
