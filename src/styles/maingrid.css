@@ -1,3 +1,10 @@
+/* 隐藏已收起横幅或非横幅模式时的图片版权描述 */
+.mobile-main-no-banner #banner-credit,
+.no-banner-layout #banner-credit {
+    display: none !important;
+}
+
+
 /* 手机端无侧边栏布局优化 */
 @media (max-width: 768px) {
     .mobile-no-sidebar {

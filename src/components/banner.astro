@@ -7,101 +7,95 @@ import ImageWrapper from "@/components/common/imageWrapper.astro";
 
 interface Props {
     config: SiteConfig["wallpaper"];
-    bannerImages: {
-        desktop: string | string[];
-        mobile: string | string[];
-    };
     isHomePage: boolean;
     mobileNonHomeBannerClass: string;
-    carouselConfig?: {
-        enable?: boolean;
-        interval?: number;
-    };
     class?: string;
 }
 
-const { config, bannerImages, isHomePage, mobileNonHomeBannerClass, carouselConfig, class: className } = Astro.props;
+const { config, isHomePage, mobileNonHomeBannerClass, class: className } = Astro.props;
 
-// 检查是否显示首页文本
+// 获取当前设备类型的图片源
+const getImageSources = () => {
+    const toArray = (src: any) => [src || []].flat();
+    const { src } = config;
+    const isObj = src && typeof src === "object" && !Array.isArray(src);
+    const desktop = toArray(isObj ? (src as any).desktop : src);
+    const mobile = toArray(isObj ? (src as any).mobile : src);
+    return {
+        desktop: desktop.length > 0 ? desktop : mobile,
+        mobile: mobile.length > 0 ? mobile : desktop,
+    };
+}
+
+const imageSources = getImageSources();
+
+// 轮播配置
+const carouselConfig = config.carousel;
+const isCarouselEnabled = imageSources.desktop.length > 1 || imageSources.mobile.length > 1;
+const carouselInterval = carouselConfig?.interval || 6
+
+// 样式配置
 const showHomeText = config.banner?.homeText?.enable && isHomePage;
-
-// 检查是否有 Banner 来源信息
-const hasBannerCredit = config.banner?.credit?.enable;
-const hasBannerLink = !!config.banner?.credit?.url;
-
-// 检查是否显示水波纹
 const showWaves = config.banner?.waves?.enable;
-// 检查是否启用性能模式（简化波浪效果）
 const isPerformanceMode = config.banner?.waves?.performanceMode;
 ---
 
 <!-- Banner Wrapper -->
 <div
     id="banner-wrapper"
-    class={`absolute z-10 w-full transition duration-600 overflow-hidden ${mobileNonHomeBannerClass} ${className || ''}`}
+    class:list={[
+        "absolute z-10 w-full transition duration-600 overflow-hidden",
+        mobileNonHomeBannerClass,
+        className
+    ]}
     style={`top: -${BANNER_HEIGHT_EXTEND}vh`}
 >
-    {/* 检查是否为轮播模式 */}
-    {(bannerImages.desktop && Array.isArray(bannerImages.desktop) && bannerImages.desktop.length > 1) ||
-     (bannerImages.mobile && Array.isArray(bannerImages.mobile) && bannerImages.mobile.length > 1) ? (
-        <!-- Carousel mode for multiple images -->
+    {isCarouselEnabled ? (
         <div id="banner-carousel" class="relative h-full w-full" data-carousel-config={JSON.stringify(carouselConfig)}>
             <ul class="carousel-list h-full w-full">
-                {Math.max(
-                    Array.isArray(bannerImages.desktop) ? bannerImages.desktop.length : 0,
-                    Array.isArray(bannerImages.mobile) ? bannerImages.mobile.length : 0
-                ) && Array.from({ length: Math.max(
-                    Array.isArray(bannerImages.desktop) ? bannerImages.desktop.length : 0,
-                    Array.isArray(bannerImages.mobile) ? bannerImages.mobile.length : 0
-                ) }).map((_, index) => {
-                    // 确保至少有一个平台有对应索引的图片
-                    const hasDesktopImage = Array.isArray(bannerImages.desktop) && bannerImages.desktop[index];
-                    const hasMobileImage = Array.isArray(bannerImages.mobile) && bannerImages.mobile[index];
-                    // 如果两个平台都没有对应索引的图片，跳过这个轮播项
-                    if (!hasDesktopImage && !hasMobileImage) {
-                        return null;
-                    }
-                    return (
-                        <li class={`carousel-item absolute inset-0 transition-all duration-600 ${index === 0 ? 'opacity-100 scale-100' : 'opacity-0 scale-110'}`}>
-                            <!-- Mobile: use mobile-specific images with same logic as desktop -->
-                            {hasMobileImage && (
-                                <ImageWrapper
-                                    alt={`Mobile banner image ${index + 1}`}
-                                    class:list={["block lg:hidden object-cover h-full w-full transition-transform duration-600 ease-out"]}
-                                    src={Array.isArray(bannerImages.mobile) ? bannerImages.mobile[index] : (typeof bannerImages.mobile === 'string' ? bannerImages.mobile : '')}
-                                    position={config.position}
-                                />
-                            )}
-                            <!-- Desktop: use desktop-specific images -->
-                            {hasDesktopImage && (
-                                <ImageWrapper
-                                    alt={`Desktop banner image ${index + 1}`}
-                                    class:list={["hidden lg:block object-cover h-full w-full transition-transform duration-600 ease-out"]}
-                                    src={Array.isArray(bannerImages.desktop) ? bannerImages.desktop[index] : (typeof bannerImages.desktop === 'string' ? bannerImages.desktop : '')}
-                                    position={config.position}
-                                />
-                            )}
-                        </li>
-                    );
-                }).filter(Boolean)}
+                {imageSources.desktop.map((src, index) => (
+                    <li class:list={[
+                        "carousel-item desktop-item hidden lg:block absolute inset-0 transition-opacity duration-1200",
+                        index === 0 ? 'opacity-100' : 'opacity-0',
+                        carouselConfig?.kenBurns !== false ? 'ken-burns-enabled' : ''
+                    ]}>
+                        <ImageWrapper
+                            alt={`Desktop banner ${index + 1}`}
+                            class:list={["object-cover h-full w-full"]}
+                            src={src}
+                            position={config.position}
+                        />
+                    </li>
+                ))}
+                {imageSources.mobile.map((src, index) => (
+                    <li class:list={[
+                        "carousel-item mobile-item block lg:hidden absolute inset-0 transition-opacity duration-1200",
+                        index === 0 ? 'opacity-100' : 'opacity-0',
+                        carouselConfig?.kenBurns !== false ? 'ken-burns-enabled' : ''
+                    ]}>
+                        <ImageWrapper
+                            alt={`Mobile banner ${index + 1}`}
+                            class:list={["object-cover h-full w-full"]}
+                            src={src}
+                            position={config.position}
+                        />
+                    </li>
+                ))}
             </ul>
         </div>
     ) : (
-        <!-- Single image mode -->
         <div class="relative h-full w-full">
-            <!-- Mobile: use mobile-specific image with same logic as desktop -->
             <ImageWrapper
-                alt="Mobile banner image of the blog"
+                alt="Mobile banner"
                 class:list={["block lg:hidden object-cover h-full w-full transition duration-600 opacity-100"]}
-                src={(Array.isArray(bannerImages.mobile) ? bannerImages.mobile[0] : (typeof bannerImages.mobile === 'string' ? bannerImages.mobile : '')) || (Array.isArray(bannerImages.desktop) ? bannerImages.desktop[0] : (typeof bannerImages.desktop === 'string' ? bannerImages.desktop : '')) || ''}
+                src={imageSources.mobile[0] || imageSources.desktop[0] || ''}
                 position={config.position}
             />
-            <!-- Desktop: use desktop-specific image -->
             <ImageWrapper
                 id="banner"
-                alt="Desktop banner image of the blog"
-                class:list={["hidden lg:block object-cover h-full transition duration-600 opacity-100"]}
-                src={(Array.isArray(bannerImages.desktop) ? bannerImages.desktop[0] : (typeof bannerImages.desktop === 'string' ? bannerImages.desktop : '')) || (Array.isArray(bannerImages.mobile) ? bannerImages.mobile[0] : (typeof bannerImages.mobile === 'string' ? bannerImages.mobile : '')) || ''}
+                alt="Desktop banner"
+                class:list={["hidden lg:block object-cover h-full w-full transition duration-600 opacity-100"]}
+                src={imageSources.desktop[0] || imageSources.mobile[0] || ''}
                 position={config.position}
             />
         </div>
@@ -206,183 +200,162 @@ const isPerformanceMode = config.banner?.waves?.performanceMode;
     )}
 </div>
 
-<script>
-    import { BREAKPOINT_LG } from "@constants/breakpoints";
-
-
+<script define:vars={{ carouselInterval }}>
     // 轮播图初始化函数
-    function initCarousel() {
+    window.initBannerCarousel = function() {
         const carousel = document.getElementById('banner-carousel');
-        const carouselConfigData = carousel?.getAttribute('data-carousel-config');
-        const carouselConfig = carouselConfigData ? JSON.parse(carouselConfigData) : {};
+        if (!carousel) return;
 
-        const carouselItems = document.querySelectorAll('.carousel-item');
-
-        // 根据屏幕尺寸过滤有效的轮播项
-        const isMobile = window.innerWidth < BREAKPOINT_LG; // lg breakpoint
-        const validItems = Array.from(carouselItems).filter(item => {
-            if (isMobile) {
-                // 移动端：只显示有mobile图片的项目
-                return item.querySelector('.block.lg\\:hidden');
-            } else {
-                // 桌面端：只显示有desktop图片的项目
-                return item.querySelector('.hidden.lg\\:block');
-            }
-        });
-
-        // Check if carousel is disabled but we have multiple images - show random image
-        if (validItems.length > 1 && !carouselConfig?.enable) {
-            // Hide all images first
-            carouselItems.forEach((item, index) => {
-                item.classList.add('opacity-0', 'scale-110');
-                item.classList.remove('opacity-100', 'scale-100');
-            });
-
-            // Show random valid image
-            const randomIndex = Math.floor(Math.random() * validItems.length);
-            const randomItem = validItems[randomIndex];
-
-            randomItem.classList.add('opacity-100', 'scale-100');
-            randomItem.classList.remove('opacity-0', 'scale-110');
+        // 检查是否是同一个 DOM 元素且定时器正在运行，避免重复初始化导致动画重置
+        if (window.bannerCarouselTimer && window.currentBannerCarousel === carousel) {
             return;
         }
+        window.currentBannerCarousel = carousel;
 
-        if (validItems.length > 1 && carouselConfig?.enable) {
-            let currentIndex = 0;
-            const interval = carouselConfig?.interval || 6;
-            let carouselInterval;
-            let isPaused = false;
-            // 移动端触摸手势支持
-            let startX = 0;
-            let startY = 0;
-            let isSwiping = false;
-            const carousel = document.getElementById('banner-carousel');
-            // 切换图片的函数 - 基于有效项目
-            function switchToSlide(index) {
-                // 隐藏当前图片
-                const currentItem = validItems[currentIndex];
-                currentItem.classList.remove('opacity-100', 'scale-100');
-                currentItem.classList.add('opacity-0', 'scale-110');
-                // 更新索引
-                currentIndex = index;
-                // 显示新图片
-                const nextItem = validItems[currentIndex];
-                nextItem.classList.add('opacity-100', 'scale-100');
-                nextItem.classList.remove('opacity-0', 'scale-110');
+        // 初始化全局状态
+        if (!window.bannerCarouselState) {
+            window.bannerCarouselState = {
+                currentIndex: 0,
+                lastSwitchTime: Date.now()
+            };
+        }
+
+        // 清理旧的定时器，防止重复初始化导致的闪烁
+        if (window.bannerCarouselTimer) {
+            clearTimeout(window.bannerCarouselTimer);
+            window.bannerCarouselTimer = null;
+        }
+
+        const carouselConfigData = carousel.getAttribute('data-carousel-config');
+        const carouselConfig = carouselConfigData ? JSON.parse(carouselConfigData) : {};
+
+        const desktopItems = carousel.querySelectorAll('.carousel-item.desktop-item');
+        const mobileItems = carousel.querySelectorAll('.carousel-item.mobile-item');
+
+        function setupCarousel(items, isEnabled) {
+            if (items.length === 0) return null;
+
+            // 如果禁用了轮播但有多张图，则随机显示一张
+            if (items.length > 1 && !isEnabled) {
+                items.forEach(item => {
+                    item.classList.add('opacity-0');
+                    item.classList.remove('opacity-100');
+                });
+                const randomIndex = Math.floor(Math.random() * items.length);
+                const randomItem = items[randomIndex];
+                randomItem.classList.add('opacity-100');
+                randomItem.classList.remove('opacity-0');
+                return null;
             }
-            // 初始化：隐藏所有图片，只显示第一张有效图片
-            carouselItems.forEach((item) => {
-                item.classList.add('opacity-0', 'scale-110');
-                item.classList.remove('opacity-100', 'scale-100');
-            });
-            // 显示第一张有效图片
-            if (validItems.length > 0) {
-                validItems[0].classList.add('opacity-100', 'scale-100');
-                validItems[0].classList.remove('opacity-0', 'scale-110');
-            }
-            // 移动端触摸事件
-            if (carousel && 'ontouchstart' in window) {
-                carousel.addEventListener('touchstart', (e) => {
-                    startX = e.touches[0].clientX;
-                    startY = e.touches[0].clientY;
-                    isSwiping = false;
-                    isPaused = true;
-                    clearInterval(carouselInterval);
-                }, { passive: true });
-                carousel.addEventListener('touchmove', (e) => {
-                    if (!startX || !startY) return;
-                    const diffX = Math.abs(e.touches[0].clientX - startX);
-                    const diffY = Math.abs(e.touches[0].clientY - startY);
-                    // 判断是否为水平滑动
-                    if (diffX > diffY && diffX > 30) {
-                        isSwiping = true;
-                        e.preventDefault();
+
+            if (items.length > 1 && isEnabled) {
+                // 使用全局状态中的索引
+                let currentIndex = window.bannerCarouselState.currentIndex;
+                // 确保索引有效
+                if (currentIndex >= items.length) {
+                    currentIndex = 0;
+                    window.bannerCarouselState.currentIndex = 0;
+                }
+                
+                function switchToSlide(index) {
+                    const currentItem = items[currentIndex];
+                    currentItem.classList.remove('opacity-100');
+                    currentItem.classList.add('opacity-0');
+                    currentIndex = index;
+                    // 更新全局状态
+                    window.bannerCarouselState.currentIndex = index;
+                    window.bannerCarouselState.lastSwitchTime = Date.now();
+
+                    const nextItem = items[currentIndex];
+                    nextItem.classList.add('opacity-100');
+                    nextItem.classList.remove('opacity-0');
+                    // 通过切换 is-animating 类来重置下一张图片的动画
+                    if (nextItem.classList.contains('ken-burns-enabled')) {
+                        nextItem.classList.remove('is-animating');
+                        nextItem.offsetHeight; // 强制重绘
+                        nextItem.classList.add('is-animating');
                     }
-                }, { passive: false });
-                carousel.addEventListener('touchend', (e) => {
-                    if (!startX || !startY || !isSwiping) {
-                        isPaused = false;
-                        startCarousel();
-                        return;
-                    }
-                    const endX = e.changedTouches[0].clientX;
-                    const diffX = startX - endX;
-                    // 滑动距离超过50px才切换
-                    if (Math.abs(diffX) > 50) {
-                            if (diffX > 0) {
-                            // 向左滑动，显示下一张
-                            const nextIndex = (currentIndex + 1) % validItems.length;
-                            switchToSlide(nextIndex);
-                        } else {
-                            // 向右滑动，显示上一张
-                            const prevIndex = (currentIndex - 1 + validItems.length) % validItems.length;
-                            switchToSlide(prevIndex);
+                }
+
+                // 初始化：根据当前索引显示图片
+                items.forEach((item, index) => {
+                    if (index === currentIndex) {
+                        item.classList.add('opacity-100');
+                        item.classList.remove('opacity-0');
+                        // 初始图片开启动画
+                        if (item.classList.contains('ken-burns-enabled')) {
+                            item.classList.add('is-animating');
                         }
+                    } else {
+                        item.classList.add('opacity-0');
+                        item.classList.remove('opacity-100');
+                        item.classList.remove('is-animating');
                     }
-                    startX = 0;
-                startY = 0;
-                    isSwiping = false;
-                    isPaused = false;
-                    // 重新开始自动轮播
-                    startCarousel();
-                }, { passive: true });
+                });
+
+                return {
+                    next: () => switchToSlide((currentIndex + 1) % items.length),
+                    prev: () => switchToSlide((currentIndex - 1 + items.length) % items.length),
+                };
             }
-            // 开始轮播的函数
+            return null;
+        }
+
+        const desktopCtrl = setupCarousel(desktopItems, carouselConfig?.enable);
+        const mobileCtrl = setupCarousel(mobileItems, carouselConfig?.enable);
+
+        if (carouselConfig?.enable && (desktopCtrl || mobileCtrl)) {
             function startCarousel() {
-                clearInterval(carouselInterval);
-                carouselInterval = setInterval(() => {
-                    if (!isPaused) {
-                        const nextIndex = (currentIndex + 1) % validItems.length;
-                        switchToSlide(nextIndex);
-                    }
-                }, interval * 1000);
+                if (window.bannerCarouselTimer) clearTimeout(window.bannerCarouselTimer);
+                
+                const runLoop = () => {
+                    const now = Date.now();
+                    const intervalMs = carouselInterval * 1000;
+                    const elapsed = now - window.bannerCarouselState.lastSwitchTime;
+                    let delay = intervalMs - elapsed;
+                    
+                    if (delay < 0) delay = 0;
+
+                    window.bannerCarouselTimer = setTimeout(() => {
+                        desktopCtrl?.next();
+                        mobileCtrl?.next();
+                        runLoop();
+                    }, delay);
+                };
+
+                runLoop();
             }
-            // 鼠标悬停暂停（桌面端）
-            if (carousel) {
-                carousel.addEventListener('mouseenter', () => {
-                    isPaused = true;
-                    clearInterval(carouselInterval);
-                });
-                carousel.addEventListener('mouseleave', () => {
-                    isPaused = false;
-                    startCarousel();
-                });
-            }
-            // 开始自动轮播
+
             startCarousel();
         }
     }
 
     // Banner显示控制函数
     function showBanner() {
-        // 使用requestAnimationFrame优化DOM操作
         requestAnimationFrame(() => {
-            // Handle single image banner (desktop)
             const banner = document.getElementById('banner');
             if (banner) {
-                banner.classList.remove('opacity-0', 'scale-105');
+                banner.classList.remove('opacity-0');
             }
-            // Handle mobile single image banner - 使用与电脑端相同的逻辑
-            const mobileBanner = document.querySelector('.block.lg\\:hidden[alt="Mobile banner image of the blog"]');
+            const mobileBanner = document.querySelector('.block.lg\\:hidden[alt="Mobile banner"]');
             if (mobileBanner && !document.getElementById('banner-carousel')) {
-                // 移动端使用与电脑端相同的初始化逻辑
-                mobileBanner.classList.remove('opacity-0', 'scale-105');
+                mobileBanner.classList.remove('opacity-0');
                 mobileBanner.classList.add('opacity-100');
             }
-            // Handle carousel banner - 立即初始化，移除延迟
             const carousel = document.getElementById('banner-carousel');
             if (carousel) {
-                // 立即初始化轮播，移除延迟以改善流畅性
-                initCarousel();
+                window.initBannerCarousel();
             }
         });
     }
 
-    // 页面加载完成后初始化banner和轮播图
+    // 监听 Astro 页面切换事件
+    document.addEventListener('astro:after-swap', () => {
+        showBanner();
+    });
+
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            showBanner();
-        });
+        document.addEventListener('DOMContentLoaded', showBanner);
     } else {
         showBanner();
     }

@@ -29,49 +29,6 @@ interface Props {
     headings?: MarkdownHeading[];
 }
 
-// 获取壁纸图片的辅助函数
-const getBannerImages = async (): Promise<{
-    desktop: string | string[];
-    mobile: string | string[];
-}> => {
-    let bannerSrc = siteConfig.wallpaper.src;
-
-    // 如果启用了图片API，获取API图片
-    if (siteConfig.wallpaper.imageApi?.enable && siteConfig.wallpaper.imageApi?.url) {
-        try {
-            const response = await fetch(siteConfig.wallpaper.imageApi.url);
-            const text = await response.text();
-            const apiImages = text.split("\n").filter((line) => line.trim());
-
-            if (apiImages.length > 0) {
-                bannerSrc = apiImages;
-            }
-        } catch (error) {
-            console.warn("Failed to fetch images from API:", error);
-        }
-    }
-
-    // 检查是否为对象类型（包含desktop和mobile属性）
-    if (typeof bannerSrc === "object" && bannerSrc !== null && !Array.isArray(bannerSrc) && ("desktop" in bannerSrc || "mobile" in bannerSrc)) {
-        const srcObj = bannerSrc as {
-            desktop?: string | string[];
-            mobile?: string | string[];
-        };
-        // 确保返回正确的类型
-        return {
-            desktop: srcObj.desktop || srcObj.mobile || "",
-            mobile: srcObj.mobile || srcObj.desktop || "",
-        };
-    }
-    // 如果是字符串或字符串数组，同时用于桌面端和移动端
-    return {
-        desktop: bannerSrc as string | string[],
-        mobile: bannerSrc as string | string[],
-    };
-};
-
-const bannerImages = await getBannerImages();
-
 const {
     title,
     banner,
@@ -276,10 +233,8 @@ const mainContentClass = `
     <!-- Banner - 总是渲染但通过CSS控制可见性 -->
     <Banner
         config={siteConfig.wallpaper}
-        bannerImages={bannerImages}
         isHomePage={isHomePage}
         mobileNonHomeBannerClass={mobileNonHomeBannerClass}
-        carouselConfig={siteConfig.wallpaper.carousel}
         class={siteConfig.wallpaper.mode === "banner" ? "" : "hidden"}
     />
 

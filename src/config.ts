@@ -80,10 +80,13 @@ export const siteConfig: SiteConfig = {
             // 桌面壁纸图片 (支持单张图片或图片数组，当数组长度 > 1 时自动启用轮播)
             desktop: [
                 "/assets/desktop-banner/desktopBanner_1.webp",
+                "/assets/desktop-banner/desktopBanner_2.webp",
+                "/assets/desktop-banner/desktopBanner_3.webp",
             ],
             // 移动壁纸图片 (支持单张图片或图片数组，当数组长度 > 1 时自动启用轮播)
             mobile: [
                 "/assets/mobile-banner/mobileBanner_1.webp",
+                "/assets/mobile-banner/mobileBanner_2.webp",
             ],
         },
         // 壁纸位置 ('top' | 'center' | 'bottom')
@@ -93,14 +96,9 @@ export const siteConfig: SiteConfig = {
             // 为多张图片启用轮播，否则随机显示一张图片
             enable: true,
             // 轮播间隔时间 (秒)
-            interval: 3.3,
-        },
-        // PicFlow API 配置 (fullscreen 和 banner 模式共享)
-        imageApi: {
-            // 启用图片 API
-            enable: false,
-            // API 地址，返回每行一个图片链接的文本
-            url: "http://domain.com/api_v2.php?format=text&count=4",
+            interval: 3.6,
+            // 启用 Ken Burns 效果
+            kenBurns: true,
         },
         // Banner 模式专属配置
         banner: {

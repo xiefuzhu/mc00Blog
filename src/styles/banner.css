@@ -8,18 +8,6 @@
  * 基础样式
  */
 
-/* Banner 文本样式 */
-.banner-title {
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-    animation: fadeInUp 1s ease-out;
-    font-weight: bold;
-}
-
-.banner-subtitle {
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
-    animation: fadeInUp 1s ease-out 0.3s both;
-}
-
 /* 淡入上移动画 */
 @keyframes fadeInUp {
     from {
@@ -32,11 +20,33 @@
     }
 }
 
+/* Banner 文本样式 */
+.banner-title {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    animation: fadeInUp 1s ease-out;
+    font-weight: bold;
+}
+
+.banner-subtitle {
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
+    animation: fadeInUp 1s ease-out 0.3s both;
+}
+
 /**
- * 
+ *
  */
 
-/* 桌面端优化 */
+ /*  Ken Burns 效果 */
+@keyframes ken-burns {
+    from {
+        transform: scale(1.0) translateZ(0);
+    }
+    to {
+        transform: scale(1.2) translateZ(0);
+    }
+}
+
+/* 桌面端 */
 @media (min-width: 1024px) {
     .banner-text-overlay {
         align-items: center !important; /* 垂直居中 */
@@ -44,45 +54,47 @@
         padding: 2rem !important;
         text-align: center !important; /* 文字居中对齐 */
     }
-    
     .banner-text-overlay > div {
         margin-bottom: 0 !important;
         width: 75% !important;
         text-align: center !important; /* 确保文字居中 */
     }
-    
-    /* 桌面端图片容器优化 */
-    .carousel-item img,
-    #banner img {
-        object-position: center center !important; /* 确保图片居中显示 */
-        transition: transform 1s ease-out !important; /* 与移动端保持一致的过渡时间 */
-    }
-    
-    /* 桌面端轮播图片过渡优化 - 与移动端保持一致 */
-    .carousel-item {
-        transition: all 0.5s ease-out !important; /* 优化过渡时间，避免与轮播间隔冲突 */
-        transform-origin: center center !important; /* 确保缩放从中心开始 */
-    }
-    
-    /* 桌面端当前图片缩放效果 */
-    .carousel-item.opacity-100.scale-100 {
-        transform: scale(1) !important; /* 当前图片正常大小 */
-        opacity: 1 !important;
-    }
-    
-    /* 桌面端非当前图片缩放效果 */
-    .carousel-item.opacity-0.scale-110 {
-        transform: scale(1.15) !important; /* 非当前图片明显放大 */
-        opacity: 0 !important;
-    }
-    
-    /* 确保轮播容器有正确的overflow设置 */
+
+    /* 确保轮播容器有正确的 overflow 设置 */
     #banner-carousel {
         overflow: hidden !important;
     }
+    /* 图片容器 */
+    .carousel-item img,
+    #banner img {
+        object-position: center center !important; /* 确保图片居中显示 */
+        transition: transform 1.2s ease-out !important;
+    }
+    /* 轮播图片过渡 */
+    .carousel-item {
+        transition: opacity 1.2s ease-in-out !important;
+    }
+    .carousel-item.ken-burns-enabled {
+        transform-origin: center center !important; /* 确保缩放从中心开始 */
+        transform: scale(1.0) translateZ(0);
+    }
+    .carousel-item.ken-burns-enabled.is-animating {
+        animation: ken-burns 12s linear forwards !important;
+    }
+    .carousel-item:not(.ken-burns-enabled) {
+        transform: scale(1.0) translateZ(0); /* 取消默认缩放 */
+    }
+    /* 当前图片缩放效果 */
+    .carousel-item.opacity-100 {
+        opacity: 1 !important;
+    }
+    /* 非当前图片缩放效果 */
+    .carousel-item.opacity-0 {
+        opacity: 0 !important;
+    }
 }
 
-/* 移动端专用淡入动画 - 与电脑端保持一致 */
+/* 移动端专用淡入动画 */
 @keyframes mobile-fade-in {
     0% {
         opacity: 0;
@@ -90,61 +102,23 @@
     }
     100% {
         opacity: 1;
-        transform: scale(1); /* 与电脑端当前图片缩放保持一致 */
+        transform: scale(1.1);
     }
 }
 
-/* 移动端图片优化 */
-@media (max-width: 1023px) {
-    /* 移动端图片容器优化 */
-    .carousel-item img,
-    #banner img {
-        object-position: center center !important; /* 确保图片居中显示 */
-        transition: transform 0.5s ease-out !important; /* 优化过渡时间，避免与轮播间隔冲突 */
-    }
-    
-    /* 轮播图片过渡优化 - 与电脑端保持一致 */
-    .carousel-item {
-        transition: all 1s ease-out !important; /* 包含opacity和transform的过渡 */
-        transform-origin: center center !important; /* 确保缩放从中心开始 */
-    }
-    
-    /* 移动端当前图片缩放效果 */
-    .carousel-item.opacity-100.scale-100 {
-        transform: scale(1) !important; /* 当前图片正常大小 */
-        opacity: 1 !important;
-    }
-    
-    /* 移动端非当前图片缩放效果 */
-    .carousel-item.opacity-0.scale-110 {
-        transform: scale(1.15) !important; /* 非当前图片明显放大 */
-        opacity: 0 !important;
-    }
-    
-    /* 确保轮播容器有正确的overflow设置 */
-    #banner-carousel {
-        overflow: hidden !important;
-    }
-    
-    /* 移动端banner加载动画优化 */
-    .onload-animation-fade-in {
-        animation: mobile-fade-in 0.8s ease-out forwards !important;
-    }
-}
-
-/* 移动端非首页隐藏banner */
+/* 移动端非首页隐藏 banner */
 @media (max-width: 1023px) {
     #banner-wrapper {
         transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s ease-out;
         transform-origin: top center;
-        /* 硬件加速优化 */
+        /* 硬件加速 */
         will-change: transform, opacity;
         backface-visibility: hidden;
         -webkit-backface-visibility: hidden;
         transform: translateZ(0);
         -webkit-transform: translateZ(0);
     }
-    
+
     .mobile-hide-banner {
         transform: translateY(-100%) translateZ(0) !important;
         opacity: 0 !important;
@@ -154,59 +128,101 @@
     }
 }
 
-/* 移动端banner性能优化 */
+/* 移动端图片 */
+@media (max-width: 1023px) {
+    /* banner 加载动画 */
+    .onload-animation-fade-in {
+        animation: mobile-fade-in 0.8s ease-out forwards !important;
+    }
+
+    /* 确保轮播容器有正确的 overflow 设置 */
+    #banner-carousel {
+        overflow: hidden !important;
+    }
+    /* 图片容器 */
+    .carousel-item img,
+    #banner img {
+        object-position: center center !important; /* 确保图片居中显示 */
+        transition: transform 1.2s ease-out !important;
+    }
+    /* 轮播图片过渡 */
+    .carousel-item {
+        transition: opacity 1.2s ease-in-out !important;
+    }
+    .carousel-item.ken-burns-enabled {
+        transform-origin: center center !important; /* 确保缩放从中心开始 */
+        transform: scale(1.0);
+    }
+    .carousel-item.ken-burns-enabled.is-animating {
+        animation: ken-burns 12s linear forwards !important;
+    }
+    .carousel-item:not(.ken-burns-enabled) {
+        transform: scale(1.0); /* 取消默认缩放 */
+    }
+    /* 当前图片缩放效果 */
+    .carousel-item.opacity-100 {
+        opacity: 1 !important;
+    }
+    /* 非当前图片缩放效果 */
+    .carousel-item.opacity-0 {
+        opacity: 0 !important;
+    }
+}
+
+/* 移动端 banner 性能 */
 @media (max-width: 1023px) {
     .banner-container {
         /* 启用硬件加速 */
         transform: translateZ(0);
         -webkit-transform: translateZ(0);
         will-change: transform, opacity;
-        
-        /* 优化渲染性能 */
+        /* 渲染性能 */
         contain: layout style paint;
-        
         /* 减少重绘 */
         backface-visibility: hidden;
         -webkit-backface-visibility: hidden;
     }
-
-    .carousel-item {
-        /* 硬件加速 */
-        transform: translateZ(0);
-        -webkit-transform: translateZ(0);
-        will-change: transform, opacity;
-        
-        /* 优化触摸响应 */
-        touch-action: pan-y;
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        user-select: none;
-    }
-
-    .banner-text-overlay {
-        /* 文字渲染优化 */
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        text-rendering: optimizeLegibility;
-        
-        /* 减少重排 */
-        contain: layout style;
-    }
-
-    /* 移动端图片优化 */
+    /* 移动端图片 */
     .banner-container img {
-        /* 图片渲染优化 */
+        /* 图片渲染 */
         image-rendering: -webkit-optimize-contrast;
         image-rendering: crisp-edges;
-        
         /* 防止图片拖拽 */
         -webkit-user-drag: none;
         -khtml-user-drag: none;
         -moz-user-drag: none;
         -o-user-drag: none;
-        
-        /* 触摸优化 */
+        /* 触摸 */
         pointer-events: none;
+    }
+
+    .banner-text-overlay {
+        /* 文字渲染 */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+        /* 减少重排 */
+        contain: layout style;
+    }
+
+    .carousel-item.ken-burns-enabled {
+        /* 硬件加速与缩放维持 */
+        transform: scale(1.0) translateZ(0);
+        will-change: transform, opacity;
+        /* 触摸响应 */
+        touch-action: pan-y;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+    .carousel-item:not(.ken-burns-enabled) {
+        transform: scale(1.0) translateZ(0);
+        will-change: transform, opacity;
+        /* 触摸响应 */
+        touch-action: pan-y;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
     }
 
     /* 移动端轮播指示器 */
@@ -228,14 +244,13 @@
         transition: all 0.3s ease;
         cursor: pointer;
     }
-
     .carousel-indicator.active {
         background: rgba(255, 255, 255, 0.9);
         transform: scale(1.2);
     }
 }
 
-/* 移动端暗色模式优化 */
+/* 移动端暗色模式 */
 @media (max-width: 1023px) and (prefers-color-scheme: dark) {
     .banner-text-overlay {
         background: linear-gradient(
@@ -255,13 +270,13 @@
     }
 }
 
-/* 移动端横屏优化 */
+/* 移动端横屏 */
 @media (max-width: 1023px) and (orientation: landscape) {
     #banner-wrapper:not(.mobile-hide-banner) {
         top: 0 !important; /* 横屏模式从顶部开始，避免被导航栏覆盖 */
         height: 60vh !important;
     }
-    
+
     .banner-container {
         height: 60vh;
         min-height: 300px;
@@ -285,39 +300,38 @@
     }
 }
 
-/* 平板优化 */
+/* 平板 */
 @media (min-width: 769px) and (max-width: 1023px) {
-    /* Banner wrapper 高度优化 */
+    /* Banner wrapper 高度 */
     #banner-wrapper {
         height: 70vh !important;
         min-height: 500px;
         top: 0 !important; /* 移动端从顶部开始，避免被导航栏覆盖 */
     }
-    
-    /* 横幅文本覆盖层优化 */
+
+    /* 横幅文本覆盖层 */
     .banner-text-overlay {
         align-items: center !important; /* 垂直居中 */
         justify-content: center !important; /* 水平居中 */
         padding: 2rem !important;
         text-align: center !important; /* 文字居中对齐 */
     }
-    
-    /* 文本容器优化 */
+    /* 文本容器 */
     .banner-text-overlay > div {
         margin-bottom: 0 !important; /* 移除底部边距，保持居中 */
         width: 85% !important;
         text-align: center !important; /* 确保文字居中 */
     }
-    
-    /* 标题字体优化 */
+
+    /* 标题文本 */
     .banner-title {
         font-size: 4rem !important;
         line-height: 1.1 !important;
         margin-bottom: 1rem !important;
         text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8) !important;
     }
-    
-    /* 副标题字体优化 */
+
+    /* 副标题文本 */
     .banner-subtitle {
         font-size: 1.5rem !important;
         line-height: 1.4 !important;
@@ -325,40 +339,39 @@
     }
 }
 
-/* 中屏手机优化 */
+/* 中屏手机 */
 @media (min-width: 513px) and (max-width: 768px) {
-    /* Banner wrapper 高度优化 - 优先保持banner显示 */
+    /* Banner wrapper 高度 - 优先保持 banner 显示 */
     #banner-wrapper {
         height: 75vh !important;
         min-height: 500px;
         max-height: none; /* 移除最大高度限制 */
         top: 0 !important; /* 移动端从顶部开始，避免被导航栏覆盖 */
     }
-    
-    /* 横幅文本覆盖层优化 */
+
+    /* 横幅文本覆盖层 */
     .banner-text-overlay {
         align-items: center !important; /* 垂直居中 */
         justify-content: center !important; /* 水平居中 */
         padding: 1.5rem !important;
         text-align: center !important; /* 文字居中对齐 */
     }
-    
-    /* 文本容器优化 */
+    /* 文本容器 */
     .banner-text-overlay > div {
         margin-bottom: 0 !important; /* 移除底部边距，保持居中 */
         width: 90% !important;
         text-align: center !important; /* 确保文字居中 */
     }
-    
-    /* 标题字体优化 */
+
+    /* 标题文本 */
     .banner-title {
         font-size: 3.8rem !important; /* 增大字体大小 */
         line-height: 1.1 !important;
         margin-bottom: 0.75rem !important;
         text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8) !important;
     }
-    
-    /* 副标题字体优化 */
+
+    /* 副标题文本 */
     .banner-subtitle {
         font-size: 1.125rem !important;
         line-height: 1.4 !important;
@@ -366,40 +379,39 @@
     }
 }
 
-/* 小屏手机优化 */
+/* 小屏手机 */
 @media (max-width: 512px) {
-    /* Banner wrapper 高度优化 - 优先保持banner显示 */
+    /* Banner wrapper 高度 - 优先保持 banner 显示 */
     #banner-wrapper {
-        height: 70vh !important; /* 保持较大高度优先显示banner */
+        height: 70vh !important; /* 保持较大高度优先显示 banner */
         min-height: 450px;
         max-height: none; /* 移除最大高度限制 */
         top: 0 !important; /* 移动端从顶部开始，避免被导航栏覆盖 */
     }
-    
-    /* 横幅文本覆盖层优化 */
+
+    /* 横幅文本覆盖层 */
     .banner-text-overlay {
         align-items: center !important; /* 垂直居中 */
         justify-content: center !important; /* 水平居中 */
         padding: 1rem !important;
         text-align: center !important; /* 文字居中对齐 */
     }
-    
-    /* 文本容器优化 */
+    /* 文本容器 */
     .banner-text-overlay > div {
         margin-bottom: 0 !important; /* 移除底部边距，保持居中 */
         width: 95% !important; /* 增加文本宽度利用率 */
         text-align: center !important; /* 确保文字居中 */
     }
-    
-    /* 标题字体优化 */
+
+    /* 标题文本 */
     .banner-title {
         font-size: 3.2rem !important; /* 增大字体大小 */
         line-height: 1.1 !important;
         margin-bottom: 0.5rem !important;
         text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8) !important; /* 增强阴影 */
     }
-    
-    /* 副标题字体优化 */
+
+    /* 副标题文本 */
     .banner-subtitle {
         font-size: 1rem !important;
         line-height: 1.3 !important;
@@ -408,10 +420,20 @@
 }
 
 /**
- * 移动端波浪动画优化
+ * 波浪
  */
 
-/* 波浪与背景同步切换优化 */
+ /* 波浪动画 */
+@keyframes wave {
+    0% {
+        transform: translate3d(-90px, 0, 0);
+    }
+    100% {
+        transform: translate3d(85px, 0, 0);
+    }
+}
+
+/* 波浪与背景同步切换 */
 #header-waves {
     /* 确保波浪容器与页面背景在同一合成层 */
     isolation: isolate;
@@ -428,7 +450,6 @@
     animation-timing-function: cubic-bezier(0.5, 0.5, 0.45, 0.5);
     animation-iteration-count: infinite;
 }
-
 /* 分层动画时序（替代内联 style） */
 #header-waves .parallax use:nth-child(1) {
     animation-duration: 7s;
@@ -448,7 +469,7 @@
 }
 
 #header-waves .waves {
-    /* 确保SVG完整渲染（svg 本身即为 .waves） */
+    /* 确保 SVG 完整渲染（svg 本身即为 .waves） */
     width: 100%;
     height: 100%;
     display: block;
@@ -463,7 +484,7 @@
     contain: layout style paint;
 }
 
-/* 波浪填充色主题切换优化 */
+/* 波浪填充色主题切换 */
 #header-waves .waves use {
     /* 确保填充色与页面背景同步更新 */
     will-change: fill;
@@ -479,7 +500,7 @@
     backface-visibility: hidden;
 }
 
-/* 移动端水波纹特殊优化 */
+/* 移动端水波纹特殊 */
 @media (max-width: 1023px) {
     #header-waves {
         /* 确保水波纹容器不被裁剪 */
@@ -488,7 +509,7 @@
         /* 水波纹快速消失动画 */
         transition: transform 0.3s ease-in, opacity 0.2s ease-in;
     }
-    
+
     /* 当banner隐藏时，水波纹快速消失 */
     .mobile-hide-banner #header-waves {
         transform: translateY(-100%);
@@ -496,24 +517,15 @@
         /* 水波纹比banner更快消失 */
         transition: transform 0.25s ease-in, opacity 0.15s ease-in;
     }
-    
+
     #header-waves .waves {
-        /* 移动端SVG优化 */
+        /* 移动端SVG */
         min-height: 60px;
     }
 }
 
-@keyframes wave {
-    0% {
-        transform: translate3d(-90px, 0, 0);
-    }
-    100% {
-        transform: translate3d(85px, 0, 0);
-    }
-}
-
 /**
- * 基于屏幕高度的banner优化
+ * 基于屏幕高度的 banner
  */
 
 /* 中等高度屏幕 (高度 601px - 700px) */
@@ -522,20 +534,20 @@
         height: 75vh !important;
         min-height: 450px !important;
     }
-    
+
     .banner-text-overlay {
         padding: 2rem !important;
         align-items: center !important; /* 垂直居中 */
         justify-content: center !important; /* 水平居中 */
         text-align: center !important; /* 文字居中对齐 */
     }
-    
+
     .banner-title {
         font-size: 3.8rem !important; /* 增大字体大小 */
         line-height: 1.1 !important;
         margin-bottom: 1rem !important;
     }
-    
+
     .banner-subtitle {
         font-size: 1.125rem !important;
         line-height: 1.4 !important;
@@ -548,20 +560,20 @@
         height: 80vh !important;
         min-height: 400px !important;
     }
-    
+
     .banner-text-overlay {
         padding: 1.5rem !important;
         align-items: center !important; /* 垂直居中 */
         justify-content: center !important; /* 水平居中 */
         text-align: center !important; /* 文字居中对齐 */
     }
-    
+
     .banner-title {
         font-size: 3.2rem !important; /* 增大字体大小 */
         line-height: 1.1 !important;
         margin-bottom: 0.75rem !important;
     }
-    
+
     .banner-subtitle {
         font-size: 1rem !important;
         line-height: 1.3 !important;
@@ -571,49 +583,49 @@
 /* 极小高度屏幕 (高度 ≤ 500px) */
 @media (max-height: 500px) {
     #banner-wrapper {
-        height: 85vh !important; /* 占用更多高度确保banner显示 */
+        height: 85vh !important; /* 占用更多高度确保 banner 显示 */
         min-height: 350px !important;
     }
-    
+
     .banner-text-overlay {
         padding: 1rem !important;
         align-items: center !important; /* 垂直居中 */
         justify-content: center !important; /* 水平居中 */
         text-align: center !important; /* 文字居中对齐 */
     }
-    
+
     .banner-title {
         font-size: 2.8rem !important; /* 增大字体大小 */
         line-height: 1.1 !important;
         margin-bottom: 0.5rem !important;
     }
-    
+
     .banner-subtitle {
         font-size: 0.9rem !important;
         line-height: 1.2 !important;
     }
 }
 
-/* 横屏模式特殊处理 - 优先显示banner */
+/* 横屏模式特殊处理 - 优先显示 banner */
 @media (orientation: landscape) and (max-height: 500px) {
     #banner-wrapper {
         height: 90vh !important; /* 横屏时占用更多高度 */
         min-height: 300px !important;
     }
-    
+
     .banner-text-overlay {
         padding: 1rem 2rem !important;
         align-items: center !important; /* 垂直居中 */
         justify-content: center !important; /* 水平居中 */
         text-align: center !important; /* 文字居中对齐 */
     }
-    
+
     .banner-title {
         font-size: 2.8rem !important; /* 增大字体大小 */
         line-height: 1.1 !important;
         margin-bottom: 0.5rem !important;
     }
-    
+
     .banner-subtitle {
         font-size: 1rem !important;
         line-height: 1.2 !important;
