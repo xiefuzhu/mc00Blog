@@ -2,7 +2,7 @@
 
 # Twilight
 
-一个基于 [Astro](https://astro.build) 框架打造的支持后台管理的静态博客模板
+一个基于 Astro 框架打造的支持后台管理的静态博客模板
 
 [![Bilibili](https://img.shields.io/badge/Bilibili-v1.0%20Intro-blue?logo=Bilibili&style=for-the-badge)](https://www.bilibili.com/video/BV18VsUzNEmL)&nbsp;
 [![YouTube](https://img.shields.io/badge/YouTube-v1.0%20Intro-red?logo=YouTube&style=for-the-badge)](https://www.youtube.com/watch?v=SdpYpg_EzNg)
@@ -39,7 +39,7 @@
 ### 内容
 - **CMS 功能**: 基于 Decap CMS 的便捷内容管理
 - **数据可视化**: 可视化的项目、技能等个人数据
-- **文章目录**: 自动化生成的文章导航
+- **自动化导航**: 自动化生成的文章导航
 
 ### 组件
 - **站点统计**: 集成 Umami 访客统计的站点分析
@@ -68,11 +68,11 @@
 
 2. **安装依赖**
    ```bash
-   # Install bun if not already installed
-   npm install -g bun
+   # Install pnpm if not already installed
+   npm install -g pnpm
    
    # Install project dependencies
-   bun install
+   pnpm install
    ```
 
 3. **配置博客**
@@ -83,7 +83,7 @@
 
 4. **本地调试**
    ```bash
-   bun dev
+   pnpm dev
    ```
 
 
@@ -94,16 +94,16 @@
 
 ## ⚡ 命令
 
-| 指令                       | 说明                        |
-|:---------------------------|:---------------------------|
-| `bun lint`                 | 检查并修复代码问题          |
-| `bun format`               | 使用 Biome 格式化代码       |
-| `bun check`                | 运行 Astro 错误检查         |
-| `bun dev`                  | 启动本地服务器              |
-| `bun build`                | 构建站点到 `./dist/`        |
-| `bun preview`              | 预览本地构建结果            |
-| `bun astro ...`            | 运行 `Astro CLI` 命令       |
-| `bun new-post <filename>`  | 创建新博客文章              |
+| 指令                       | 说明                      |
+|:---------------------------|:-------------------------|
+| `pnpm lint`                | 检查并修复代码问题         |
+| `pnpm format`              | 使用 Biome 格式化代码      |
+| `pnpm check`               | 运行 Astro 错误检查       |
+| `pnpm dev`                 | 启动本地服务器             |
+| `pnpm build`               | 构建站点到 `./dist/`      |
+| `pnpm preview`             | 预览本地构建结果           |
+| `pnpm astro ...`           | 运行 `Astro CLI` 命令     |
+| `pnpm new-post <filename>` | 创建新博客文章             |
 
 
 ## 🙏 致谢

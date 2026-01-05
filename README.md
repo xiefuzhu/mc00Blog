@@ -39,7 +39,7 @@ English | [**中文**](docs/README_ZH.md)
 ### Content
 - **CMS Functionality**: Easy content management with Decap CMS integration
 - **Data Visualization**: Visualized personal data like projects, skills etc.
-- **Table of Contents**: Automatic generation of post navigation
+- **Automatic Navigation**: Automatic generation of post navigation
 
 ### Components
 - **Analytics Support**: Umami analytics integration for visitor insights
@@ -68,11 +68,11 @@ English | [**中文**](docs/README_ZH.md)
 
 2. **Install dependencies:**
    ```bash
-   # Install bun if not already installed
-   npm install -g bun
+   # Install pnpm if not already installed
+   npm install -g pnpm
    
    # Install project dependencies
-   bun install
+   pnpm install
    ```
 
 3. **Configure your blog:**
@@ -83,7 +83,7 @@ English | [**中文**](docs/README_ZH.md)
 
 4. **Start the development server:**
    ```bash
-   bun dev
+   pnpm dev
    ```
 
 
@@ -94,16 +94,16 @@ Deploy your blog to any static hosting platform
 
 ## ⚡ Commands
 
-| Command                    | Action                     |
-|:---------------------------|:---------------------------|
-| `bun lint`                 | Check and fix code issues  |
-| `bun format`               | Format code with Biome     |
-| `bun check`                | Run Astro error checking   |
-| `bun dev`                  | Start local dev server     |
-| `bun build`                | Build site to `./dist/`    |
-| `bun preview`              | Preview build locally      |
-| `bun astro ...`            | Run Astro CLI commands     |
-| `bun new-post <filename>`  | Create a new blog post     |
+| Command                     | Action                      |
+|:----------------------------|:----------------------------|
+| `pnpm lint`                 | Check and fix code issues   |
+| `pnpm format`               | Format code with Biome      |
+| `pnpm check`                | Run Astro error checking    |
+| `pnpm dev`                  | Start local dev server      |
+| `pnpm build`                | Build site to `./dist/`     |
+| `pnpm preview`              | Preview build locally       |
+| `pnpm astro ...`            | Run Astro CLI commands      |
+| `pnpm new-post <filename>`  | Create a new blog post      |
 
 
 ## 🙏 Acknowledgements
@@ -111,7 +111,7 @@ Deploy your blog to any static hosting platform
 - Prototype   - [Fuwari](https://github.com/saicaca/fuwari)
 - Inspiration - [Yukina](https://github.com/WhitePaper233/yukina) & [Mizuki](https://github.com/matsuzaka-yuki/Mizuki)
 - CMS         - [astro-decap-cms-oauth](https://github.com/dorukgezici/astro-decap-cms-oauth)
-- translation - [translate](https://gitee.com/mail_osc/translate)
+- Translation - [translate](https://gitee.com/mail_osc/translate)
 
 
 ## 🤝 Support
