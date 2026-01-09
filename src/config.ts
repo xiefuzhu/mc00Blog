@@ -511,7 +511,7 @@ export const musicPlayerConfig: MusicPlayerConfig = {
                 // 封面
                 cover: "https://p1.music.126.net/PhKOqFtljgHDDpKYM2ADUA==/109951169858309716.jpg",
                 // 路径
-                url: "assets/music/url/深海之息.m4a",
+                url: "assets/music/深海之息.m4a",
                 // 时长
                 duration: 146,
             },
