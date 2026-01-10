@@ -15,6 +15,7 @@ import {
     PAGE_WIDTH,
 } from "@constants/constants";
 import { pathsEqual, url } from "@utils/url-utils";
+import FontLoader from "@components/common/fontLoader.astro";
 import ConfigCarrier from "@components/configCarrier.astro";
 import MusicPlayer from "@components/musicPlayer.svelte";
 import Pio from "@components/pio.svelte";
@@ -226,9 +227,12 @@ const umamiScripts = umamiConfig.scripts || ""; // 获取Umami scripts配置
 
         <!-- Umami Analytics -->
         {umamiEnabled && umamiScripts && <Fragment set:html={umamiScripts} />}
-</head>
+        
+        <!-- Font Loader -->
+        <FontLoader />
+    </head>
 
-    <body class=" min-h-screen " class:list={[{"lg:is-home": isHomePage, "enable-banner": enableBanner, "zen-maru-gothic-enabled": siteConfig.font.zenMaruGothic.enable, "hanalei-enabled": siteConfig.font.hanalei.enable}]}
+    <body class=" min-h-screen " class:list={[{"lg:is-home": isHomePage, "enable-banner": enableBanner}]}
     >
         <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KRX3XGVH" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
