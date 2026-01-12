@@ -15,7 +15,7 @@ import {
     PAGE_WIDTH,
 } from "@constants/constants";
 import { pathsEqual, url } from "@utils/url-utils";
-import FontLoader from "@components/common/fontLoader.astro";
+import FontLoader from "@components/fontLoader.astro";
 import ConfigCarrier from "@components/configCarrier.astro";
 import MusicPlayer from "@components/musicPlayer.svelte";
 import Pio from "@components/pio.svelte";
@@ -122,9 +122,12 @@ const umamiScripts = umamiConfig.scripts || ""; // 获取Umami scripts配置
 <html lang={siteLang} class="bg-[var(--page-bg)] text-[14px] md:text-[16px] show-initial-animation"
 >
     <head>
+        <meta charset="UTF-8" />
+        <!-- Font Loader -->
+        <FontLoader />
+
         <title>{pageTitle}</title>
 
-        <meta charset="UTF-8" />
         <meta name="description" content={description || pageTitle}>
         {siteConfig.keywords && siteConfig.keywords.length > 0 && (
             <meta name="keywords" content={siteConfig.keywords.join(', ')} />
@@ -210,9 +213,6 @@ const umamiScripts = umamiConfig.scripts || ""; // 获取Umami scripts配置
 
         <!-- Umami Analytics -->
         {umamiEnabled && umamiScripts && <Fragment set:html={umamiScripts} />}
-        
-        <!-- Font Loader -->
-        <FontLoader />
     </head>
 
     <body class=" min-h-screen " class:list={[{"lg:is-home": isHomePage, "enable-banner": enableBanner}]}
