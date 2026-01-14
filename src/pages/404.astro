@@ -3,10 +3,10 @@ import { Icon } from "astro-icon/components";
 
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
-import MainGridLayout from "@layouts/MainGridLayout.astro";
+import GridLayout from "@layouts/grid.astro";
 ---
 
-<MainGridLayout title={i18n(I18nKey.notFound)} description={i18n(I18nKey.notFoundDescription)}>
+<GridLayout title={i18n(I18nKey.notFound)} description={i18n(I18nKey.notFoundDescription)}>
     <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-96">
         <div class="card-base z-10 px-9 py-12 relative w-full flex flex-col items-center justify-center text-center">
             <!-- 404 大号数字 -->
@@ -47,7 +47,7 @@ import MainGridLayout from "@layouts/MainGridLayout.astro";
             </div>
         </div>
     </div>
-</MainGridLayout>
+</GridLayout>
 
 <style>
     /* 添加一些动画效果 */

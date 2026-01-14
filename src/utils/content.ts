@@ -1,6 +1,6 @@
 import { type CollectionEntry, getCollection } from "astro:content";
 
-import { getCategoryUrl } from "@utils/url-utils";
+import { getCategoryUrl } from "@utils/url";
 import { i18n } from "@i18n/translation";
 import I18nKey from "@i18n/i18nKey";
 

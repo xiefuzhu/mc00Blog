@@ -13,7 +13,7 @@ import {
     SYSTEM_MODE,
     PAGE_WIDTH,
 } from "@constants/constants";
-import { pathsEqual, url } from "@utils/url-utils";
+import { pathsEqual, url } from "@utils/url";
 import FontLoader from "@components/fontLoader.astro";
 import LoadingOverlay from "@components/loadingOverlay.astro";
 import ConfigCarrier from "@components/configCarrier.astro";
@@ -39,7 +39,7 @@ let { title, banner, description, lang, setOGTypeArticle, postSlug } = Astro.pro
 const isHomePage = pathsEqual(Astro.url.pathname, url("/"));
 
 // defines global css variables
-// why doing this in Layout instead of GlobalStyles: https://github.com/withastro/astro/issues/6728#issuecomment-1502203757
+// why doing this in BaseLayout instead of GlobalStyles: https://github.com/withastro/astro/issues/6728#issuecomment-1502203757
 const configHue = siteConfig.themeColor.hue;
 
 // 获取导航栏透明模式配置
@@ -276,7 +276,7 @@ import {
     BANNER_HEIGHT_HOME,
     BANNER_HEIGHT_EXTEND,
 } from "@/constants/constants";
-import { pathsEqual, url } from "@utils/url-utils";
+import { pathsEqual, url } from "@utils/url";
 import { initWallpaperMode } from "@utils/wallpaper";
 import { initTheme } from "@utils/theme";
 import { initHue } from "@utils/hue";
@@ -417,7 +417,6 @@ const setup = () => {
                     }
                 });
                 document.dispatchEvent(pageLoadedEvent);
-                console.log('Layout: 触发 twilight:page:loaded 事件，路径:', window.location.pathname);
             }
         }, 300);
         // Initialize Fancybox

@@ -1,6 +1,6 @@
 // Project data configuration file
 // Used to manage data for the project display page
-const projectModules = import.meta.glob('./projects/*.json', { eager: true });
+const projectModules = import.meta.glob('../content/projects/*.json', { eager: true });
 
 export interface Project {
     id: string;

@@ -1,6 +1,6 @@
 // Album data configuration file
 // Used to manage data for the album display page
-const albumModules = import.meta.glob('./albums/*.json', { eager: true });
+const albumModules = import.meta.glob('../content/albums/*.json', { eager: true });
 
 export interface Photo {
     src: string;

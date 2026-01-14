@@ -1,6 +1,6 @@
 // Diary data configuration file
 // Used to manage data for the diary display page
-const diaryModules = import.meta.glob('./diary/*.json', { eager: true });
+const diaryModules = import.meta.glob('../content/diary/*.json', { eager: true });
 
 export interface Moment {
     id: string;

@@ -1,6 +1,6 @@
 // Friends links data configuration file
 // Used to manage data for the friends page
-const friendModules = import.meta.glob('./friends/*.json', { eager: true });
+const friendModules = import.meta.glob('../content/friends/*.json', { eager: true });
 
 export interface FriendLink {
     id: string;

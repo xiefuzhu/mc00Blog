@@ -9,16 +9,14 @@ import {
     getSkillsByCategory,
     getTotalExperience,
     skillsData,
-} from "@data/skills";
+} from "@utils/skills";
 import { i18n } from "@i18n/translation";
 import I18nKey from "@i18n/i18nKey";
 import IconifyLoader from "@components/common/iconifyLoader.astro";
 import SkillCard from "@components/data/skillCard.astro";
-import MainGridLayout from "@layouts/MainGridLayout.astro";
+import GridLayout from "@layouts/grid.astro";
 
 
-
-const { lang } = Astro.props;
 
 // 获取技能统计信息
 const stats = getSkillStats();
@@ -102,7 +100,7 @@ const subtitle = i18n(I18nKey.skillsSubtitle);
 const allIcons = skillsData.map((skill) => skill.icon).filter(Boolean);
 ---
 
-<MainGridLayout title={title} description={subtitle}>
+<GridLayout title={title} description={subtitle}>
     <!-- 图标加载器，预加载所有技能图标 -->
     <IconifyLoader preloadIcons={allIcons} />
     <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
@@ -250,7 +248,7 @@ const allIcons = skillsData.map((skill) => skill.icon).filter(Boolean);
             </div>
         </div>
     </div>
-</MainGridLayout>
+</GridLayout>
 
 <style>
     .line-clamp-2 {

@@ -7,8 +7,8 @@ import MarkdownIt from "markdown-it";
 import sanitizeHtml from "sanitize-html";
 
 import { siteConfig } from "@/config";
-import { getSortedPosts } from "@/utils/content-utils";
-import { getFileDirFromPath, getPostUrl } from "@/utils/url-utils";
+import { getSortedPosts } from "@utils/content";
+import { getFileDirFromPath, getPostUrl } from "@utils/url";
 
 
 const markdownParser = new MarkdownIt();

@@ -1,15 +1,15 @@
 ---
-import { sortedAlbums } from "@data/albums";
+import { sortedAlbums } from "@utils/albums";
 import { i18n } from "@i18n/translation";
 import I18nKey from "@i18n/i18nKey";
-import MainGridLayout from "@layouts/MainGridLayout.astro";
+import GridLayout from "@layouts/grid.astro";
 
 
 // 获取所有相册
 const albumsData = sortedAlbums.filter(album => album.visible);
 ---
 
-<MainGridLayout title={i18n(I18nKey.albums)} description={i18n(I18nKey.albumsSubtitle)}>
+<GridLayout title={i18n(I18nKey.albums)} description={i18n(I18nKey.albumsSubtitle)}>
     <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
         <div class="card-base z-10 px-9 py-6 relative w-full">
             <!-- 页面标题 -->
@@ -100,7 +100,7 @@ const albumsData = sortedAlbums.filter(album => album.visible);
             )}
         </div>
     </div>
-</MainGridLayout>
+</GridLayout>
 
 <style>
     .line-clamp-2 {

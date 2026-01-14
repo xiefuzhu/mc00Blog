@@ -9,12 +9,12 @@ import {
     getFeaturedTimeline,
     getCurrentItems,
     getTotalWorkExperience,
-} from "@data/timeline";
+} from "@utils/timeline";
 import { i18n } from "@i18n/translation";
 import I18nKey from "@i18n/i18nKey";
 import IconifyLoader from "@components/common/iconifyLoader.astro";
 import TimelineItem from "@components/data/timelineItem.astro";
-import MainGridLayout from "@layouts/MainGridLayout.astro";
+import GridLayout from "@layouts/grid.astro";
 
 
 // 收集所有时间线图标用于预加载
@@ -51,7 +51,7 @@ const title = i18n(I18nKey.timeline);
 const subtitle = i18n(I18nKey.timelineSubtitle);
 ---
 
-<MainGridLayout title={title} description={subtitle}>
+<GridLayout title={title} description={subtitle}>
     <!-- 图标加载器，预加载所有时间线图标 -->
     <IconifyLoader preloadIcons={allIcons} />
     <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
@@ -183,7 +183,7 @@ const subtitle = i18n(I18nKey.timelineSubtitle);
             </div>
         </div>
     </div>
-</MainGridLayout>
+</GridLayout>
 
 <style>
     .line-clamp-2 {

@@ -1,11 +1,11 @@
 ---
 import { getEntry, render } from "astro:content";
 
-import { friendsData } from "@data/friends";
+import { friendsData } from "@utils/friends";
 import { i18n } from "@i18n/translation";
 import I18nKey from "@i18n/i18nKey";
 import Markdown from "@components/common/markdown.astro";
-import MainGridLayout from "@layouts/MainGridLayout.astro";
+import GridLayout from "@layouts/grid.astro";
 
 
 const friendsPost = await getEntry("spec", "friends");
@@ -29,7 +29,7 @@ function shuffleArray(array) {
 const shuffledItems = shuffleArray(items);
 ---
 
-<MainGridLayout title={i18n(I18nKey.friends)} description={i18n(I18nKey.friends)}>
+<GridLayout title={i18n(I18nKey.friends)} description={i18n(I18nKey.friends)}>
     <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
         <div class="card-base z-10 px-9 py-6 relative w-full ">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-8 my-4">
@@ -67,4 +67,4 @@ const shuffledItems = shuffleArray(items);
             </Markdown>
         </div>
     </div>
-</MainGridLayout>
+</GridLayout>

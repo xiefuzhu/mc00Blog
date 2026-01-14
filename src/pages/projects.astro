@@ -2,23 +2,19 @@
 export const prerender = true;
 
 
-import { getCollection } from "astro:content";
-
 import {
     projectsData,
     getProjectStats,
     getProjectsByCategory,
     getFeaturedProjects,
     getAllTechStack,
-} from "@data/projects";
+} from "@utils/projects";
 import { UNCATEGORIZED } from "@constants/constants";
 import { i18n } from "@i18n/translation";
 import I18nKey from "@i18n/i18nKey";
 import ProjectCard from "@components/data/projectCard.astro";
-import MainGridLayout from "@layouts/MainGridLayout.astro";
+import GridLayout from "@layouts/grid.astro";
 
-
-const { lang } = Astro.props;
 
 // 获取项目统计信息
 const stats = getProjectStats();
@@ -62,7 +58,7 @@ const getCategoryText = (category: string) => {
 
 ---
 
-<MainGridLayout title={title} description={subtitle}>
+<GridLayout title={title} description={subtitle}>
     <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
         <div class="card-base z-10 px-9 py-6 relative w-full">
             <!-- 页面标题 -->
@@ -144,7 +140,7 @@ const getCategoryText = (category: string) => {
             </div>
         </div>
     </div>
-</MainGridLayout>
+</GridLayout>
 
 <style>
     .line-clamp-1 {

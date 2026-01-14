@@ -5,10 +5,10 @@ export const prerender = true;
 import type { GetStaticPaths } from "astro";
 
 import { PAGE_SIZE } from "@constants/constants";
-import { getSortedPosts } from "@utils/content-utils";
+import { getSortedPosts } from "@utils/content";
 import Pagination from "@components/pagination.astro";
 import PostPage from "@components/postPage.astro";
-import MainGridLayout from "@layouts/MainGridLayout.astro";
+import GridLayout from "@layouts/grid.astro";
 
 
 export const getStaticPaths = (async ({ paginate }) => {
@@ -23,7 +23,7 @@ const { page } = Astro.props;
 const len = page.data.length;
 ---
 
-<MainGridLayout>
+<GridLayout>
     <PostPage page={page}></PostPage>
     <Pagination class="mx-auto onload-animation-up" page={page} style={`animation-delay: ${(len)*50}ms`}></Pagination>
-</MainGridLayout>
+</GridLayout>

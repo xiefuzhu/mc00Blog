@@ -1,4 +1,4 @@
-import { getResolvedSiteLang } from "@/utils/language";
+import { getResolvedSiteLang } from "@utils/language";
 import { en } from "./languages/en";
 import { ja } from "./languages/ja";
 import { zh } from "./languages/zh";

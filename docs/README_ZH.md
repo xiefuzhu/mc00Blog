@@ -79,7 +79,7 @@
    - 在 `src/config.ts` 中 [自定义博客设置](https://docs.twilight.spr-aachen.com/config/core)
    - 在 `.env` 中 [配置 CMS 功能](https://docs.twilight.spr-aachen.com/config/cms)
    - 在 `.env` 中 [配置站点统计功能](https://docs.twilight.spr-aachen.com/config/analytics)
-   - 在 `src/data` 中 [更新站点信息](https://docs.twilight.spr-aachen.com/config/data)
+   - 在 `src/content` 中 [管理站点内容](https://docs.twilight.spr-aachen.com/config/content)
 
 4. **本地调试**
    ```bash

@@ -18,7 +18,7 @@ let pioInitialized = false;
 let pioContainer;
 let pioCanvas;
 
-// 样式已通过 Layout.astro 静态引入，无需动态加载
+// 样式已通过 base.astro 静态引入，无需动态加载
 
 // 等待 DOM 加载完成后再初始化 Pio
 function initPio() {
@@ -46,7 +46,7 @@ function initPio() {
 function loadPioAssets() {
     if (typeof window === "undefined") return;
 
-    // 样式已通过 Layout.astro 静态引入
+    // 样式已通过 base.astro 静态引入
 
     // 加载JS脚本
     const loadScript = (src, id) => {
@@ -76,7 +76,7 @@ function loadPioAssets() {
         });
 }
 
-// 样式已通过 Layout.astro 静态引入，无需页面切换监听
+// 样式已通过 base.astro 静态引入，无需页面切换监听
 
 onMount(() => {
     if (!pioConfig.enable) return;

@@ -2,8 +2,8 @@
 import { onMount, onDestroy } from "svelte";
 import Icon from "@iconify/svelte";
 
-import { url } from "@utils/url-utils";
-import { navigateToPage } from "@utils/navigation-utils";
+import { url } from "@utils/url";
+import { navigateToPage } from "@utils/navigation";
 import type { SearchResult } from "@/global";
 import { i18n } from "@i18n/translation";
 import I18nKey from "@i18n/i18nKey";

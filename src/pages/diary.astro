@@ -1,9 +1,9 @@
 ---
 import { siteConfig } from "@/config";
-import { sortedMoments } from "@/data/diary";
+import { sortedMoments } from "@/utils/diary";
 import { i18n } from "@i18n/translation";
 import I18nKey from "@i18n/i18nKey";
-import MainGridLayout from "@layouts/MainGridLayout.astro";
+import GridLayout from "@layouts/grid.astro";
 
 
 // 时间格式化函数
@@ -29,7 +29,7 @@ function formatTime(dateString: string): string {
 }
 ---
 
-<MainGridLayout title={i18n(I18nKey.diary)} description="即刻短文">
+<GridLayout title={i18n(I18nKey.diary)} description="即刻短文">
     <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
         <div class="card-base z-10 px-4 py-4 md:px-6 md:py-5 relative w-full">
             <div class="relative max-w-4xl">
@@ -90,7 +90,7 @@ function formatTime(dateString: string): string {
             </div>
         </div>
     </div>
-</MainGridLayout>
+</GridLayout>
 
 <style>
     .card-base {

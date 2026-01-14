@@ -6,9 +6,9 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 
 import { siteConfig, profileConfig, postConfig } from "@/config";
-import { getSortedPosts } from "@utils/content-utils";
-import { formatDateToYYYYMMDD } from "@utils/date-utils";
-import { getFileDirFromPath, getPostUrlBySlug, removeFileExtension} from "@utils/url-utils";
+import { getSortedPosts } from "@utils/content";
+import { formatDateToYYYYMMDD } from "@utils/date";
+import { getFileDirFromPath, getPostUrlBySlug, removeFileExtension} from "@utils/url";
 import { i18n } from "@i18n/translation";
 import I18nKey from "@i18n/i18nKey";
 import License from "@components/post/license.astro";
@@ -17,7 +17,8 @@ import ImageWrapper from "@components/common/imageWrapper.astro";
 import Comment from "@components/post/comment.astro";
 import PasswordProtection from "@components/common/passwordProtection.astro";
 import PostMetadata from "@components/post/postMeta.astro";
-import MainGridLayout from "@layouts/MainGridLayout.astro";
+import GridLayout from "@layouts/grid.astro";
+
 
 
 export async function getStaticPaths() {
@@ -88,7 +89,7 @@ const jsonLd = {
 };
 ---
 
-<MainGridLayout
+<GridLayout
     banner={entry.data.cover}
     title={entry.data.title}
     description={entry.data.description}
@@ -352,4 +353,4 @@ const jsonLd = {
             }
         </a>
     </div>
-</MainGridLayout>
+</GridLayout>

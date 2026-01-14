@@ -204,7 +204,7 @@ export class ParticleManager {
         }
         // 创建图片对象
         this.img = new Image();
-        this.img.src = "/particle.png"; // 使用粒子图片
+        this.img.src = "/assets/images/particle.png"; // 使用粒子图片
         // 等待图片加载完成
         await new Promise<void>((resolve, reject) => {
             if (this.img) {

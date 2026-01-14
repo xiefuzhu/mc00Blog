@@ -1,9 +1,9 @@
 ---
-import type { AlbumGroup } from "@data/albums";
-import { sortedAlbums } from "@data/albums";
+import type { AlbumGroup } from "@utils/albums";
+import { sortedAlbums } from "@utils/albums";
 import { i18n } from "@i18n/translation";
 import I18nKey from "@i18n/i18nKey";
-import MainGridLayout from "@layouts/MainGridLayout.astro";
+import GridLayout from "@layouts/grid.astro";
 
 
 export const getStaticPaths = async () => {
@@ -25,7 +25,7 @@ if (!album) {
 }
 ---
 
-<MainGridLayout title={album.title} description={album.description || album.title}>
+<GridLayout title={album.title} description={album.description || album.title}>
     <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
         <div class="card-base z-10 px-9 py-6 relative w-full">
             <!-- 返回按钮 -->
@@ -101,7 +101,7 @@ if (!album) {
             </div>
         </div>
     </div>
-</MainGridLayout>
+</GridLayout>
 
 <style>
     .grid-layout {

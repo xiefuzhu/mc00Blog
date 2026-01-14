@@ -1,18 +1,18 @@
 ---
 import { Icon } from "astro-icon/components";
 
-import { getSortedPosts } from "@utils/content-utils";
-import { formatDateToYYYYMMDD } from "@utils/date-utils";
+import { getSortedPosts } from "@utils/content";
+import { formatDateToYYYYMMDD } from "@utils/date";
 import { i18n } from "@i18n/translation";
 import I18nKey from "@i18n/i18nKey";
-import MainGridLayout from "@layouts/MainGridLayout.astro";
+import GridLayout from "@layouts/grid.astro";
 
 
 const posts = (await getSortedPosts()).filter((post) => !post.data.encrypted);
 const recentPosts = posts.slice(0, 6);
 ---
 
-<MainGridLayout title={i18n(I18nKey.rss)} description={i18n(I18nKey.rssDescription)}>
+<GridLayout title={i18n(I18nKey.rss)} description={i18n(I18nKey.rssDescription)}>
 
     <div class="onload-animation-up">
         <!-- RSS 标题和介绍 -->
@@ -134,4 +134,4 @@ const recentPosts = posts.slice(0, 6);
         document.addEventListener("astro:after-swap", init);
     </script>
 
-</MainGridLayout>
+</GridLayout>

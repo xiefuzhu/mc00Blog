@@ -3,12 +3,22 @@ import { z } from 'astro/zod';
 import { glob } from 'astro/loaders';
 
 
+// Helper for handling dates that might be empty strings from JSON
+const dateSchema = z.preprocess((arg) => {
+    if (typeof arg === "string" && arg.trim() === "") return undefined;
+    return arg;
+}, z.coerce.date());
+const optionalDateSchema = z.preprocess((arg) => {
+    if (typeof arg === "string" && arg.trim() === "") return undefined;
+    return arg;
+}, z.coerce.date().optional());
+
 const postsCollection = defineCollection({
     loader: glob({ pattern: '**/[^_]*.{md,mdx}', base: "./src/content/posts" }),
     schema: z.object({
         title: z.string(),
-        published: z.date(),
-        updated: z.date().optional(),
+        published: dateSchema,
+        updated: optionalDateSchema,
         draft: z.boolean().optional().default(false),
         description: z.string().optional().default(""),
         cover: z.string().optional().default(""),
@@ -35,6 +45,7 @@ const postsCollection = defineCollection({
         nextSlug: z.string().default(""),
     }),
 });
+
 const specCollection = defineCollection({
     loader: glob({ pattern: '**/[^_]*.{md,mdx}', base: "./src/content/spec" }),
     schema: z.object({}),

@@ -6,15 +6,22 @@ import { siteConfig } from "@/config";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import ImageWrapper from "@components/common/imageWrapper.astro";
-import MainGridLayout from "@layouts/MainGridLayout.astro";
+import GridLayout from "@layouts/grid.astro";
 
 
 // Bangumi API配置
-const BANGUMI_USER_ID = siteConfig.bangumi?.userId || "your-user-id"; // 用户ID
+const BANGUMI_USER_ID = siteConfig.bangumi?.userId || "";
 const BANGUMI_API_BASE = "https://api.bgm.tv";
+
+// 检查是否配置了有效的 Bangumi 用户 ID
+const isBangumiConfigured = 
+    BANGUMI_USER_ID && 
+    BANGUMI_USER_ID !== "your-bangumi-id" && 
+    BANGUMI_USER_ID !== "your-user-id";
 
 // 获取单个条目相关人员信息
 async function fetchSubjectPersons(subjectId: number) {
+    if (!isBangumiConfigured) return [];
     try {
         const response = await fetch(
             `${BANGUMI_API_BASE}/v0/subjects/${subjectId}/persons`,
@@ -33,6 +40,7 @@ async function fetchBangumiCollection(
     subjectType: number,
     type: number,
 ) {
+    if (!isBangumiConfigured) return null;
     try {
         let allData: any[] = [];
         let offset = 0;
@@ -189,7 +197,7 @@ const stats = {
 };
 ---
 
-<MainGridLayout title={i18n(I18nKey.anime)} description={i18n(I18nKey.animeSubtitle)}>
+<GridLayout title={i18n(I18nKey.anime)} description={i18n(I18nKey.animeSubtitle)}>
     <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
         <div class="card-base z-10 px-9 py-6 relative w-full">
             <!-- 页面标题 -->
@@ -246,7 +254,7 @@ const stats = {
                     {i18n(I18nKey.animeList)}
                 </h2>
 
-                {BANGUMI_USER_ID === 'your-user-id' ? (
+                {!isBangumiConfigured ? (
                     <div class="text-center py-12">
                         <div class="text-5xl mb-4">😢</div>
                         <h3 class="text-xl font-medium text-black/80 dark:text-white/80 mb-2">
@@ -344,4 +352,4 @@ const stats = {
             </div>
         </div>
     </div>
-</MainGridLayout>
+</GridLayout>

@@ -31,7 +31,7 @@ collections:
   # 项目集合
   - name: "projects"
     label: "Projects"
-    folder: "src/data/projects"
+    folder: "src/content/projects"
     create: true
     slug: "{{slug}}"
     format: "json"
@@ -51,7 +51,7 @@ collections:
   # 技能集合
   - name: "skills"
     label: "Skills"
-    folder: "src/data/skills"
+    folder: "src/content/skills"
     create: true
     slug: "{{slug}}"
     format: "json"
@@ -73,7 +73,7 @@ collections:
   # 时间线集合
   - name: "timeline"
     label: "Timeline"
-    folder: "src/data/timeline"
+    folder: "src/content/timeline"
     create: true
     slug: "{{slug}}"
     format: "json"
@@ -101,7 +101,7 @@ collections:
   # 日记集合
   - name: "diary"
     label: "Diary"
-    folder: "src/data/diary"
+    folder: "src/content/diary"
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{hour}}-{{minute}}"
     format: "json"
@@ -117,7 +117,7 @@ collections:
   # 相册集合
   - name: "albums"
     label: "Albums"
-    folder: "src/data/albums"
+    folder: "src/content/albums"
     create: true
     slug: "{{slug}}"
     format: "json"
@@ -145,7 +145,7 @@ collections:
   # 友链集合
   - name: "friends"
     label: "Friends"
-    folder: "src/data/friends"
+    folder: "src/content/friends"
     create: true
     slug: "{{slug}}"
     format: "json"

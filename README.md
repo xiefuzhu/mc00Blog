@@ -79,7 +79,7 @@ English | [**中文**](docs/README_ZH.md)
    - [Customize blog settings](https://docs.twilight.spr-aachen.com/en/config/core) inside `src/config.ts`
    - [Support CMS functionality](https://docs.twilight.spr-aachen.com/en/config/cms) inside `.env`
    - [Support Umami analytics](https://docs.twilight.spr-aachen.com/en/config/analytics) inside `.env`
-   - [Update site information](https://docs.twilight.spr-aachen.com/en/config/data) inside `src/data`
+   - [Manage site content](https://docs.twilight.spr-aachen.com/en/config/content) inside `src/content`
 
 4. **Start the development server:**
    ```bash
