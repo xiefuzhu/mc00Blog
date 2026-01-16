@@ -6,6 +6,7 @@ import Profile from "@components/sidebar/profile.astro";
 import Announcement from "@components/sidebar/announcement.astro";
 import Categories from "@components/sidebar/categories.astro";
 import Tags from "@components/sidebar/tags.astro";
+import Statistics from "@components/sidebar/statistics.astro";
 import TOC from "@components/sidebar/toc.astro";
 
 
@@ -28,6 +29,7 @@ const componentMap = {
     announcement: Announcement,
     categories: Categories,
     tags: Tags,
+    statistics: Statistics,
     toc: TOC,
 };
 
@@ -40,15 +42,10 @@ function renderComponent(component: any, index: number, components: any[]) {
     const componentClass = widgetManager.getComponentClass(component, index);
     const componentStyle = widgetManager.getComponentStyle(component, index);
 
-    // 为在切换页面时需要动画的 TOC 组件添加 onload-animation-up 类
-    const componentClass_animated = component.type === "toc" 
-        ? `${componentClass} onload-animation-up` 
-        : componentClass;
-
     return {
         Component: ComponentToRender,
         props: {
-            class: componentClass_animated,
+            class: componentClass,
             style: componentStyle,
             headings: component.type === "toc" ? headings : undefined,
             ...component.customProps,
@@ -73,7 +70,7 @@ function renderComponent(component: any, index: number, components: any[]) {
 
     <!-- 粘性组件区域 -->
     {stickyComponents.length > 0 && (
-        <div id="sidebar-sticky" class="transition-all duration-600 flex flex-col w-full gap-4 sticky top-4">
+        <div id="sidebar-sticky" class="flex flex-col w-full gap-4 sticky top-4">
             {stickyComponents.map((component, index) => {
                 const renderData = renderComponent(component, index, stickyComponents);
                 if (!renderData) return null;
