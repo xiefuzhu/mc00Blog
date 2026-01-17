@@ -2,13 +2,13 @@
 
 # Twilight
 
-一个基于 Astro 框架打造的支持后台管理的静态博客模板
-
-[![Bilibili](https://img.shields.io/badge/Bilibili-v1.0%20Intro-blue?logo=Bilibili&style=for-the-badge)](https://www.bilibili.com/video/BV18VsUzNEmL)&nbsp;
-[![YouTube](https://img.shields.io/badge/YouTube-v1.0%20Intro-red?logo=YouTube&style=for-the-badge)](https://www.youtube.com/watch?v=SdpYpg_EzNg)
+一个支持后台管理的静态博客主题模板，基于 Astro 框架打造
 
 [**🖥️ 演示**](https://twilight.spr-aachen.com)
 [**📝 文档**](https://docs.twilight.spr-aachen.com)
+
+[![Bilibili](https://img.shields.io/badge/Bilibili-Intro-blue?logo=Bilibili)](https://space.bilibili.com/359461611/lists/6641229)&nbsp;
+[![YouTube](https://img.shields.io/badge/YouTube-Intro-red?logo=YouTube)](https://youtube.com/playlist?list=PLzjq8Hx1SRV7yqZQiACcCJmKPeg5D8JKe&si=Bcz2o0PF8MFvx8ec)
 
 <table style="width: 100%; table-layout: fixed;">
    <tr>
