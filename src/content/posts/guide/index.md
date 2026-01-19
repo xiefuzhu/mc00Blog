@@ -2,7 +2,7 @@
 title: Guide for Blog Template
 published: 2001-10-02
 description: "How to use this blog template."
-cover: "./cover.webp"
+cover: "./cover.jpg"
 pinned: true
 tags: []
 category: Guides
@@ -20,7 +20,7 @@ Tip: For the things that are not mentioned in this guide, you may find the answe
 title: My First Blog Post
 published: 2020-02-02
 description: This is the first post of my new Astro blog.
-cover: ./cover.webp
+cover: ./cover.jpg
 tags: [Foo, Bar]
 category: Front-end
 draft: false
@@ -51,6 +51,6 @@ Your post files should be placed in `src/content/posts/` directory. You can also
 src/content/posts/
 ├── post-1.md
 └── post-2/
-    ├── cover.png
+    ├── cover.jpg
     └── index.md
 ```
