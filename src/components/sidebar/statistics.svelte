@@ -5,12 +5,20 @@
     import { i18n } from "@i18n/translation";
     import I18nKey from "@i18n/i18nKey";
 
-    export let posts: any[] = [];
-    export let categories: any[] = [];
-    export let tags: any[] = [];
-    let className: string = "";
-    export { className as class };
-    export let style: string = "";
+
+    let {
+        posts = [],
+        categories = [],
+        tags = [],
+        class: className = "",
+        style = ""
+    }: {
+        posts?: any[],
+        categories?: any[],
+        tags?: any[],
+        class?: string,
+        style?: string
+    } = $props();
 
     const labels = {
         year: i18n(I18nKey.year),
@@ -23,17 +31,17 @@
         statistics: i18n(I18nKey.statistics),
     };
 
-    let container: HTMLDivElement;
-    let heatmapContainer: HTMLDivElement;
-    let categoriesContainer: HTMLDivElement;
-    let tagsContainer: HTMLDivElement;
-    let echarts: any;
-    let heatmapChart: any;
-    let categoriesChart: any;
-    let tagsChart: any;
+    let container = $state<HTMLDivElement>();
+    let heatmapContainer = $state<HTMLDivElement>();
+    let categoriesContainer = $state<HTMLDivElement>();
+    let tagsContainer = $state<HTMLDivElement>();
+    let echarts: any = $state();
+    let heatmapChart: any = $state();
+    let categoriesChart: any = $state();
+    let tagsChart: any = $state();
 
-    let timeScale: 'year' | 'month' | 'day' = 'year';
-    let isDark = false;
+    let timeScale: 'year' | 'month' | 'day' = $state('year');
+    let isDark = $state(false);
 
     const getThemeColors = () => {
         const isDarkNow = document.documentElement.classList.contains('dark');
@@ -49,21 +57,33 @@
     const loadECharts = async () => {
         if (typeof window === 'undefined') return;
         isDark = document.documentElement.classList.contains('dark');
-        if (window.echarts) {
-            echarts = window.echarts;
-        } else {
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js';
-            script.async = true;
-            document.head.appendChild(script);
-            await new Promise((resolve) => {
-                script.onload = resolve;
-            });
-            echarts = window.echarts;
-        }
+
+        // 动态导入 ECharts 及其组件，启用 Tree Shaking
+        const echartsCore = await import('echarts/core');
+        const { LineChart, RadarChart } = await import('echarts/charts');
+        const {
+            TitleComponent,
+            TooltipComponent,
+            GridComponent,
+            LegendComponent
+        } = await import('echarts/components');
+        const { SVGRenderer } = await import('echarts/renderers');
+
+        // 注册组件
+        echartsCore.use([
+            LineChart,
+            RadarChart,
+            TitleComponent,
+            TooltipComponent,
+            GridComponent,
+            LegendComponent,
+            SVGRenderer
+        ]);
+
+        echarts = echartsCore;
     };
 
-    let isInitialized = false;
+    let isInitialized = $state(false);
 
     const initCharts = () => {
         if (isInitialized) return;
@@ -74,7 +94,7 @@
 
     const initActivityChart = (isUpdate = false) => {
         if (!heatmapContainer || !echarts) return;
-        
+
         // 尝试获取现有实例以支持 Swup 持久化
         const existingChart = echarts.getInstanceByDom(heatmapContainer);
         const isNew = !existingChart;
@@ -277,30 +297,46 @@
 
     onMount(async () => {
         await loadECharts();
-        
+
         // 检查是否处于初始加载动画阶段
-        const hasInitialAnimation = document.documentElement.classList.contains('show-initial-animation') || 
+        const hasInitialAnimation = document.documentElement.classList.contains('show-initial-animation') ||
                                    document.documentElement.classList.contains('is-loading');
-        
+
         if (hasInitialAnimation) {
             // 查找带有动画类的侧边栏容器
             const sidebar = container?.closest('.onload-animation-up');
+
+            const startInit = () => {
+                if (!isInitialized) initCharts();
+            };
+
             if (sidebar) {
-                // 监听动画结束事件
-                sidebar.addEventListener('animationend', (e) => {
+                // 监听侧边栏淡入动画开始
+                sidebar.addEventListener('animationstart', (e) => {
                     if ((e as AnimationEvent).animationName === 'fade-in-up') {
-                        initCharts();
+                        startInit();
                     }
                 }, { once: true });
-                
-                // 保底机制：如果动画事件没触发，1.5秒后强制加载
-                setTimeout(() => {
-                    if (!heatmapChart) initCharts();
-                }, 1500);
-            } else {
-                // 如果找不到侧边栏，延迟 1 秒加载
-                setTimeout(initCharts, 1000);
             }
+
+            // 使用 MutationObserver 监听 html 的 class 变化，作为更可靠的保底机制
+            const htmlObserver = new MutationObserver(() => {
+                const isStillLoading = document.documentElement.classList.contains('is-loading');
+
+                // 一旦 loading 结束（进入动画播放阶段），就开始绘制图表
+                if (!isStillLoading) {
+                    startInit();
+                    htmlObserver.disconnect();
+                }
+            });
+            htmlObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+            // 较长的保底时间（3秒），防止所有监听机制意外失效
+            setTimeout(() => {
+                startInit();
+                htmlObserver.disconnect();
+            }, 3000);
+
         } else {
             // 无动画状态，直接加载
             initCharts();
@@ -331,9 +367,11 @@
         };
     });
 
-    $: if (timeScale && echarts && isInitialized) {
-        initActivityChart(true);
-    }
+    $effect(() => {
+        if (timeScale && echarts && isInitialized) {
+            initActivityChart(true);
+        }
+    });
 </script>
 
 <div id="statistics" bind:this={container} data-swup-persist="statistics" class={"pb-4 card-base " + className} {style}>
@@ -347,12 +385,14 @@
                     <div class="dropdown-wrapper">
                         <button class="time-scale-select flex items-center gap-1">
                             {labels[timeScale]}
-                            <Icon icon="material-symbols:keyboard-arrow-down-rounded" class="dropdown-icon" />
+                            <span class="dropdown-icon flex items-center">
+                                <Icon icon="material-symbols:keyboard-arrow-down-rounded" />
+                            </span>
                         </button>
                         <div class="dropdown-menu-custom">
-                            <button class="dropdown-item-custom" class:active={timeScale === 'year'} on:click={() => timeScale = 'year'}>{labels.year}</button>
-                            <button class="dropdown-item-custom" class:active={timeScale === 'month'} on:click={() => timeScale = 'month'}>{labels.month}</button>
-                            <button class="dropdown-item-custom" class:active={timeScale === 'day'} on:click={() => timeScale = 'day'}>{labels.day}</button>
+                            <button class="dropdown-item-custom" class:active={timeScale === 'year'} onclick={() => timeScale = 'year'}>{labels.year}</button>
+                            <button class="dropdown-item-custom" class:active={timeScale === 'month'} onclick={() => timeScale = 'month'}>{labels.month}</button>
+                            <button class="dropdown-item-custom" class:active={timeScale === 'day'} onclick={() => timeScale = 'day'}>{labels.day}</button>
                         </div>
                     </div>
                 </div>

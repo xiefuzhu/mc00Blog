@@ -13,6 +13,7 @@ import {
 
 // Function to apply theme to document
 export function applyThemeToDocument(theme: LIGHT_DARK_MODE, force = false) {
+    if (typeof document === "undefined") return;
     // 获取当前主题状态的完整信息
     const currentIsDark = document.documentElement.classList.contains("dark");
     const currentTheme = document.documentElement.getAttribute("data-theme");
@@ -68,17 +69,33 @@ export function applyThemeToDocument(theme: LIGHT_DARK_MODE, force = false) {
 
 // Function to set theme
 export function setTheme(theme: LIGHT_DARK_MODE): void {
-    localStorage.setItem("theme", theme);
+    if (typeof localStorage !== "undefined") {
+        localStorage.setItem("theme", theme);
+    }
     applyThemeToDocument(theme);
+}
+
+// Function to get default theme from config-carrier
+export function getDefaultTheme(): LIGHT_DARK_MODE {
+    const fallback = siteConfig.defaultTheme;
+    if (typeof document !== "undefined") {
+        const configCarrier = document.getElementById("config-carrier");
+        return (configCarrier?.dataset.theme as LIGHT_DARK_MODE) || fallback;
+    }
+    return fallback;
 }
 
 // Function to get stored theme from local storage or default
 export function getStoredTheme(): LIGHT_DARK_MODE {
-    return (localStorage.getItem("theme") as LIGHT_DARK_MODE) || siteConfig.defaultTheme;
+    if (typeof localStorage !== "undefined") {
+        return (localStorage.getItem("theme") as LIGHT_DARK_MODE) || getDefaultTheme();
+    }
+    return getDefaultTheme();
 }
 
 // Function to initialize theme from local storage or default
 export function initTheme(): void {
+    if (typeof window === "undefined") return;
     const storedTheme = getStoredTheme();
     applyThemeToDocument(storedTheme, true);
     // 监听系统主题变化
