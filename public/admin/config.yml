@@ -1,161 +1,293 @@
+# 后台系统配置
 backend:
-  name: github
-  repo: Spr-Aachen/Twilight # 请替换为您的 GitHub 仓库
-  branch: main # 请替换为您的分支名称
-  site_domain: twilight.spr-aachen.com # 请替换为您的域名
-  base_url: https://twilight.spr-aachen.com  # 请替换为您的 URL
-  auth_endpoint: oauth # OAuth 路由由集成提供
+    name: github
+    repo: Spr-Aachen/Twilight # 请替换为您的 GitHub 仓库
+    branch: main # 请替换为您的分支名称
+    site_domain: twilight.spr-aachen.com # 请替换为您的域名
+    base_url: https://twilight.spr-aachen.com  # 请替换为您的 URL
+    auth_endpoint: oauth # OAuth 路由由集成提供
 
-# 媒体文件配置
+
+# 媒体目录配置
 media_folder: "public/images" # 媒体文件存储路径
 public_folder: "/images" # 公共访问路径
 
-# 集合配置
+
+# 集合管理配置
 collections:
-  # 博客文章集合
-  - name: "posts"
-    label: "Posts"
-    folder: "src/content/posts"
-    create: true
-    slug: "{{slug}}"
-    fields:
-      - {label: "Title", name: "title", widget: "string"}
-      - {label: "Published Date", name: "published", widget: "datetime"}
-      - {label: "Updated Date", name: "updated", widget: "datetime", required: false}
-      - {label: "Description", name: "description", widget: "text", required: false}
-      - {label: "Cover", name: "cover", widget: "image", required: false}
-      - {label: "Tags", name: "tags", widget: "list", default: [], required: false}
-      - {label: "Category", name: "category", widget: "string", required: false}
-      - {label: "Draft", name: "draft", widget: "boolean", default: false}
-      - {label: "Body", name: "body", widget: "markdown"}
-  # 项目集合
-  - name: "projects"
-    label: "Projects"
-    folder: "src/content/projects"
-    create: true
-    slug: "{{slug}}"
-    format: "json"
-    fields:
-      - { label: "Title", name: "title", widget: "string" }
-      - { label: "Description", name: "description", widget: "text" }
-      - { label: "Image", name: "image", widget: "image", required: false }
-      - { label: "Category", name: "category", widget: "select", options: ["library","ai","software","website","game"] }
-      - { label: "Tech Stack", name: "techStack", widget: "list", default: [] }
-      - { label: "Status", name: "status", widget: "select", options: ["completed","in-progress","planned"] }
-      - { label: "Live Demo", name: "liveDemo", widget: "string", required: false }
-      - { label: "Source Code", name: "sourceCode", widget: "string", required: false }
-      - { label: "Start Date", name: "startDate", widget: "datetime" }
-      - { label: "End Date", name: "endDate", widget: "datetime", required: false }
-      - { label: "Featured", name: "featured", widget: "boolean", required: false, default: false }
-      - { label: "Tags", name: "tags", widget: "list", required: false, default: [] }
-  # 技能集合
-  - name: "skills"
-    label: "Skills"
-    folder: "src/content/skills"
-    create: true
-    slug: "{{slug}}"
-    format: "json"
-    fields:
-      - { label: "Name", name: "name", widget: "string" }
-      - { label: "Description", name: "description", widget: "text" }
-      - { label: "Icon", name: "icon", widget: "string" }
-      - { label: "Category", name: "category", widget: "select", options: ["ai","backend","client","frontend","database","engines","tools","others"] }
-      - { label: "Level", name: "level", widget: "select", options: ["beginner","intermediate","advanced","expert"] }
-      - label: "Experience"
-        name: "experience"
-        widget: "object"
+
+    - # 博客文章集合
+        # 集合名称
+        name: "posts"
+        # 后台显示标签
+        label: "Posts"
+        # 内容存储目录
+        folder: "src/content/posts"
+        # 允许创建新条目
+        create: true
+        # 文件命名规则
+        slug: "{{slug}}"
+        # 字段列表
         fields:
-          - { label: "Years", name: "years", widget: "number", value_type: "int", min: 0 }
-          - { label: "Months", name: "months", widget: "number", value_type: "int", min: 0, max: 11 }
-      - { label: "Projects", name: "projects", widget: "list", required: false, default: [] }
-      - { label: "Certifications", name: "certifications", widget: "list", required: false, default: [] }
-      - { label: "Color", name: "color", widget: "string", required: false }
-  # 时间线集合
-  - name: "timeline"
-    label: "Timeline"
-    folder: "src/content/timeline"
-    create: true
-    slug: "{{slug}}"
-    format: "json"
-    fields:
-      - { label: "Title", name: "title", widget: "string" }
-      - { label: "Description", name: "description", widget: "text" }
-      - { label: "Type", name: "type", widget: "select", options: ["education","work","project","achievement"] }
-      - { label: "Start Date", name: "startDate", widget: "datetime" }
-      - { label: "End Date", name: "endDate", widget: "datetime", required: false }
-      - { label: "Location", name: "location", widget: "string", required: false }
-      - { label: "Organization", name: "organization", widget: "string", required: false }
-      - { label: "Position", name: "position", widget: "string", required: false }
-      - { label: "Skills", name: "skills", widget: "list", required: false, default: [] }
-      - { label: "Achievements", name: "achievements", widget: "list", required: false, default: [] }
-      - label: "Links"
-        name: "links"
-        widget: "list"
-        required: false
+            - # 标题
+                {label: "Title", name: "title", widget: "string"}
+            - # 发布日期
+                {label: "Published Date", name: "published", widget: "datetime"}
+            - # 更新日期
+                {label: "Updated Date", name: "updated", widget: "datetime", required: false}
+            - # 描述
+                {label: "Description", name: "description", widget: "text", required: false}
+            - # 封面图
+                {label: "Cover", name: "cover", widget: "image", required: false}
+            - # 标签
+                {label: "Tags", name: "tags", widget: "list", default: [], required: false}
+            - # 分类
+                {label: "Category", name: "category", widget: "string", required: false}
+            - # 草稿
+                {label: "Draft", name: "draft", widget: "boolean", default: false}
+            - # 正文
+                {label: "Body", name: "body", widget: "markdown"}
+
+    - # 项目集合
+        # 集合名称
+        name: "projects"
+        # 后台显示标签
+        label: "Projects"
+        # 内容存储目录
+        folder: "src/content/projects"
+        # 允许创建新条目
+        create: true
+        # 文件命名规则
+        slug: "{{slug}}"
+        # 文件存储格式
+        format: "json"
+        # 字段列表
         fields:
-          - { label: "Name", name: "name", widget: "string" }
-          - { label: "URL", name: "url", widget: "string" }
-          - { label: "Type", name: "type", widget: "select", options: ["certificate","project","other"] }
-      - { label: "Icon", name: "icon", widget: "string", required: false }
-      - { label: "Color", name: "color", widget: "string", required: false }
-  # 日记集合
-  - name: "diary"
-    label: "Diary"
-    folder: "src/content/diary"
-    create: true
-    slug: "{{year}}-{{month}}-{{day}}-{{hour}}-{{minute}}"
-    format: "json"
-    fields:
-      - { label: "Content", name: "content", widget: "text" }
-      - { label: "Date", name: "date", widget: "datetime" }
-      - label: "Images"
-        name: "images"
-        widget: "list"
-        required: false
-        default: []
-        field: { label: "Image", name: "image", widget: "image" }
-  # 相册集合
-  - name: "albums"
-    label: "Albums"
-    folder: "src/content/albums"
-    create: true
-    slug: "{{slug}}"
-    format: "json"
-    fields:
-      - { label: "Title", name: "title", widget: "string" }
-      - { label: "Description", name: "description", widget: "text", required: false }
-      - { label: "Cover", name: "cover", widget: "image" }
-      - { label: "Date", name: "date", widget: "datetime" }
-      - { label: "Location", name: "location", widget: "string", required: false }
-      - { label: "Tags", name: "tags", widget: "list", required: false, default: [] }
-      - { label: "Layout", name: "layout", widget: "select", options: ["grid", "masonry", "list"], default: "grid" }
-      - { label: "Columns", name: "columns", widget: "number", default: 3, value_type: "int", min: 1, max: 6 }
-      - label: "Photos"
-        name: "photos"
-        widget: "list"
-        required: false
+            - # 项目标题
+                { label: "Title", name: "title", widget: "string" }
+            - # 项目描述
+                { label: "Description", name: "description", widget: "text" }
+            - # 项目封面
+                { label: "Image", name: "image", widget: "image", required: false }
+            - # 项目类别
+                { label: "Category", name: "category", widget: "select", options: ["library","ai","software","website","game"] }
+            - # 技术栈
+                { label: "Tech Stack", name: "techStack", widget: "list", default: [] }
+            - # 项目状态
+                { label: "Status", name: "status", widget: "select", options: ["completed","in-progress","planned"] }
+            - # 在线演示
+                { label: "Live Demo", name: "liveDemo", widget: "string", required: false }
+            - # 源代码
+                { label: "Source Code", name: "sourceCode", widget: "string", required: false }
+            - # 开始日期
+                { label: "Start Date", name: "startDate", widget: "datetime" }
+            - # 结束日期
+                { label: "End Date", name: "endDate", widget: "datetime", required: false }
+            - # 是否精选
+                { label: "Featured", name: "featured", widget: "boolean", required: false, default: false }
+            - # 标签
+                { label: "Tags", name: "tags", widget: "list", required: false, default: [] }
+
+    - # 技能集合
+        # 集合名称
+        name: "skills"
+        # 后台显示标签
+        label: "Skills"
+        # 内容存储目录
+        folder: "src/content/skills"
+        # 允许创建新条目
+        create: true
+        # 文件命名规则
+        slug: "{{slug}}"
+        # 文件存储格式
+        format: "json"
+        # 字段列表
         fields:
-          - { label: "Image", name: "src", widget: "image" }
-          - { label: "Caption", name: "alt", widget: "string", required: false }
-          - { label: "Title", name: "title", widget: "string", required: false }
-          - { label: "Description", name: "description", widget: "text", required: false }
-          - { label: "Tags", name: "tags", widget: "list", required: false, default: [] }
-          - { label: "Date", name: "date", widget: "datetime", required: false }
-      - { label: "Visible", name: "visible", widget: "boolean", default: true, required: false }
-  # 友链集合
-  - name: "friends"
-    label: "Friends"
-    folder: "src/content/friends"
-    create: true
-    slug: "{{slug}}"
-    format: "json"
-    fields:
-      - { label: "Title", name: "title", widget: "string" }
-      - { label: "Avatar URL", name: "imgurl", widget: "string" }
-      - { label: "Description", name: "desc", widget: "text" }
-      - { label: "Site URL", name: "siteurl", widget: "string" }
-      - { label: "Tags", name: "tags", widget: "list", required: false, default: [] }
+            - # 技能名称
+                { label: "Name", name: "name", widget: "string" }
+            - # 技能描述
+                { label: "Description", name: "description", widget: "text" }
+            - # 图标
+                { label: "Icon", name: "icon", widget: "string" }
+            - # 技能类别
+                { label: "Category", name: "category", widget: "select", options: ["ai","backend","client","frontend","database","engines","tools","others"] }
+            - # 熟练程度
+                { label: "Level", name: "level", widget: "select", options: ["beginner","intermediate","advanced","expert"] }
+            - # 经验
+                label: "Experience"
+                name: "experience"
+                widget: "object"
+                fields:
+                    - # 年
+                        { label: "Years", name: "years", widget: "number", value_type: "int", min: 0 }
+                    - # 月
+                        { label: "Months", name: "months", widget: "number", value_type: "int", min: 0, max: 11 }
+            - # 相关项目
+               { label: "Projects", name: "projects", widget: "list", required: false, default: [] }
+            - # 相关认证
+               { label: "Certifications", name: "certifications", widget: "list", required: false, default: [] }
+            - # 主题颜色
+               { label: "Color", name: "color", widget: "string", required: false }
+
+    - # 时间线集合
+        # 集合名称
+        name: "timeline"
+        # 后台显示标签
+        label: "Timeline"
+        # 内容存储目录
+        folder: "src/content/timeline"
+        # 允许创建新条目
+        create: true
+        # 文件命名规则
+        slug: "{{slug}}"
+        # 文件存储格式
+        format: "json"
+        # 字段列表
+        fields:
+            - # 标题
+                { label: "Title", name: "title", widget: "string" }
+            - # 描述
+                { label: "Description", name: "description", widget: "text" }
+            - # 类型
+                { label: "Type", name: "type", widget: "select", options: ["education","work","project","achievement"] }
+            - # 开始日期
+                { label: "Start Date", name: "startDate", widget: "datetime" }
+            - # 结束日期
+                { label: "End Date", name: "endDate", widget: "datetime", required: false }
+            - # 地点
+                { label: "Location", name: "location", widget: "string", required: false }
+            - # 组织/机构
+                { label: "Organization", name: "organization", widget: "string", required: false }
+            - # 职位
+                { label: "Position", name: "position", widget: "string", required: false }
+            - # 相关技能
+                { label: "Skills", name: "skills", widget: "list", required: false, default: [] }
+            - # 相关成就
+                { label: "Achievements", name: "achievements", widget: "list", required: false, default: [] }
+            - # 相关链接
+                label: "Links"
+                name: "links"
+                widget: "list"
+                required: false
+                fields:
+                    - # 链接名称
+                        { label: "Name", name: "name", widget: "string" }
+                    - # 链接地址
+                        { label: "URL", name: "url", widget: "string" }
+                    - # 链接类型
+                        { label: "Type", name: "type", widget: "select", options: ["certificate","project","other"] }
+            - # 图标
+                { label: "Icon", name: "icon", widget: "string", required: false }
+            - # 主题颜色
+                { label: "Color", name: "color", widget: "string", required: false }
+
+    - # 日记集合
+        # 集合名称
+        name: "diary"
+        # 后台显示标签
+        label: "Diary"
+        # 内容存储目录
+        folder: "src/content/diary"
+        # 允许创建新条目
+        create: true
+        # 文件命名规则
+        slug: "{{year}}-{{month}}-{{day}}-{{hour}}-{{minute}}"
+        # 文件存储格式
+        format: "json"
+        # 字段列表
+        fields:
+            - # 日记内容
+                { label: "Content", name: "content", widget: "text" }
+            - # 日记日期
+                { label: "Date", name: "date", widget: "datetime" }
+            - # 图片列表
+                label: "Images"
+                name: "images"
+                widget: "list"
+                required: false
+                default: []
+                field: { label: "Image", name: "image", widget: "image" }
+
+    - # 相册集合
+        # 集合名称
+        name: "albums"
+        # 后台显示标签
+        label: "Albums"
+        # 内容存储目录
+        folder: "src/content/albums"
+        # 允许创建新条目
+        create: true
+        # 文件命名规则
+        slug: "{{slug}}"
+        # 文件存储格式
+        format: "json"
+        # 字段列表
+        fields:
+            - # 相册标题
+                { label: "Title", name: "title", widget: "string" }
+            - # 相册描述
+                { label: "Description", name: "description", widget: "text", required: false }
+            - # 相册封面
+                { label: "Cover", name: "cover", widget: "image" }
+            - # 日期
+                { label: "Date", name: "date", widget: "datetime" }
+            - # 地点
+                { label: "Location", name: "location", widget: "string", required: false }
+            - # 标签
+                { label: "Tags", name: "tags", widget: "list", required: false, default: [] }
+            - # 布局方式
+                { label: "Layout", name: "layout", widget: "select", options: ["grid", "masonry", "list"], default: "grid" }
+            - # 列数
+                { label: "Columns", name: "columns", widget: "number", default: 3, value_type: "int", min: 1, max: 6 }
+            - # 照片列表
+                label: "Photos"
+                name: "photos"
+                widget: "list"
+                required: false
+                fields:
+                    - # 图片路径
+                        { label: "Image", name: "src", widget: "image" }
+                    - # 图片描述
+                        { label: "Caption", name: "alt", widget: "string", required: false }
+                    - # 图片标题
+                        { label: "Title", name: "title", widget: "string", required: false }
+                    - # 图片说明
+                        { label: "Description", name: "description", widget: "text", required: false }
+                    - # 标签
+                        { label: "Tags", name: "tags", widget: "list", required: false, default: [] }
+                    - # 拍摄日期
+                        { label: "Date", name: "date", widget: "datetime", required: false }
+            - # 是否可见
+                { label: "Visible", name: "visible", widget: "boolean", default: true, required: false }
+
+    - # 友链集合
+        # 集合名称
+        name: "friends"
+        # 后台显示标签
+        label: "Friends"
+        # 内容存储目录
+        folder: "src/content/friends"
+        # 允许创建新条目
+        create: true
+        # 文件命名规则
+        slug: "{{slug}}"
+        # 文件存储格式
+        format: "json"
+        # 字段列表
+        fields:
+            - # 网站名称
+                { label: "Title", name: "title", widget: "string" }
+            - # 头像链接
+                { label: "Avatar URL", name: "imgurl", widget: "string" }
+            - # 网站描述
+                { label: "Description", name: "desc", widget: "text" }
+            - # 网站链接
+                { label: "Site URL", name: "siteurl", widget: "string" }
+            - # 标签
+                { label: "Tags", name: "tags", widget: "list", required: false, default: [] }
+
 
 # 编辑器配置
 editor:
-  preview: true  # 启用预览功能
+    # 启用预览功能
+    preview: true
