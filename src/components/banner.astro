@@ -53,7 +53,7 @@ const isPerformanceMode = config.banner?.waves?.performanceMode;
             <ul class="carousel-list h-full w-full">
                 {imageSources.desktop.map((src, index) => (
                     <li class:list={[
-                        "carousel-item desktop-item hidden lg:block absolute inset-0 transition-opacity duration-1200",
+                        "carousel-item desktop-item hidden md:block absolute inset-0 transition-opacity duration-1200",
                         index === 0 ? 'opacity-100' : 'opacity-0',
                         carouselConfig?.kenBurns !== false ? 'ken-burns-enabled' : ''
                     ]}>
@@ -68,7 +68,7 @@ const isPerformanceMode = config.banner?.waves?.performanceMode;
                 ))}
                 {imageSources.mobile.map((src, index) => (
                     <li class:list={[
-                        "carousel-item mobile-item block lg:hidden absolute inset-0 transition-opacity duration-1200",
+                        "carousel-item mobile-item block md:hidden absolute inset-0 transition-opacity duration-1200",
                         index === 0 ? 'opacity-100' : 'opacity-0',
                         carouselConfig?.kenBurns !== false ? 'ken-burns-enabled' : ''
                     ]}>
@@ -87,7 +87,7 @@ const isPerformanceMode = config.banner?.waves?.performanceMode;
         <div class="relative h-full w-full">
             <ImageWrapper
                 alt="Mobile banner"
-                class:list={["block lg:hidden object-cover h-full w-full transition duration-600 opacity-100"]}
+                class:list={["block md:hidden object-cover h-full w-full transition duration-600 opacity-100"]}
                 src={imageSources.mobile[0] || imageSources.desktop[0] || ''}
                 position={config.position}
                 loading="eager"
@@ -95,7 +95,7 @@ const isPerformanceMode = config.banner?.waves?.performanceMode;
             <ImageWrapper
                 id="banner"
                 alt="Desktop banner"
-                class:list={["hidden lg:block object-cover h-full w-full transition duration-600 opacity-100"]}
+                class:list={["hidden md:block object-cover h-full w-full transition duration-600 opacity-100"]}
                 src={imageSources.desktop[0] || imageSources.mobile[0] || ''}
                 position={config.position}
                 loading="eager"

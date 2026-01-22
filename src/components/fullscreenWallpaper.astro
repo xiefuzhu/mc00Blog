@@ -50,7 +50,7 @@ const blur = config.fullscreen?.blur || 0;
             <ul class="carousel-list h-full w-full">
                 {imageSources.desktop.map((src, index) => (
                     <li class:list={[
-                        "carousel-item desktop-item hidden lg:block absolute inset-0 transition-opacity duration-1200",
+                        "carousel-item desktop-item hidden md:block absolute inset-0 transition-opacity duration-1200",
                         index === 0 ? 'opacity-100' : 'opacity-0',
                         carouselConfig?.kenBurns !== false ? 'ken-burns-enabled' : ''
                     ]}>
@@ -66,7 +66,7 @@ const blur = config.fullscreen?.blur || 0;
                 ))}
                 {imageSources.mobile.map((src, index) => (
                     <li class:list={[
-                        "carousel-item mobile-item block lg:hidden absolute inset-0 transition-opacity duration-1200",
+                        "carousel-item mobile-item block md:hidden absolute inset-0 transition-opacity duration-1200",
                         index === 0 ? 'opacity-100' : 'opacity-0',
                         carouselConfig?.kenBurns !== false ? 'ken-burns-enabled' : ''
                     ]}>
@@ -86,7 +86,7 @@ const blur = config.fullscreen?.blur || 0;
         <div class="relative h-full w-full">
             <ImageWrapper
                 alt="Mobile wallpaper"
-                class:list={["block lg:hidden object-cover h-full w-full transition duration-600 opacity-100"]}
+                class:list={["block md:hidden object-cover h-full w-full transition duration-600 opacity-100"]}
                 src={imageSources.mobile[0] || imageSources.desktop[0] || ''}
                 position={config.position}
                 style={blur > 0 ? `filter: blur(${blur}px);` : undefined}
@@ -95,7 +95,7 @@ const blur = config.fullscreen?.blur || 0;
             <ImageWrapper
                 id="fullscreen-wallpaper"
                 alt="Desktop wallpaper"
-                class:list={["hidden lg:block object-cover h-full w-full transition duration-600 opacity-100"]}
+                class:list={["hidden md:block object-cover h-full w-full transition duration-600 opacity-100"]}
                 src={imageSources.desktop[0] || imageSources.mobile[0] || ''}
                 position={config.position}
                 style={blur > 0 ? `filter: blur(${blur}px);` : undefined}
@@ -242,7 +242,7 @@ const blur = config.fullscreen?.blur || 0;
             if (wallpaper) {
                 wallpaper.classList.remove('opacity-0');
             }
-            const mobileWallpaper = document.querySelector('.block.lg\\:hidden[alt="Mobile wallpaper"]');
+            const mobileWallpaper = document.querySelector('.block.md\\:hidden[alt="Mobile wallpaper"]');
             if (mobileWallpaper && !document.getElementById('fullscreen-wallpaper-carousel')) {
                 mobileWallpaper.classList.remove('opacity-0');
                 mobileWallpaper.classList.add('opacity-100');

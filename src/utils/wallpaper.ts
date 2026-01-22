@@ -125,7 +125,7 @@ function initBannerElements(banner: HTMLElement | null) {
     banner.classList.add('opacity-100');
 
     // Handle mobile banner
-    const mobileBanner = document.querySelector('.block.lg\\:hidden[alt="Mobile banner"]');
+    const mobileBanner = document.querySelector('.block.md\\:hidden[alt="Mobile banner"]');
     if (mobileBanner) {
         mobileBanner.classList.remove('opacity-0');
         mobileBanner.classList.add('opacity-100');
