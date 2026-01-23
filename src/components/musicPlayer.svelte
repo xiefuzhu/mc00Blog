@@ -566,7 +566,7 @@ onDestroy(() => {
 </div>
 {/if}
 
-<div class="music-player fixed bottom-4 right-4 z-50 transition-all duration-300 ease-in-out onload-animation-up"
+<div class="music-player fixed bottom-4 right-4 z-[101] transition-all duration-300 ease-in-out onload-animation-up"
      class:expanded={!isCollapsed}
      class:collapsed={isCollapsed}>
     <!-- 折叠状态的小圆球 -->
