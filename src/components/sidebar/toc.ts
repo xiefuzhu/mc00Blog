@@ -15,6 +15,20 @@ export class TableOfContents extends HTMLElement {
     _retryCount = 0;
     _backToTopObserver: MutationObserver | null = null;
 
+    _handleBtnClick = (e: Event) => {
+        e.stopPropagation();
+        const panel = this.querySelector('.toc-floating-panel');
+        const isHidden = panel?.classList.contains('hidden') || panel?.classList.contains('opacity-0');
+        this.toggleFloatingPanel(!!isHidden);
+    };
+
+    _handleDocClick = (e: Event) => {
+        const panel = this.querySelector('.toc-floating-panel');
+        if (panel && !panel.classList.contains('hidden') && !panel.contains(e.target as Node)) {
+            this.toggleFloatingPanel(false);
+        }
+    };
+
     constructor() {
         super();
         this.observer = new IntersectionObserver(this.markVisibleSection);
@@ -268,19 +282,11 @@ export class TableOfContents extends HTMLElement {
 
         if (this.dataset.isFloating === "true") {
             const btn = this.querySelector('.toc-floating-btn');
-            btn?.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const panel = this.querySelector('.toc-floating-panel');
-                const isHidden = panel?.classList.contains('hidden') || panel?.classList.contains('opacity-0');
-                this.toggleFloatingPanel(!!isHidden);
-            });
+            btn?.removeEventListener('click', this._handleBtnClick);
+            btn?.addEventListener('click', this._handleBtnClick);
 
-            document.addEventListener('click', (e) => {
-                const panel = this.querySelector('.toc-floating-panel');
-                if (panel && !panel.classList.contains('hidden') && !panel.contains(e.target as Node)) {
-                    this.toggleFloatingPanel(false);
-                }
-            });
+            document.removeEventListener('click', this._handleDocClick);
+            document.addEventListener('click', this._handleDocClick);
 
             // 监听 backToTop 按钮的状态
             const backToTopBtn = document.getElementById('back-to-top-btn');
@@ -387,6 +393,10 @@ export class TableOfContents extends HTMLElement {
         this.observer.disconnect();
         this._backToTopObserver?.disconnect();
         this.tocEl?.removeEventListener("click", this.handleAnchorClick);
+        
+        const btn = this.querySelector('.toc-floating-btn');
+        btn?.removeEventListener('click', this._handleBtnClick);
+        document.removeEventListener('click', this._handleDocClick);
     };
 }
 
