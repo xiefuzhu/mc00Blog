@@ -13,13 +13,15 @@
         categories = [],
         tags = [],
         class: className = "",
-        style = ""
+        style = "",
+        side = "default",
     }: {
         posts?: any[],
         categories?: any[],
         tags?: any[],
         class?: string,
-        style?: string
+        style?: string,
+        side?: string,
     } = $props();
 
     const labels = {
@@ -317,53 +319,67 @@
         }
     };
 
-    onMount(async () => {
+    onMount(() => {
         updateIsDesktop();
 
-        await loadECharts();
+        let visibilityObserver: IntersectionObserver;
 
-        // 检查是否处于初始加载动画阶段
-        const hasInitialAnimation = document.documentElement.classList.contains('show-initial-animation') ||
-                                   document.documentElement.classList.contains('is-loading');
+        const runInit = async () => {
+            await loadECharts();
 
-        if (hasInitialAnimation) {
-            // 查找带有动画类的侧边栏容器
-            const sidebar = container?.closest('.onload-animation-up');
+            // 检查是否处于初始加载动画阶段
+            const hasInitialAnimation = document.documentElement.classList.contains('show-initial-animation') ||
+                                       document.documentElement.classList.contains('is-loading');
 
-            const startInit = () => {
-                if (!isInitialized) initCharts();
-            };
+            if (hasInitialAnimation) {
+                // 查找带有动画类的侧边栏容器
+                const sidebar = container?.closest('.onload-animation-up');
 
-            if (sidebar) {
-                // 监听侧边栏淡入动画开始
-                sidebar.addEventListener('animationstart', (e) => {
-                    if ((e as AnimationEvent).animationName === 'fade-in-up') {
+                const startInit = () => {
+                    if (!isInitialized) initCharts();
+                };
+
+                if (sidebar) {
+                    // 监听侧边栏淡入动画开始
+                    sidebar.addEventListener('animationstart', (e) => {
+                        if ((e as AnimationEvent).animationName === 'fade-in-up') {
+                            startInit();
+                        }
+                    }, { once: true });
+                }
+
+                // 使用 MutationObserver 监听 html 的 class 变化，作为更可靠的保底机制
+                const htmlObserver = new MutationObserver(() => {
+                    const isStillLoading = document.documentElement.classList.contains('is-loading');
+
+                    // 一旦 loading 结束（进入动画播放阶段），就开始绘制图表
+                    if (!isStillLoading) {
                         startInit();
+                        htmlObserver.disconnect();
                     }
-                }, { once: true });
-            }
+                });
+                htmlObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
-            // 使用 MutationObserver 监听 html 的 class 变化，作为更可靠的保底机制
-            const htmlObserver = new MutationObserver(() => {
-                const isStillLoading = document.documentElement.classList.contains('is-loading');
-
-                // 一旦 loading 结束（进入动画播放阶段），就开始绘制图表
-                if (!isStillLoading) {
+                // 较长的保底时间（3秒），防止所有监听机制意外失效
+                setTimeout(() => {
                     startInit();
                     htmlObserver.disconnect();
+                }, 3000);
+
+            } else {
+                // 无动画状态，直接加载
+                initCharts();
+            }
+        };
+
+        if (container) {
+            visibilityObserver = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    visibilityObserver.disconnect();
+                    runInit();
                 }
             });
-            htmlObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-
-            // 较长的保底时间（3秒），防止所有监听机制意外失效
-            setTimeout(() => {
-                startInit();
-                htmlObserver.disconnect();
-            }, 3000);
-
-        } else {
-            // 无动画状态，直接加载
-            initCharts();
+            visibilityObserver.observe(container);
         }
 
         const handleResize = () => {
@@ -401,6 +417,7 @@
         return () => {
             window.removeEventListener('resize', handleResize);
             observer.disconnect();
+            if (visibilityObserver) visibilityObserver.disconnect();
         };
     });
 
@@ -411,7 +428,7 @@
     });
 </script>
 
-<div id="statistics" bind:this={container} data-swup-persist="statistics" class={"pb-4 card-base " + className} {style}>
+<div id={`statistics-${side}`} bind:this={container} class={"pb-4 card-base " + className} {style}>
     <div class="font-bold transition text-lg text-neutral-900 dark:text-neutral-100 relative ml-8 mt-4 mb-2
         before:w-1 before:h-4 before:rounded-md before:bg-[var(--primary)]
         before:absolute before:left-[-16px] before:top-[5.5px]">{labels.statistics}</div>
