@@ -3,11 +3,16 @@ import type { Translation } from "@i18n/translation";
 
 
 export const zh: Translation = {
+    // 加载遮罩
+    [Key.loading]: "加载中",
+
+    // 导航
     [Key.home]: "主页",
     [Key.archive]: "归档",
     [Key.about]: "关于",
     [Key.search]: "搜索",
 
+    // 文章
     [Key.tags]: "标签",
     [Key.categories]: "分类",
     [Key.series]: "系列",
@@ -16,6 +21,12 @@ export const zh: Translation = {
     [Key.postList]: "文章列表",
     [Key.statistics]: "统计",
     [Key.tableOfContents]: "目录",
+
+    // 统计
+    [Key.pageViews]: "浏览量",
+    [Key.visitors]: "访客",
+    [Key.statsLoading]: "统计加载中...",
+    [Key.statsError]: "统计不可用",
 
     // 公告栏
     [Key.announcement]: "公告",
@@ -247,4 +258,17 @@ export const zh: Translation = {
 
     // 音乐播放器
     [Key.playlist]: "播放列表",
+    [Key.musicEmptyPlaylist]: "本地播放列表为空",
+    [Key.musicNoSongsAvailable]: "播放列表中没有可用的歌曲",
+    [Key.musicPlayFailed]: "无法播放 \"{0}\", 正在尝试下一首...",
+    [Key.musicAutoplayBlocked]: "自动播放被拦截",
+    [Key.musicMetingFailed]: "Meting 歌单获取失败",
+    [Key.musicUnknownArtist]: "未知艺术家",
+    [Key.musicUnknownTrack]: "未知歌曲",
+    [Key.musicSwitchToLocal]: "切换到 Local 模式",
+    [Key.musicSwitchToMeting]: "切换到 Meting 模式",
+    [Key.musicProgress]: "播放进度",
+    [Key.musicCollapse]: "折叠播放器",
+    [Key.musicVolume]: "音量控制",
+    [Key.musicExpand]: "展开音乐播放器",
 };

@@ -128,8 +128,8 @@ async function fetchMetingPlaylist() {
         if (!res.ok) throw new Error("meting api error");
         const list = await res.json();
         playlist = list.map((song: any, index: number) => {
-            let title = song.name ?? song.title ?? "未知歌曲";
-            let artist = song.artist ?? song.author ?? "未知艺术家";
+            let title = song.name ?? song.title ?? i18n(Key.musicUnknownTrack);
+            let artist = song.artist ?? song.author ?? i18n(Key.musicUnknownArtist);
             let dur = song.duration ?? 0;
             if (dur > 10000) dur = Math.floor(dur / 1000);
             if (!Number.isFinite(dur) || dur <= 0) dur = 0;
@@ -150,7 +150,7 @@ async function fetchMetingPlaylist() {
         }
         isLoading = false;
     } catch (e) {
-        showErrorMessage("Meting 歌单获取失败");
+        showErrorMessage(i18n(Key.musicMetingFailed));
         isLoading = false;
     }
 }
@@ -178,7 +178,7 @@ async function toggleMode() {
                 restoreLastSong();
             }, 0);
         } else {
-            showErrorMessage("本地播放列表为空");
+            showErrorMessage(i18n(Key.musicEmptyPlaylist));
         }
     }
 }
@@ -331,7 +331,7 @@ function handleLoadSuccess() {
                 autoplayFailed = false;
                 shouldPlay = false;
             }).catch((error) => {
-                showErrorMessage("自动播放被拦截");
+                showErrorMessage(i18n(Key.musicAutoplayBlocked));
                 autoplayFailed = true;
                 // 确保 UI 状态为暂停
                 isPlaying = false;
@@ -355,9 +355,9 @@ function handleUserInteraction() {
 
 function handleLoadError(event: Event) {
     isLoading = false;
-    showErrorMessage(`无法播放 "${currentSong.title}"，正在尝试下一首...`);
+    showErrorMessage(i18n(Key.musicPlayFailed).replace("{0}", currentSong.title));
     if (playlist.length > 1) setTimeout(() => nextSong(), 1000);
-    else showErrorMessage("播放列表中没有可用的歌曲");
+    else showErrorMessage(i18n(Key.musicNoSongsAvailable));
 }
 
 function handleLoadStart() {}
@@ -530,7 +530,7 @@ onMount(() => {
                 restoreLastSong();
             }, 0);
         } else {
-            showErrorMessage("本地播放列表为空");
+            showErrorMessage(i18n(Key.musicEmptyPlaylist));
         }
     }
 });
@@ -583,7 +583,7 @@ onDestroy(() => {
          }}
          role="button"
          tabindex="0"
-         aria-label="展开音乐播放器">
+         aria-label={i18n(Key.musicExpand)}>
         {#if isLoading}
             <Icon icon="eos-icons:loading" class="text-white text-lg" />
         {:else if isPlaying}
@@ -618,13 +618,13 @@ onDestroy(() => {
             <div class="flex items-center gap-1">
                 <button class="btn-plain w-8 h-8 rounded-lg flex items-center justify-center"
                         onclick={toggleMode}
-                        title={mode === "meting" ? "切换到 Local 模式" : "切换到 Meting 模式"}>
+                        title={mode === "meting" ? i18n(Key.musicSwitchToLocal) : i18n(Key.musicSwitchToMeting)}>
                     <Icon icon={mode === "meting" ? "material-symbols:cloud" : "material-symbols:folder"} class="text-lg" />
                 </button>
                 <button class="btn-plain w-8 h-8 rounded-lg flex items-center justify-center"
                         class:text-[var(--primary)]={showPlaylist}
                         onclick={togglePlaylist}
-                        title="播放列表">
+                        title={i18n(Key.playlist)}>
                     <Icon icon="material-symbols:queue-music" class="text-lg" />
                 </button>
             </div>
@@ -649,7 +649,7 @@ onDestroy(() => {
                 }}
                 role="slider"
                 tabindex="0"
-                aria-label="播放进度"
+                aria-label={i18n(Key.musicProgress)}
                 aria-valuemin="0"
                 aria-valuemax="100"
                 aria-valuenow={duration > 0 ? (currentTime / duration * 100) : 0}>
@@ -722,7 +722,7 @@ onDestroy(() => {
                 }}
                 role="slider"
                 tabindex="0"
-                aria-label="音量控制"
+                aria-label={i18n(Key.musicVolume)}
                 aria-valuemin="0"
                 aria-valuemax="100"
                 aria-valuenow={volume * 100}>
@@ -734,7 +734,7 @@ onDestroy(() => {
             </div>
             <button class="btn-plain w-8 h-8 rounded-lg flex items-center justify-center"
                     onclick={toggleCollapse}
-                    title="折叠播放器">
+                    title={i18n(Key.musicCollapse)}>
                 <Icon icon="material-symbols:expand-more" class="text-lg" />
             </button>
         </div>

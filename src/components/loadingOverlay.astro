@@ -1,12 +1,14 @@
 ---
 import { siteConfig } from "@/config";
+import { i18n } from "@i18n/translation";
+import I18nKey from "@i18n/i18nKey";
 
 
 const config = siteConfig.loadingOverlay;
 const showOverlay = config?.enable ?? true;
 const showSpinner = config?.spinner?.enable ?? true;
 const showTitle = config?.title?.enable ?? true;
-const titleContent = config?.title?.content ?? "LOADING";
+const titleContent = config?.title?.content ?? i18n(I18nKey.loading);
 const spinnerInterval = config?.spinner?.interval ?? 1.5;
 const titleInterval = config?.title?.interval ?? 1.5;
 ---

@@ -3,11 +3,16 @@ import type { Translation } from "@i18n/translation";
 
 
 export const ja: Translation = {
+    // 加載遮罩
+    [Key.loading]: "読み込み中",
+
+    // ナビゲーション
     [Key.home]: "ホーム",
     [Key.archive]: "アーカイブ",
     [Key.about]: "について",
     [Key.search]: "検索",
 
+    // 投稿
     [Key.tags]: "タグ",
     [Key.categories]: "カテゴリ",
     [Key.series]: "シリーズ",
@@ -16,6 +21,12 @@ export const ja: Translation = {
     [Key.postList]: "投稿リスト",
     [Key.statistics]: "統計",
     [Key.tableOfContents]: "目次",
+
+    // 統計
+    [Key.pageViews]: "閲覧数",
+    [Key.visitors]: "訪問者",
+    [Key.statsLoading]: "統計を読み込み中...",
+    [Key.statsError]: "統計を利用できません",
 
     // お知らせ
     [Key.announcement]: "お知らせ",
@@ -245,6 +256,19 @@ export const ja: Translation = {
     [Key.minute]: "分",
     [Key.second]: "秒",
 
-    // 音楽プレーヤー
+    // 音楽プレイヤー
     [Key.playlist]: "プレイリスト",
+    [Key.musicEmptyPlaylist]: "ローカルプレイリストが空です",
+    [Key.musicNoSongsAvailable]: "プレイリストに利用可能な曲がありません",
+    [Key.musicPlayFailed]: "\"{0}\" の再生に失敗しました。次を試行しています...",
+    [Key.musicAutoplayBlocked]: "自動再生がブロックされました",
+    [Key.musicMetingFailed]: "Meting プレイリストの取得に失敗しました",
+    [Key.musicUnknownArtist]: "未知のアーティスト",
+    [Key.musicUnknownTrack]: "未知の曲",
+    [Key.musicSwitchToLocal]: "ローカルモードに切り替え",
+    [Key.musicSwitchToMeting]: "Metingモードに切り替え",
+    [Key.musicProgress]: "再生の進捗",
+    [Key.musicCollapse]: "プレイヤーを閉じる",
+    [Key.musicVolume]: "音量調節",
+    [Key.musicExpand]: "音楽プレイヤーを展開",
 };

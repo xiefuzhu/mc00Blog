@@ -1,9 +1,14 @@
 enum I18nKey {
+    // 加载
+    loading = "loading",
+
+    // 导航
     home = "home",
     archive = "archive",
     about = "about",
     search = "search",
 
+    // 文章
     tags = "tags",
     categories = "categories",
     series = "series",
@@ -12,6 +17,12 @@ enum I18nKey {
     postList = "postList",
     statistics = "statistics",
     tableOfContents = "tableOfContents",
+
+    // 统计
+    pageViews = "pageViews",
+    visitors = "visitors",
+    statsLoading = "statsLoading",
+    statsError = "statsError",
 
     // 公告栏
     announcement = "announcement",
@@ -244,6 +255,19 @@ enum I18nKey {
 
     // 音乐播放器
     playlist = "playlist",
+    musicEmptyPlaylist = "musicEmptyPlaylist",
+    musicNoSongsAvailable = "musicNoSongsAvailable",
+    musicPlayFailed = "musicPlayFailed",
+    musicAutoplayBlocked = "musicAutoplayBlocked",
+    musicMetingFailed = "musicMetingFailed",
+    musicUnknownArtist = "musicUnknownArtist",
+    musicUnknownTrack = "musicUnknownTrack",
+    musicSwitchToLocal = "musicSwitchToLocal",
+    musicSwitchToMeting = "musicSwitchToMeting",
+    musicProgress = "musicProgress",
+    musicCollapse = "musicCollapse",
+    musicVolume = "musicVolume",
+    musicExpand = "musicExpand",
 }
 
 export default I18nKey;
