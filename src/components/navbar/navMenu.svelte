@@ -48,17 +48,17 @@ onMount(() => {
         {#each links as link}
             <div class="mobile-menu-item">
                 <a href={link.external ? link.url : url(link.url)} 
-                    class="group flex justify-between items-center py-2 pl-3 pr-1 rounded-lg gap-8 hover:bg-[var(--btn-plain-bg-hover)] active:bg-[var(--btn-plain-bg-active)] transition"
+                    class="group flex justify-between items-center py-2 pl-3 pr-1 rounded-lg gap-8 hover:bg-(--btn-plain-bg-hover) active:bg-(--btn-plain-bg-active) transition"
                     target={link.external ? "_blank" : null}
                 >
-                    <div class="flex items-center transition text-black/75 dark:text-white/75 font-bold group-hover:text-[var(--primary)] group-active:text-[var(--primary)]">
+                    <div class="flex items-center transition text-black/75 dark:text-white/75 font-bold group-hover:text-(--primary) group-active:text-(--primary)">
                         {#if link.icon}
                             <Icon icon={link.icon} class="text-[1.1rem] mr-2" />
                         {/if}
                         {link.name}
                     </div>
                     {#if !link.external}
-                        <Icon icon="material-symbols:chevron-right-rounded" class="transition text-[1.25rem] text-[var(--primary)]" />
+                        <Icon icon="material-symbols:chevron-right-rounded" class="transition text-[1.25rem] text-(--primary)" />
                     {:else}
                         <Icon icon="fa6-solid:arrow-up-right-from-square" class="transition text-[0.75rem] text-black/25 dark:text-white/25 -translate-x-1" />
                     {/if}

@@ -293,8 +293,8 @@ export class WidgetManager {
         // Desktop: Visible if hasLeftSidebar
         const leftSidebarClass = `
             mb-0 col-span-1 hidden
-            ${hasAnyComponents ? "md:block md:max-w-[17.5rem]" : ""}
-            ${hasLeftSidebar ? "lg:block lg:max-w-[17.5rem] lg:col-start-1 lg:col-end-2 lg:row-start-1 lg:row-end-2" : "lg:hidden"}
+            ${hasAnyComponents ? "md:block md:max-w-70" : ""}
+            ${hasLeftSidebar ? "lg:block lg:max-w-70 lg:col-start-1 lg:col-end-2 lg:row-start-1 lg:row-end-2" : "lg:hidden"}
         `.trim().replace(/\s+/g, " ");
 
         // 右侧侧边栏容器类名
@@ -307,8 +307,8 @@ export class WidgetManager {
             ${
                 hasRightSidebar
                     ? hasLeftSidebar
-                        ? "lg:block lg:max-w-[17.5rem] lg:col-start-3 lg:col-end-4 lg:row-start-1 lg:row-end-2"
-                        : "lg:block lg:max-w-[17.5rem] lg:col-start-2 lg:col-end-3 lg:row-start-1 lg:row-end-2"
+                        ? "lg:block lg:max-w-70 lg:col-start-3 lg:col-end-4 lg:row-start-1 lg:row-end-2"
+                        : "lg:block lg:max-w-70 lg:col-start-2 lg:col-end-3 lg:row-start-1 lg:row-end-2"
                     : "lg:hidden"
             }
         `.trim().replace(/\s+/g, " ");

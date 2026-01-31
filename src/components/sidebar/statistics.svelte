@@ -430,7 +430,7 @@
 
 <div id={`statistics-${side}`} bind:this={container} class={"pb-4 card-base " + className} {style}>
     <div class="font-bold transition text-lg text-neutral-900 dark:text-neutral-100 relative ml-8 mt-4 mb-2
-        before:w-1 before:h-4 before:rounded-md before:bg-[var(--primary)]
+        before:w-1 before:h-4 before:rounded-md before:bg-(--primary)
         before:absolute before:left-[-16px] before:top-[5.5px]">{labels.statistics}</div>
     <div class="collapse-wrapper px-4 overflow-hidden">
         <div class="stats-charts">
@@ -511,7 +511,7 @@
     .dropdown-wrapper:hover .dropdown-menu-custom {
         opacity: 1;
         visibility: visible;
-        transform: translateY(0);
+        translate: 0 0;
     }
     .dropdown-menu-custom {
         position: absolute;
@@ -524,7 +524,7 @@
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         opacity: 0;
         visibility: hidden;
-        transform: translateY(-10px);
+        translate: 0 -10px;
         transition: all 0.2s;
         z-index: 50;
         min-width: 80px;
@@ -552,10 +552,10 @@
     }
     .dropdown-icon {
         font-size: 0.9rem;
-        transition: transform 0.2s;
+        transition: rotate 0.2s;
     }
     .dropdown-wrapper:hover .dropdown-icon {
-        transform: rotate(180deg);
+        rotate: 180deg;
     }
     .heatmap-container {
         height: 180px;

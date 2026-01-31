@@ -27,7 +27,7 @@ if (!album) {
 ---
 
 <GridLayout title={album.title} description={album.description || album.title}>
-    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
+    <div class="flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32">
         <div class="card-base z-10 px-9 py-6 relative w-full">
             <BackwardButton href="/albums/" text={i18n(I18nKey.albumsBackToList)} />
             <!-- 相册标题信息 -->

@@ -73,7 +73,7 @@ const allIcons = skillsData.map((skill) => skill.icon).filter(Boolean);
 <GridLayout title={title} description={subtitle}>
     <!-- 图标加载器，预加载所有技能图标 -->
     <IconifyLoader preloadIcons={allIcons} />
-    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
+    <div class="flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32">
         <div class="card-base z-10 px-9 py-6 relative w-full">
             <BackwardButton currentPath={Astro.url.pathname} />
             <!-- 页面标题 -->
@@ -88,19 +88,19 @@ const allIcons = skillsData.map((skill) => skill.icon).filter(Boolean);
 
             <!-- 统计信息 -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-4">
+                <div class="bg-linear-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-4">
                     <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.total}</div>
                     <div class="text-sm text-blue-600/70 dark:text-blue-400/70">{i18n(I18nKey.skillsTotal)}</div>
                 </div>
-                <div class="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-lg p-4">
+                <div class="bg-linear-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-lg p-4">
                     <div class="text-2xl font-bold text-red-600 dark:text-red-400">{stats.byLevel.expert}</div>
                     <div class="text-sm text-red-600/70 dark:text-red-400/70">{i18n(I18nKey.skillsExpert)}</div>
                 </div>
-                <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg p-4">
+                <div class="bg-linear-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg p-4">
                     <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.byLevel.advanced}</div>
                     <div class="text-sm text-orange-600/70 dark:text-orange-400/70">{i18n(I18nKey.skillsAdvanced)}</div>
                 </div>
-                <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg p-4">
+                <div class="bg-linear-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg p-4">
                     <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">
                         {totalExperience.years}{totalExperience.months > 0 ? `.${totalExperience.months}` : ''}
                     </div>
@@ -220,15 +220,6 @@ const allIcons = skillsData.map((skill) => skill.icon).filter(Boolean);
         </div>
     </div>
 </GridLayout>
-
-<style>
-    .line-clamp-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-</style>
 
 <script>
     // 确保图标库已加载，并处理页面导航

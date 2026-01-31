@@ -34,12 +34,12 @@ let links: NavbarLink[] = navbarConfig.links.map(
 ---
 
 <div id="navbar" class="z-50 onload-animation-down px-3 sm:px-6 md:px-0" data-transparent-mode={navbarTransparentMode} data-is-home={isHomePage}>
-    <div class="absolute h-8 left-0 right-0 -top-8 bg-[var(--card-bg)] transition"></div> <!-- used for onload animation -->
+    <div class="absolute h-8 left-0 right-0 -top-8 bg-(--card-bg) transition"></div> <!-- used for onload animation -->
     <div class:list={[
         className,
-        "!overflow-visible max-w-[var(--page-width)] h-[4.5rem] mx-auto flex items-center justify-between md:px-4"]}>
-        <a href={url('/')} class="btn-plain scale-animation rounded-lg h-[3.25rem] px-5 font-bold active:scale-95">
-            <div class="flex flex-row text-[var(--primary)] items-center text-md">
+        "overflow-visible! max-w-(--page-width) h-18 mx-auto flex items-center justify-between md:px-4"]}>
+        <a href={url('/')} class="btn-plain scale-animation rounded-lg h-13 px-5 font-bold active:scale-95">
+            <div class="flex flex-row text-(--primary) items-center text-md">
                 <Icon name="material-symbols:home-pin-outline" class="text-[1.75rem] mb-1 mr-2" />
                 {siteConfig.title}
             </div>
@@ -50,12 +50,12 @@ let links: NavbarLink[] = navbarConfig.links.map(
             })}
         </div>
         <div class="flex items-center navbar-buttons" id="navbar-buttons">
-            <Search client:load="svelte"></Search>
-            <Translator client:load="svelte"></Translator>
-            <DisplaySettings client:load="svelte"></DisplaySettings>
-            <LightDarkSwitch client:load="svelte"></LightDarkSwitch>
-            <WallpaperSwitch client:load="svelte"></WallpaperSwitch>
-            <NavMenu client:load="svelte" links={links}></NavMenu>
+            <Search client:load></Search>
+            <Translator client:load></Translator>
+            <DisplaySettings client:load></DisplaySettings>
+            <LightDarkSwitch client:load></LightDarkSwitch>
+            <WallpaperSwitch client:load></WallpaperSwitch>
+            <NavMenu client:load links={links}></NavMenu>
         </div>
     </div>
 </div>

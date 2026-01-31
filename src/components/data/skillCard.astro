@@ -156,7 +156,7 @@ const getExperienceText = (experience: Props["skill"]["experience"]) => {
                 <!-- 分类标签 -->
                 {skill.category && (
                     <div class="mb-2">
-                        <span class={`px-2 py-1 bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 rounded ${sizeClasses.badge}`}>
+                        <span class={`px-2 py-1 bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 rounded-sm ${sizeClasses.badge}`}>
                             {skill.category}
                         </span>
                     </div>
@@ -185,7 +185,7 @@ const getExperienceText = (experience: Props["skill"]["experience"]) => {
                     <div class="mb-3">
                         <div class="flex flex-wrap gap-1">
                             {skill.certifications.map((cert) => (
-                                <span class={`px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded ${sizeClasses.badge}`}>
+                                <span class={`px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-sm ${sizeClasses.badge}`}>
                                     🏆 {cert}
                                 </span>
                             ))}
@@ -202,22 +202,6 @@ const getExperienceText = (experience: Props["skill"]["experience"]) => {
         </div>
     </div>
 </div>
-
-<style>
-    .line-clamp-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    .line-clamp-3 {
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-</style>
 
 <script>
     // 监听图标加载完成事件

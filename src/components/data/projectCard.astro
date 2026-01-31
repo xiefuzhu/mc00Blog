@@ -95,7 +95,7 @@ const sizeClasses = getSizeClasses(size);
 <div class="bg-white dark:bg-gray-800 rounded-lg border border-black/10 dark:border-white/10 overflow-hidden hover:shadow-lg transition-all duration-300 group">
     <!-- 项目图片 -->
     {showImage && project.image && (
-        <div class={`overflow-hidden ${size === 'large' ? 'aspect-video' : 'aspect-[4/3]'}`}>
+        <div class={`overflow-hidden ${size === 'large' ? 'aspect-video' : 'aspect-4/3'}`}>
             <img
                 src={project.image}
                 alt={project.title}
@@ -118,7 +118,7 @@ const sizeClasses = getSizeClasses(size);
         <!-- 分类标签 -->
         {project.category && (
             <div class="mb-2">
-                <span class="px-2 py-1 text-xs bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 rounded">
+                <span class="px-2 py-1 text-xs bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 rounded-sm">
                     {project.category}
                 </span>
             </div>
@@ -131,12 +131,12 @@ const sizeClasses = getSizeClasses(size);
         {project.techStack && project.techStack.length > 0 && (
             <div class="flex flex-wrap gap-1 mb-4">
                 {project.techStack.slice(0, maxTechStack).map((tech) => (
-                    <span class={`px-2 py-1 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded ${sizeClasses.tech}`}>
+                    <span class={`px-2 py-1 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded-sm ${sizeClasses.tech}`}>
                         {tech}
                     </span>
                 ))}
                 {project.techStack.length > maxTechStack && (
-                    <span class={`px-2 py-1 bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400 rounded ${sizeClasses.tech}`}>
+                    <span class={`px-2 py-1 bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400 rounded-sm ${sizeClasses.tech}`}>
                         +{project.techStack.length - maxTechStack}
                     </span>
                 )}
@@ -146,7 +146,7 @@ const sizeClasses = getSizeClasses(size);
         {project.tags && project.tags.length > 0 && (
             <div class="flex flex-wrap gap-1 mb-4">
                 {project.tags.map((tag) => (
-                    <span class={`px-2 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded ${sizeClasses.tech}`}>
+                    <span class={`px-2 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded-sm ${sizeClasses.tech}`}>
                         #{tag}
                     </span>
                 ))}
@@ -177,26 +177,3 @@ const sizeClasses = getSizeClasses(size);
         </div>
     </div>
 </div>
-
-<style>
-    .line-clamp-1 {
-        display: -webkit-box;
-        -webkit-line-clamp: 1;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    .line-clamp-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    .line-clamp-3 {
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-</style>

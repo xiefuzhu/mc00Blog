@@ -2,7 +2,7 @@ import { defineConfig } from "astro/config";
 import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-sections";
 import { pluginLineNumbers } from "@expressive-code/plugin-line-numbers";
 import svelte, { vitePreprocess } from "@astrojs/svelte";
-import tailwind from "@astrojs/tailwind";
+import tailwindcss from "@tailwindcss/vite";
 import swup from "@swup/astro";
 import sitemap from "@astrojs/sitemap";
 import vercel from "@astrojs/vercel";
@@ -45,9 +45,6 @@ export default defineConfig({
         decapCmsOauth({
             decapCMSVersion: "3.3.3",
             oauthDisabled: true, // Disable it to use oauth, requires .env configuration
-        }),
-        tailwind({
-            nesting: true,
         }),
         swup({
             theme: false,
@@ -190,6 +187,7 @@ export default defineConfig({
         ],
     },
     vite: {
+        plugins: [tailwindcss()],
         build: {
             rollupOptions: {
                 onwarn(warning, warn) {

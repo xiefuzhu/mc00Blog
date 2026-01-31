@@ -120,7 +120,7 @@ const umamiScripts = umamiConfig.scripts || ""; // 获取Umami scripts配置
 ---
 
 <!DOCTYPE html>
-<html lang={siteLang} class="bg-[var(--page-bg)] text-[14px] md:text-[16px] is-loading"
+<html lang={siteLang} class="bg-(--page-bg) text-[14px] md:text-[16px] is-loading"
 >
     <head>
         <meta charset="UTF-8" />
@@ -245,31 +245,28 @@ const umamiScripts = umamiConfig.scripts || ""; // 获取Umami scripts配置
     'banner-height-home': `${BANNER_HEIGHT_HOME}vh`,
     'banner-height': `${BANNER_HEIGHT}vh`,
 }}>
-@tailwind components;
+@reference "../styles/main.css";
 @layer components {
     .enable-banner.is-home #banner-wrapper {
-        @apply h-[var(--banner-height-home)] translate-y-[var(--banner-height-extend)]
+        @apply h-(--banner-height-home) translate-y-(--banner-height-extend)
     }
     .enable-banner #banner-wrapper {
-        @apply h-[var(--banner-height-home)]
+        @apply h-(--banner-height-home)
     }
     .enable-banner.is-home #banner {
-        @apply h-[var(--banner-height-home)] translate-y-0
+        @apply h-(--banner-height-home) translate-y-0
     }
     .enable-banner #banner {
-        @apply h-[var(--banner-height-home)] translate-y-[var(--bannerOffset)]
+        @apply h-(--banner-height-home) translate-y-(--bannerOffset)
     }
     .enable-banner.is-home #main-grid {
-        @apply translate-y-[var(--banner-height-extend)];
+        translate: 0 var(--banner-height-extend);
     }
     .enable-banner #top-row {
-        @apply h-[calc(var(--banner-height-home)_-_5.5rem)]
+        height: calc(var(--banner-height-home) - 5.5rem);
     }
     .enable-banner.is-home #sidebar-sticky {
-        @apply top-[calc(1rem_-_var(--banner-height-extend))]
-    }
-    .navbar-hidden {
-        @apply opacity-0 -translate-y-16
+        top: calc(1rem - var(--banner-height-extend)) !important;
     }
 }
 </style>

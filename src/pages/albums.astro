@@ -16,7 +16,7 @@ const albumsData = sortedAlbums.filter(album => album.visible);
 ---
 
 <GridLayout title={pageTitle} description={pageDescription}>
-    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
+    <div class="flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32">
         <div class="card-base z-10 px-9 py-6 relative w-full">
             <BackwardButton currentPath={Astro.url.pathname} />
             <!-- 页面标题 -->
@@ -36,17 +36,17 @@ const albumsData = sortedAlbums.filter(album => album.visible);
                     >
                         <a href={`/albums/${album.id}/`} class="block">
                             <!-- 封面图片 -->
-                            <div class="aspect-[4/3] overflow-hidden bg-neutral-100 dark:bg-neutral-700">
+                            <div class="aspect-4/3 overflow-hidden bg-neutral-100 dark:bg-neutral-700">
                                 <img
                                     src={album.cover}
                                     alt={album.title}
-                                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                                     loading="lazy"
                                 />
                             </div>
                             <!-- 相册信息 -->
                             <div class="p-4">
-                                <h3 class="font-bold text-lg text-neutral-900 dark:text-neutral-100 mb-2 group-hover:text-[var(--primary)] transition-colors">
+                                <h3 class="font-bold text-lg text-neutral-900 dark:text-neutral-100 mb-2 group-hover:text-(--primary) transition-colors">
                                     {album.title}
                                 </h3>
                                 {album.description && (
@@ -110,25 +110,18 @@ const albumsData = sortedAlbums.filter(album => album.visible);
 </GridLayout>
 
 <style>
-    .line-clamp-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
     .album-card:hover {
-        transform: translateY(-2px);
+        translate: 0 -2px;
     }
 
     @keyframes fadeInUp {
         from {
             opacity: 0;
-            transform: translateY(20px);
+            translate: 0 20px;
         }
         to {
             opacity: 1;
-            transform: translateY(0);
+            translate: 0 0;
         }
     }
 

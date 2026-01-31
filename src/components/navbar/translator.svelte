@@ -102,13 +102,13 @@ onDestroy(() => {
         <Icon icon="material-symbols:translate" class="text-[1.25rem] transition" />
     </button>
     <!-- 翻译面板 -->
-    <div id="translate-panel-wrapper" class="fixed top-[3.625rem] pt-5 right-4 w-[calc(100vw-2rem)] max-w-64 md:absolute md:top-11 md:right-0 md:w-64 md:pt-5 transition-all z-50" class:float-panel-closed={!isOpen}>
+    <div id="translate-panel-wrapper" class="fixed top-14.5 pt-5 right-4 w-[calc(100vw-2rem)] max-w-64 md:absolute md:top-11 md:right-0 md:w-64 md:pt-5 transition-all z-50" class:float-panel-closed={!isOpen}>
         <DropdownPanel
             bind:element={translatePanel}
             id="translate-panel"
             class="p-4 w-full"
         >
-            <div class="text-sm font-medium text-[var(--primary)] mb-3 px-1">
+            <div class="text-sm font-medium text-(--primary) mb-3 px-1">
                 选择语言 / Select Language
             </div>
             <div class="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto">
@@ -116,13 +116,13 @@ onDestroy(() => {
                     <DropdownItem
                         isActive={currentLanguage === lang.code}
                         onclick={() => changeLanguage(lang.code)}
-                        class="gap-3 !p-2 !h-auto"
+                        class="gap-3 p-2! h-auto!"
                         isLast={false}
                     >
                         <span class="text-lg transition">{lang.icon}</span>
-                        <span class="text-sm transition flex-grow text-left">{lang.name}</span>
+                        <span class="text-sm transition grow text-left">{lang.name}</span>
                         {#if currentLanguage === lang.code}
-                            <span class="ml-auto text-[var(--primary)]">✓</span>
+                            <span class="ml-auto text-(--primary)">✓</span>
                         {/if}
                     </DropdownItem>
                 {/each}

@@ -45,7 +45,7 @@ const pageDescription = link.description || "";
 ---
 
 <GridLayout title={pageTitle} description={pageDescription}>
-    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
+    <div class="flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32">
         <div class="card-base z-10 px-9 py-6 relative w-full">
             <BackwardButton currentPath={Astro.url.pathname} />
             <!-- 标题 -->
@@ -70,7 +70,7 @@ const pageDescription = link.description || "";
                         <div class="icon-wrapper w-16 h-16 flex items-center justify-center rounded-full mb-4 transition-all duration-300">
                             {child.icon && <Icon name={child.icon} class="text-3xl" />}
                         </div>
-                        <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-100 group-hover:text-[var(--primary)] transition-colors duration-300 text-center">
+                        <h2 class="text-xl font-bold text-neutral-900 dark:text-neutral-100 group-hover:text-(--primary) transition-colors duration-300 text-center">
                             {child.name}
                         </h2>
                         {child.description && (
@@ -101,7 +101,7 @@ const pageDescription = link.description || "";
         background-color: color-mix(in oklch, var(--primary), transparent 95%);
         border-color: var(--primary);
         box-shadow: 0 0 20px color-mix(in oklch, var(--primary), transparent 80%);
-        transform: translateY(-4px);
+        translate: 0 -4px;
     }
 
     .menu-card:hover .icon-wrapper {

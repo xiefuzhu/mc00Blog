@@ -1,12 +1,10 @@
+// PostCSS config for CSS imports
+// Tailwind v4 is handled by @tailwindcss/vite plugin in astro.config.mjs
 import postcssImport from 'postcss-import';
-import postcssNesting from 'tailwindcss/nesting/index.js';
-import tailwindcss from 'tailwindcss';
 
 
 export default {
     plugins: {
-        'postcss-import': postcssImport, // to combine multiple css files
-        'tailwindcss/nesting': postcssNesting,
-        tailwindcss: tailwindcss,
+        'postcss-import': postcssImport,
     }
 };

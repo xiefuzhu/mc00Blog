@@ -24,39 +24,7 @@ const { link, class: className } = Astro.props;
         <div class="flex items-center">
             {link.icon && <Icon name={link.icon} class="text-[1.1rem] nav-link-icon" />}
             <span class="nav-link-text ml-2 hidden lg:inline">{link.name}</span>
-            {link.external && <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.875rem] transition -translate-y-[1px] ml-1 text-black/[0.2] dark:text-white/[0.2]" />}
+            {link.external && <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.875rem] transition -translate-y-px ml-1 text-black/20 dark:text-white/20" />}
         </div>
     </a>
 </div>
-
-<style>
-    .nav-link-container {
-        @apply relative;
-    }
-
-    /* 小屏幕时只显示图标 */
-    @media (max-width: 1279px) {
-        .nav-link-item {
-            @apply w-11 px-0 flex items-center justify-center;
-        }
-
-        .nav-link-text {
-            @apply hidden;
-        }
-
-        .nav-link-icon {
-            @apply ml-0;
-        }
-    }
-
-    /* 大屏幕时显示图标+文字 */
-    @media (min-width: 1280px) {
-        .nav-link-item {
-            @apply px-3;
-        }
-
-        .nav-link-text {
-            @apply inline;
-        }
-    }
-</style>

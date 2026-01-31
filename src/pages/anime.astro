@@ -204,7 +204,7 @@ const stats = {
 ---
 
 <GridLayout title={pageTitle} description={pageDescription}>
-    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
+    <div class="flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32">
         <div class="card-base z-10 px-9 py-6 relative w-full">
             <BackwardButton currentPath={Astro.url.pathname} />
             <!-- 页面标题 -->
@@ -215,7 +215,7 @@ const stats = {
                 </div>
                 <!-- 统计卡片 -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-4">
+                    <div class="bg-linear-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-4">
                         <div class="flex items-center gap-3">
                             <div class="text-2xl">📊</div>
                             <div>
@@ -224,7 +224,7 @@ const stats = {
                             </div>
                         </div>
                     </div>
-                    <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg p-4">
+                    <div class="bg-linear-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg p-4">
                         <div class="flex items-center gap-3">
                             <div class="text-2xl">▶️</div>
                             <div>
@@ -233,7 +233,7 @@ const stats = {
                             </div>
                         </div>
                     </div>
-                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg p-4">
+                    <div class="bg-linear-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg p-4">
                         <div class="flex items-center gap-3">
                             <div class="text-2xl">✅</div>
                             <div>
@@ -242,7 +242,7 @@ const stats = {
                             </div>
                         </div>
                     </div>
-                    <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg p-4">
+                    <div class="bg-linear-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg p-4">
                         <div class="flex items-center gap-3">
                             <div class="text-2xl">⭐</div>
                             <div>
@@ -274,9 +274,9 @@ const stats = {
                             const statusInfo = getStatusInfo(anime.status);
                             const progressPercent = anime.totalEpisodes > 0 ? (anime.progress / anime.totalEpisodes) * 100 : 0;
                             return (
-                                <div class="group relative bg-[var(--card-bg)] border border-[var(--line-divider)] rounded-[var(--radius-large)] overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
+                                <div class="group relative bg-(--card-bg) border border-(--line-divider) rounded-(--radius-large) overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-[1.02]">
                                     <!-- 封面区域 - 竖屏比例 -->
-                                    <div class="relative aspect-[2/3] overflow-hidden">
+                                    <div class="relative aspect-2/3 overflow-hidden">
                                         <a href={anime.link} target="_blank" rel="noopener noreferrer" class="block w-full h-full">
                                             <ImageWrapper
                                                 src={anime.cover}
@@ -284,7 +284,7 @@ const stats = {
                                                 class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                                                 loading="lazy"
                                             />
-                                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                            <div class="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                                 <div class="absolute inset-0 flex items-center justify-center">
                                                     <div class="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
                                                         <svg class="w-6 h-6 text-gray-800 ml-1" fill="currentColor" viewBox="0 0 24 24">
@@ -308,9 +308,9 @@ const stats = {
                                         </div>
                                         <!-- 进度条 - 在封面底部 -->
                                         {anime.status === 'watching' && (
-                                            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                                            <div class="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/80 to-transparent p-2">
                                                 <div class="w-full bg-white/20 rounded-full h-1.5 mb-1">
-                                                    <div class="bg-gradient-to-r from-emerald-400 to-teal-400 h-1.5 rounded-full transition-all duration-300" style={`width: ${progressPercent}%`}></div>
+                                                    <div class="bg-linear-to-r from-emerald-400 to-teal-400 h-1.5 rounded-full transition-all duration-300" style={`width: ${progressPercent}%`}></div>
                                                 </div>
                                                 <div class="text-white text-xs font-medium">
                                                     {anime.progress}/{anime.totalEpisodes} ({Math.round(progressPercent)}%)
@@ -334,7 +334,7 @@ const stats = {
                                             </div>
                                             <div class="flex flex-wrap gap-1 mt-2">
                                                 {anime.genre.map(g => (
-                                                    <span class="px-1.5 py-0.5 bg-[var(--btn-regular-bg)] text-black/70 dark:text-white/70 rounded text-xs">{g}</span>
+                                                    <span class="px-1.5 py-0.5 bg-(--btn-regular-bg) text-black/70 dark:text-white/70 rounded-sm text-xs">{g}</span>
                                                 ))}
                                             </div>
                                         </div>

@@ -9,7 +9,7 @@
 }
 
 .album-card:hover {
-    transform: translateY(-4px);
+    translate: 0 -4px;
 }
 
 
@@ -57,12 +57,12 @@
 }
 
 .photo-info {
-    transform: translateY(100%);
+    translate: 0 100%;
     transition: transform 0.3s ease;
 }
 
 .photo-item:hover .photo-info {
-    transform: translateY(0);
+    translate: 0 0;
 }
 
 
@@ -97,7 +97,7 @@
 
 .lightbox button:hover {
     background-color: rgba(0, 0, 0, 0.7);
-    transform: scale(1.05);
+    scale: 1.05;
 }
 
 
@@ -156,11 +156,11 @@
 @keyframes fadeInUp {
     from {
         opacity: 0;
-        transform: translateY(30px);
+        translate: 0 30px;
     }
     to {
         opacity: 1;
-        transform: translateY(0);
+        translate: 0 0;
     }
 }
 

@@ -34,7 +34,7 @@ const shuffledItems = shuffleArray(items);
 ---
 
 <GridLayout title={pageTitle} description={pageDescription}>
-    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
+    <div class="flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32">
         <div class="card-base z-10 px-9 py-6 relative w-full ">
             <BackwardButton currentPath={Astro.url.pathname} />
             <!-- 标题 -->
@@ -52,11 +52,11 @@ const shuffledItems = shuffleArray(items);
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 my-4">
                 {shuffledItems.map((item) => (
                     <a href={item.siteurl} target="_blank" rel="noopener noreferrer" class="menu-card group flex flex-row items-center p-4 rounded-xl border transition-all duration-300 gap-4">
-                        <div class="icon-wrapper w-20 h-20 flex-shrink-0 flex items-center justify-center rounded-full transition-all duration-300 overflow-hidden bg-zinc-200 dark:bg-zinc-900">
-                            <img src={item.imgurl} alt={item.title} class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                        <div class="icon-wrapper w-20 h-20 shrink-0 flex items-center justify-center rounded-full transition-all duration-300 overflow-hidden bg-zinc-200 dark:bg-zinc-900">
+                            <img src={item.imgurl} alt={item.title} class="w-full h-full object-cover transition duration-300 group-hover:scale-110" />
                         </div>
                         <div class="flex flex-col justify-center overflow-hidden">
-                            <h2 class="text-lg font-bold text-neutral-900 dark:text-neutral-100 group-hover:text-[var(--primary)] transition-colors duration-300 truncate">
+                            <h2 class="text-lg font-bold text-neutral-900 dark:text-neutral-100 group-hover:text-(--primary) transition-colors duration-300 truncate">
                                 {item.title}
                             </h2>
                             <p class="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-1 mt-1">
@@ -103,7 +103,7 @@ const shuffledItems = shuffleArray(items);
         background-color: color-mix(in oklch, var(--primary), transparent 95%);
         border-color: var(--primary);
         box-shadow: 0 0 20px color-mix(in oklch, var(--primary), transparent 80%);
-        transform: translateY(-4px);
+        translate: 0 -4px;
     }
 
     .menu-card:hover .icon-wrapper {

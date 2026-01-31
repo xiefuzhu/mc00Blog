@@ -12,11 +12,11 @@
 @keyframes fadeInUp {
     from {
         opacity: 0;
-        transform: translateY(30px);
+        translate: 0 30px;
     }
     to {
         opacity: 1;
-        transform: translateY(0);
+        translate: 0 0;
     }
 }
 
@@ -29,7 +29,7 @@ html.banner-hiding #banner-wrapper {
 
 /* 退出动画时，强制子组件同步上移，避免主内容区域出现“两段式”位移 */
 html.banner-hiding #main-grid {
-    transform: translateY(0) !important;
+    translate: none !important;
 }
 html.banner-hiding #top-row {
     height: 0 !important;
@@ -84,10 +84,12 @@ html.is-wallpaper-transitioning body {
  /*  Ken Burns 效果 */
 @keyframes ken-burns {
     from {
-        transform: scale(1.0) translateZ(0);
+        scale: 1.0;
+        translate: 0 0 0;
     }
     to {
-        transform: scale(1.2) translateZ(0);
+        scale: 1.2;
+        translate: 0 0 0;
     }
 }
 
@@ -121,13 +123,15 @@ html.is-wallpaper-transitioning body {
     }
     .carousel-item.ken-burns-enabled {
         transform-origin: center center !important; /* 确保缩放从中心开始 */
-        transform: scale(1.0) translateZ(0);
+        scale: 1.0;
+        translate: 0 0 0;
     }
     .carousel-item.ken-burns-enabled.is-animating {
         animation: ken-burns 12s linear forwards !important;
     }
     .carousel-item:not(.ken-burns-enabled) {
-        transform: scale(1.0) translateZ(0); /* 取消默认缩放 */
+        scale: 1.0;
+        translate: 0 0 0; /* 取消默认缩放 */
     }
     /* 当前图片缩放效果 */
     .carousel-item.opacity-100 {
@@ -158,13 +162,13 @@ html.is-wallpaper-transitioning body {
     }
     .carousel-item.ken-burns-enabled {
         transform-origin: center center !important; /* 确保缩放从中心开始 */
-        transform: scale(1.0);
+        scale: 1.0;
     }
     .carousel-item.ken-burns-enabled.is-animating {
         animation: ken-burns 12s linear forwards !important;
     }
     .carousel-item:not(.ken-burns-enabled) {
-        transform: scale(1.0); /* 取消默认缩放 */
+        scale: 1.0; /* 取消默认缩放 */
     }
     /* 当前图片缩放效果 */
     .carousel-item.opacity-100 {
@@ -180,8 +184,7 @@ html.is-wallpaper-transitioning body {
 @media (max-width: 1279px) {
     .banner-container {
         /* 启用硬件加速 */
-        transform: translateZ(0);
-        -webkit-transform: translateZ(0);
+        translate: 0 0 0;
         will-change: transform, opacity;
         /* 渲染性能 */
         contain: layout style paint;
@@ -214,7 +217,8 @@ html.is-wallpaper-transitioning body {
 
     .carousel-item.ken-burns-enabled {
         /* 硬件加速与缩放维持 */
-        transform: scale(1.0) translateZ(0);
+        scale: 1.0;
+        translate: 0 0 0;
         will-change: transform, opacity;
         /* 触摸响应 */
         touch-action: pan-y;
@@ -223,7 +227,8 @@ html.is-wallpaper-transitioning body {
         user-select: none;
     }
     .carousel-item:not(.ken-burns-enabled) {
-        transform: scale(1.0) translateZ(0);
+        scale: 1.0;
+        translate: 0 0 0;
         will-change: transform, opacity;
         /* 触摸响应 */
         touch-action: pan-y;
@@ -237,7 +242,7 @@ html.is-wallpaper-transitioning body {
         position: absolute;
         bottom: 20px;
         left: 50%;
-        transform: translateX(-50%);
+        translate: -50% 0;
         display: flex;
         gap: 8px;
         z-index: 10;
@@ -253,7 +258,7 @@ html.is-wallpaper-transitioning body {
     }
     .carousel-indicator.active {
         background: rgba(255, 255, 255, 0.9);
-        transform: scale(1.2);
+        scale: 1.2;
     }
 }
 
@@ -386,10 +391,10 @@ html.is-wallpaper-transitioning body {
  /* 波浪动画 */
 @keyframes wave {
     0% {
-        transform: translate3d(-90px, 0, 0);
+        translate: -90px 0 0;
     }
     100% {
-        transform: translate3d(85px, 0, 0);
+        translate: 85px 0 0;
     }
 }
 

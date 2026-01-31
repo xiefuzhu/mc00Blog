@@ -12,6 +12,43 @@
     transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s, gap 0.3s ease;
 }
 
+/* 导航链接样式 */
+.nav-link-container {
+    position: relative;
+}
+
+/* 小屏幕时只显示图标 */
+@media (max-width: 1279px) {
+    .nav-link-item {
+        width: 2.75rem; /* 11 * 0.25rem */
+        padding-left: 0;
+        padding-right: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .nav-link-text {
+        display: none;
+    }
+
+    .nav-link-icon {
+        margin-left: 0;
+    }
+}
+
+/* 大屏幕时显示图标+文字 */
+@media (min-width: 1280px) {
+    .nav-link-item {
+        padding-left: 0.75rem; /* 3 * 0.25rem */
+        padding-right: 0.75rem;
+    }
+
+    .nav-link-text {
+        display: inline;
+    }
+}
+
 /* 按钮区域基础布局样式（避免 flex 子项溢出） */
 .navbar-buttons {
     min-width: 0;
@@ -130,7 +167,7 @@
     #navbar .navbar-nav-links {
         position: static;
         left: unset;
-        transform: none;
+        translate: none;
         justify-self: center;
         gap: clamp(0.12rem, 1vw, 0.36rem);
     }
@@ -154,7 +191,7 @@
     /* 搜索状态下的避让逻辑以防重叠 */
     #navbar.is-searching .navbar-nav-links {
         opacity: 0;
-        transform: scale(0.9);
+        scale: 0.9;
         pointer-events: none;
         visibility: hidden;
     }

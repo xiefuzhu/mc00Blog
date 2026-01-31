@@ -9976,7 +9976,7 @@ var translate = {
               background-size: 200% 100%;
               animation: translate_api_in_progress_horizontal-loader 3.5s linear infinite;
               z-index: 3;
-              transform: translateY(-50%);
+              translate: 0 -50%;
             }
 
             @keyframes translate_api_in_progress_horizontal-loader {

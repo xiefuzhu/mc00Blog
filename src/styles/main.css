@@ -1,306 +1,654 @@
+@import 'tailwindcss';
+
 /* 导入相册样式 */
-@import './albums.css';
+@import './albums.css' layer(base);
 /* 导入追番页面样式 */
-@import './anime.css';
-/* 导入动画样式 */
-@import './transition.css';
-@import './animation-enhancements.css';
+@import './anime.css' layer(base);
+/* 导入动过渡样式 */
+@import './transition.css' layer(base);
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@plugin '@tailwindcss/typography';
 
 
-/* 确保平滑滚动并隐藏原生滚动条 */
-html, body {
+@theme {
+    --breakpoint-sm: 512px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 1280px;
+    --breakpoint-xl: 1920px;
+
+    --transition-duration-300: 300ms;
+    --transition-duration-600: 600ms;
+}
+
+
+@custom-variant dark (&:is(.dark *));
+
+
+/*
+    The default border color has changed to `currentcolor` in Tailwind CSS v4,
+    so we've added these compatibility styles to make sure everything still
+    looks the same as it did with Tailwind CSS v3.
+
+    If we ever want to remove these styles, we need to add an explicit border
+    color utility to any element that depends on these defaults.
+*/
+@layer base {
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+    }
+}
+
+
+@utility is-theme-transitioning {
+    /* 主题过渡保护类 - 临时禁用所有过渡动画 */
+    & * {
+    transition: none !important;
+    }
+    & *::before {
+    transition: none !important;
+    }
+    & *::after {
+    transition: none !important;
+    }
+
+    /* 波浪效果精确同步处理 */
+    & svg use {
+    /* 禁用过渡但保持动画 */
+    transition: none;
+    /* 强制立即继承页面背景色 */
+    fill: currentColor;
+    }
+
+    /* 导航栏主题切换保护 - 完全禁用过渡以确保性能 */
+    & #navbar > div {
+    transition: none !important;
+    backdrop-filter: none !important;
+    }
+    & #navbar[data-transparent-mode] > div {
+    transition: none !important;
+    backdrop-filter: none !important;
+    }
+    & #navbar[data-transparent-mode].scrolled > div {
+    transition: none !important;
+    backdrop-filter: none !important;
+    }
+    & body.wallpaper-transparent #navbar > div {
+    transition: none !important;
+    backdrop-filter: none !important;
+    }
+    & body.wallpaper-transparent #navbar[data-transparent-mode] > div {
+    transition: none !important;
+    backdrop-filter: none !important;
+    }
+    & body.wallpaper-transparent #navbar[data-transparent-mode].scrolled > div {
+    transition: none !important;
+    backdrop-filter: none !important;
+    }
+    & #banner-wrapper ~ * #navbar > div {
+    transition: none !important;
+    backdrop-filter: none !important;
+    }
+    & #banner-wrapper ~ * #navbar[data-transparent-mode] > div {
+    transition: none !important;
+    backdrop-filter: none !important;
+    }
+    & body:has(#banner-wrapper) #navbar > div {
+    transition: none !important;
+    backdrop-filter: none !important;
+    }
+    & body:has(#banner-wrapper) #navbar[data-transparent-mode] > div {
+    transition: none !important;
+    backdrop-filter: none !important;
+    }
+
+    /* 导航栏相关浮动面板的过渡禁用 */
+    & .dropdown-content {
+    transition: none !important;
+    backdrop-filter: none !important;
+    }
+    & .float-panel {
+    transition: none !important;
+    backdrop-filter: none !important;
+    }
+    & #display-setting {
+    transition: none !important;
+    backdrop-filter: none !important;
+    }
+    & #nav-menu-panel {
+    transition: none !important;
+    backdrop-filter: none !important;
+    }
+    & #translate-panel {
+    transition: none !important;
+    backdrop-filter: none !important;
+    }
+    & #search-panel {
+    transition: none !important;
+    backdrop-filter: none !important;
+    }
+
+    /* 波浪容器的颜色传递 */
+    & #header-waves {
+    /* 设置当前颜色为页面背景色，供SVG继承 */
+    color: var(--page-bg);
+    /* 确保与页面在同一合成层 */
+    isolation: isolate;
+    /* 优化渲染性能 - 移除 strict containment 改用 none */
+    contain: none;
+    /* GPU层合成 */
+    translate: 0 0 0;
+    /* 确保没有背景色 */
+    background: transparent;
+    }
+
+    & #header-waves use {
+    /* 保持动画连续性 */
+    will-change: transform;
+    /* GPU优化 */
+    translate: 0 0 0;
+    }
+}
+
+@utility scrolled {
+    .is-theme-transitioning &#navbar[data-transparent-mode] > div {
+    transition: none !important;
+    backdrop-filter: none !important;
+    }
+
+    .is-theme-transitioning
+    body.wallpaper-transparent
+    &#navbar[data-transparent-mode]
+    > div {
+    transition: none !important;
+    backdrop-filter: none !important;
+    }
+}
+
+@utility wallpaper-transparent {
+    .is-theme-transitioning &body #navbar > div {
+    transition: none !important;
+    backdrop-filter: none !important;
+    }
+
+    .is-theme-transitioning &body #navbar[data-transparent-mode] > div {
+    transition: none !important;
+    backdrop-filter: none !important;
+    }
+
+    .is-theme-transitioning &body #navbar[data-transparent-mode].scrolled > div {
+    transition: none !important;
+    backdrop-filter: none !important;
+    }
+
+    /* 全屏壁纸模式下的半透明效果 */
+    & .card-base {
+    @apply bg-(--card-bg-transparent);
+    }
+
+    & .float-panel {
+    @apply bg-(--card-bg-transparent);
+    }
+
+    & #navbar > div {
+    @apply bg-(--card-bg-transparent) backdrop-blur-xs;
+    }
+
+    & .btn-card {
+    @apply bg-(--card-bg-transparent);
+    }
+
+    & ~ * .music-player .mini-player {
+    background-color: var(--card-bg-transparent) !important;
+    backdrop-filter: blur(8px) !important;
+    }
+
+    & ~ * .music-player .expanded-player {
+    background-color: var(--card-bg-transparent) !important;
+    backdrop-filter: blur(8px) !important;
+    }
+
+    & ~ * .music-player .playlist-panel {
+    background-color: var(--card-bg-transparent) !important;
+    backdrop-filter: blur(8px) !important;
+    }
+
+    & body .music-player .mini-player {
+    background-color: var(--card-bg-transparent) !important;
+    backdrop-filter: blur(8px) !important;
+    }
+
+    & body .music-player .expanded-player {
+    background-color: var(--card-bg-transparent) !important;
+    backdrop-filter: blur(8px) !important;
+    }
+
+    & body .music-player .playlist-panel {
+    background-color: var(--card-bg-transparent) !important;
+    backdrop-filter: blur(8px) !important;
+    }
+}
+
+@utility dropdown-content {
+    /* 导航栏相关浮动面板的过渡禁用 */
+    .is-theme-transitioning & {
+    transition: none !important;
+    backdrop-filter: none !important;
+    }
+    @apply bg-(--float-panel-bg) rounded-(--radius-large) shadow-xl dark:shadow-none border border-black/5 dark:border-white/10 py-2 min-w-48;
+}
+
+@utility float-panel {
+    .is-theme-transitioning & {
+    transition: none !important;
+    backdrop-filter: none !important;
+    }
+
+    .wallpaper-transparent & {
+    @apply bg-(--card-bg-transparent);
+    }
+    @apply top-21 rounded-(--radius-large) overflow-hidden bg-(--float-panel-bg) transition-colors duration-150 shadow-xl dark:shadow-none;
+}
+
+@utility card-base {
+    @apply rounded-(--radius-large) overflow-hidden bg-(--card-bg) transition-colors duration-150;
+
+    /* 全屏壁纸模式下的半透明效果 */
+    .wallpaper-transparent & {
+    @apply bg-(--card-bg-transparent);
+    }
+}
+
+@utility card-base-transparent {
+    @apply rounded-(--radius-large) overflow-hidden bg-(--card-bg-transparent) backdrop-blur-xs transition-colors duration-150;
+}
+
+@utility btn-card {
+    .wallpaper-transparent & {
+    @apply bg-(--card-bg-transparent);
+    }
+    @apply transition-colors duration-150 flex items-center justify-center bg-(--card-bg) hover:bg-(--btn-card-bg-hover)
+        active:bg-(--btn-card-bg-active);
+    &.disabled {
+    @apply pointer-events-none text-black/10 dark:text-white/10;
+    }
+}
+
+@utility music-player {
+    .wallpaper-transparent ~ * & .mini-player {
+    background-color: var(--card-bg-transparent) !important;
+    backdrop-filter: blur(8px) !important;
+    }
+
+    .wallpaper-transparent ~ * & .expanded-player {
+    background-color: var(--card-bg-transparent) !important;
+    backdrop-filter: blur(8px) !important;
+    }
+
+    .wallpaper-transparent ~ * & .playlist-panel {
+    background-color: var(--card-bg-transparent) !important;
+    backdrop-filter: blur(8px) !important;
+    }
+
+    body.wallpaper-transparent & .mini-player {
+    background-color: var(--card-bg-transparent) !important;
+    backdrop-filter: blur(8px) !important;
+    }
+
+    body.wallpaper-transparent & .expanded-player {
+    background-color: var(--card-bg-transparent) !important;
+    backdrop-filter: blur(8px) !important;
+    }
+
+    body.wallpaper-transparent & .playlist-panel {
+    background-color: var(--card-bg-transparent) !important;
+    backdrop-filter: blur(8px) !important;
+    }
+}
+
+@utility mini-player {
+    .wallpaper-transparent ~ * .music-player & {
+    background-color: var(--card-bg-transparent) !important;
+    backdrop-filter: blur(8px) !important;
+    }
+
+    body.wallpaper-transparent .music-player & {
+    background-color: var(--card-bg-transparent) !important;
+    backdrop-filter: blur(8px) !important;
+    }
+}
+
+@utility expanded-player {
+    .wallpaper-transparent ~ * .music-player & {
+    background-color: var(--card-bg-transparent) !important;
+    backdrop-filter: blur(8px) !important;
+    }
+
+    body.wallpaper-transparent .music-player & {
+    background-color: var(--card-bg-transparent) !important;
+    backdrop-filter: blur(8px) !important;
+    }
+}
+
+@utility playlist-panel {
+    .wallpaper-transparent ~ * .music-player & {
+    background-color: var(--card-bg-transparent) !important;
+    backdrop-filter: blur(8px) !important;
+    }
+
+    body.wallpaper-transparent .music-player & {
+    background-color: var(--card-bg-transparent) !important;
+    backdrop-filter: blur(8px) !important;
+    }
+}
+
+@utility card-shadow {
+    @apply drop-shadow-sm;
+}
+
+@utility expand-animation {
+    @apply relative before:ease-out before:transition active:bg-none hover:before:bg-(--btn-plain-bg-hover) active:before:bg-(--btn-plain-bg-active) z-0
+        before:absolute before:rounded-[inherit] before:inset-0 before:scale-[0.85] hover:before:scale-100 before:-z-10;
+}
+
+@utility link {
+    @apply transition-colors duration-150 rounded-md p-1 -m-1 expand-animation;
+}
+
+@utility link-lg {
+    @apply transition-colors duration-150 rounded-md p-1.5 -m-1.5 expand-animation;
+}
+
+@utility float-panel-closed {
+    @apply -translate-y-1 opacity-0 pointer-events-none;
+}
+
+@utility search-panel {
+    & mark {
+    @apply bg-transparent text-(--primary);
+    }
+}
+
+@utility disabled {
+    &.btn-card {
+    @apply pointer-events-none text-black/10 dark:text-white/10;
+    }
+}
+
+@utility btn-plain {
+    @apply transition-colors duration-150 relative flex items-center justify-center bg-none
+        text-black/75 hover:text-(--primary) dark:text-white/75 dark:hover:text-(--primary);
+    &:not(.scale-animation) {
+    @apply hover:bg-(--btn-plain-bg-hover) active:bg-(--btn-plain-bg-active);
+    }
+    &.scale-animation {
+    @apply expand-animation;
+    }
+    &:hover .iconify {
+    @apply text-(--primary)!;
+    }
+    &:hover svg {
+    @apply text-(--primary)!;
+    }
+    &:hover span {
+    @apply text-(--primary)!;
+    }
+}
+
+@utility iconify {
+    .btn-plain:hover & {
+    @apply text-(--primary)!;
+    }
+    .current-theme-btn & {
+    @apply text-(--primary)!;
+    }
+}
+
+@utility btn-regular {
+    @apply transition-colors duration-150 flex items-center justify-center bg-(--btn-regular-bg) hover:bg-(--btn-regular-bg-hover) active:bg-(--btn-regular-bg-active)
+        text-(--btn-content) dark:text-white/75;
+}
+
+@utility current-theme-btn {
+    @apply text-(--primary)! bg-(--btn-plain-bg-hover)! hover:bg-(--btn-plain-bg-hover)! active:bg-(--btn-plain-bg-hover)!;
+    & .iconify {
+    @apply text-(--primary)!;
+    }
+    & svg {
+    @apply text-(--primary)!;
+    }
+    & span {
+    @apply text-(--primary)!;
+    }
+    & .text-sm {
+    @apply text-(--primary)!;
+    }
+    & .text-lg {
+    @apply text-(--primary)!;
+    }
+}
+
+@utility text-sm {
+    .current-theme-btn & {
+    @apply text-(--primary)!;
+    }
+}
+
+@utility text-lg {
+    .current-theme-btn & {
+    @apply text-(--primary)!;
+    }
+}
+
+@utility link-underline {
+    @apply transition-colors duration-150 underline decoration-2 decoration-dashed decoration-(--link-underline)
+        hover:decoration-(--link-hover) active:decoration-(--link-active) underline-offset-4;
+}
+
+@utility hide-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    &::-webkit-scrollbar {
+    display: none;
+    }
+}
+
+@utility text-90 {
+    @apply text-black/90 dark:text-white/90;
+}
+
+@utility text-75 {
+    @apply text-black/75 dark:text-white/75;
+}
+
+@utility text-50 {
+    @apply text-black/50 dark:text-white/50;
+}
+
+@utility text-30 {
+    @apply text-black/30 dark:text-white/30;
+}
+
+@utility text-25 {
+    @apply text-black/25 dark:text-white/25;
+}
+
+@utility dropdown-container {
+    /* 下拉菜单样式 */
+    @apply relative;
+
+    &:hover .dropdown-menu {
+    @apply opacity-100 visible pointer-events-auto translate-y-0;
+    }
+
+    &:focus-within .dropdown-menu {
+    @apply opacity-100 visible pointer-events-auto translate-y-0;
+    }
+
+    &:hover .dropdown-arrow {
+    @apply rotate-180;
+    }
+
+    &:focus-within .dropdown-arrow {
+    @apply rotate-180;
+    }
+
+    /* 无障碍支持 */
+    &:focus-within .dropdown-menu {
+    @apply opacity-100 visible pointer-events-auto translate-y-0;
+    }
+}
+
+@utility dropdown-menu {
+    @apply absolute top-full left-0 pt-2 opacity-0 invisible pointer-events-none transition-all duration-200 ease-out translate-y-[-8px] z-50;
+
+    .dropdown-container:hover & {
+    @apply opacity-100 visible pointer-events-auto translate-y-0;
+    }
+
+    .dropdown-container:focus-within & {
+    @apply opacity-100 visible pointer-events-auto translate-y-0;
+    }
+
+    /* 无障碍支持 */
+    .dropdown-container:focus-within & {
+    @apply opacity-100 visible pointer-events-auto translate-y-0;
+    }
+}
+
+@utility dropdown-arrow {
+    .dropdown-container:hover & {
+    @apply rotate-180;
+    }
+
+    .dropdown-container:focus-within & {
+    @apply rotate-180;
+    }
+}
+
+@utility dropdown-item {
+    @apply flex items-center justify-between px-4 py-2.5 text-black/75 dark:text-white/75 hover:text-(--primary) hover:bg-(--btn-plain-bg-hover) transition-colors duration-150 font-medium;
+
+    &:first-child {
+    @apply rounded-t-[calc(var(--radius-large)-0.5rem)];
+    }
+
+    &:last-child {
+    @apply rounded-b-[calc(var(--radius-large)-0.5rem)];
+    }
+
+    &:focus {
+    @apply outline-hidden;
+    }
+}
+
+@utility mobile-submenu {
+    /* 移动端菜单样式 */
+    @apply max-h-0 overflow-hidden transition-all duration-300 ease-in-out;
+
+    .mobile-dropdown[data-expanded='true'] & {
+    @apply max-h-96;
+    }
+}
+
+@utility mobile-dropdown {
+    &[data-expanded='true'] .mobile-submenu {
+    @apply max-h-96;
+    }
+
+    &[data-expanded='true'] .mobile-dropdown-arrow {
+    @apply rotate-180;
+    }
+
+    & button:focus {
+    @apply outline-hidden;
+    }
+}
+
+@utility mobile-dropdown-arrow {
+    .mobile-dropdown[data-expanded='true'] & {
+    @apply rotate-180;
+    }
+}
+
+@utility meta-icon {
+    @apply w-8 h-8 transition-colors duration-150 rounded-md flex items-center justify-center bg-(--btn-regular-bg)
+        text-(--btn-content) mr-2;
+}
+
+@utility with-divider {
+    @apply before:content-['/'] before:ml-1.5 before:mr-1.5 before:text-(--meta-divider) before:text-sm
+        before:font-medium first-of-type:before:hidden before:transition-colors before:duration-150;
+}
+
+@utility btn-regular-dark {
+    @apply flex items-center justify-center
+        bg-[oklch(0.45_0.01_var(--hue))] hover:bg-[oklch(0.50_0.01_var(--hue))] active:bg-[oklch(0.55_0.01_var(--hue))]
+        dark:bg-[oklch(0.30_0.02_var(--hue))] dark:hover:bg-[oklch(0.35_0.03_var(--hue))] dark:active:bg-[oklch(0.40_0.03_var(--hue))];
+    &.success {
+    @apply bg-[oklch(0.75_0.14_var(--hue))] dark:bg-[oklch(0.75_0.14_var(--hue))];
+    }
+}
+
+@utility success {
+    &.btn-regular-dark {
+    @apply bg-[oklch(0.75_0.14_var(--hue))] dark:bg-[oklch(0.75_0.14_var(--hue))];
+    }
+}
+
+@layer utilities {
+    /* 确保平滑滚动并隐藏原生滚动条 */
+    html,
+    body {
     scroll-behavior: smooth;
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE and Edge */
-}
+    }
 
-html::-webkit-scrollbar, body::-webkit-scrollbar {
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar {
     display: none; /* Chrome, Safari and Opera */
-}
+    }
 
-
-/* 页面顶部渐变高光效果 */
-.top-gradient-highlight {
+    /* 页面顶部渐变高光效果 */
+    .top-gradient-highlight {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     height: 180px;
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.3) 30%, rgba(255, 255, 255, 0.15) 60%, rgba(255, 255, 255, 0.05) 80%, transparent 100%);
+    background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.5) 0%,
+        rgba(255, 255, 255, 0.3) 30%,
+        rgba(255, 255, 255, 0.15) 60%,
+        rgba(255, 255, 255, 0.05) 80%,
+        transparent 100%
+    );
     pointer-events: none;
     z-index: 20;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+    }
 
-/* 暗色主题下的渐变高光效果 */
-:root.dark .top-gradient-highlight {
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.3) 30%, rgba(0, 0, 0, 0.15) 60%, rgba(0, 0, 0, 0.05) 80%, transparent 100%);
+    /* 暗色主题下的渐变高光效果 */
+    :root.dark .top-gradient-highlight {
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.5) 0%,
+        rgba(0, 0, 0, 0.3) 30%,
+        rgba(0, 0, 0, 0.15) 60%,
+        rgba(0, 0, 0, 0.05) 80%,
+        transparent 100%
+    );
+    }
 }
 
 @layer components {
-    /* 主题过渡保护类 - 临时禁用所有过渡动画 */
-    .is-theme-transitioning *,
-    .is-theme-transitioning *::before,
-    .is-theme-transitioning *::after {
-        transition: none !important;
-    }
-
-    /* 波浪效果精确同步处理 */
-    .is-theme-transitioning svg use {
-        /* 禁用过渡但保持动画 */
-        transition: none;
-        /* 强制立即继承页面背景色 */
-        fill: currentColor;
-    }
-
-    /* 导航栏主题切换保护 - 完全禁用过渡以确保性能 */
-    .is-theme-transitioning #navbar > div,
-    .is-theme-transitioning #navbar[data-transparent-mode] > div,
-    .is-theme-transitioning #navbar[data-transparent-mode].scrolled > div,
-    .is-theme-transitioning body.wallpaper-transparent #navbar > div,
-    .is-theme-transitioning body.wallpaper-transparent #navbar[data-transparent-mode] > div,
-    .is-theme-transitioning body.wallpaper-transparent #navbar[data-transparent-mode].scrolled > div,
-    .is-theme-transitioning #banner-wrapper ~ * #navbar > div,
-    .is-theme-transitioning #banner-wrapper ~ * #navbar[data-transparent-mode] > div,
-    .is-theme-transitioning body:has(#banner-wrapper) #navbar > div,
-    .is-theme-transitioning body:has(#banner-wrapper) #navbar[data-transparent-mode] > div {
-        transition: none !important;
-        backdrop-filter: none !important;
-    }
-
-    /* 导航栏相关浮动面板的过渡禁用 */
-    .is-theme-transitioning .dropdown-content,
-    .is-theme-transitioning .float-panel,
-    .is-theme-transitioning #display-setting,
-    .is-theme-transitioning #nav-menu-panel,
-    .is-theme-transitioning #translate-panel,
-    .is-theme-transitioning #search-panel {
-        transition: none !important;
-        backdrop-filter: none !important;
-    }
-
-    /* 波浪容器的颜色传递 */
-    .is-theme-transitioning #header-waves {
-        /* 设置当前颜色为页面背景色，供SVG继承 */
-        color: var(--page-bg);
-        /* 确保与页面在同一合成层 */
-        isolation: isolate;
-        /* 优化渲染性能 - 移除 strict containment 改用 none */
-        contain: none;
-        /* GPU层合成 */
-        transform: translateZ(0);
-        /* 确保没有背景色 */
-        background: transparent;
-    }
-
-    .is-theme-transitioning #header-waves use {
-        /* 保持动画连续性 */
-        will-change: transform;
-        /* GPU优化 */
-        transform: translateZ(0);
-    }
-
-    .card-base {
-        @apply rounded-[var(--radius-large)] overflow-hidden bg-[var(--card-bg)] transition-colors duration-150;
-    }
-    .card-base-transparent {
-        @apply rounded-[var(--radius-large)] overflow-hidden bg-[var(--card-bg-transparent)] backdrop-blur-sm transition-colors duration-150;
-    }
-
-    /* 全屏壁纸模式下的半透明效果 */
-    .wallpaper-transparent .card-base {
-        @apply bg-[var(--card-bg-transparent)];
-    }
-
-    .wallpaper-transparent .float-panel {
-        @apply bg-[var(--card-bg-transparent)];
-    }
-
-    .wallpaper-transparent #navbar > div {
-        @apply bg-[var(--card-bg-transparent)] backdrop-blur-sm;
-    }
-
-    .wallpaper-transparent .btn-card {
-        @apply bg-[var(--card-bg-transparent)];
-    }
-
-    .wallpaper-transparent ~ * .music-player .mini-player,
-    .wallpaper-transparent ~ * .music-player .expanded-player,
-    .wallpaper-transparent ~ * .music-player .playlist-panel,
-    body.wallpaper-transparent .music-player .mini-player,
-    body.wallpaper-transparent .music-player .expanded-player,
-    body.wallpaper-transparent .music-player .playlist-panel {
-        background-color: var(--card-bg-transparent) !important;
-        backdrop-filter: blur(8px) !important;
-    }
     h1, h2, h3, h4, h5, h6, p, a, span, li, ul, ol, blockquote, code, pre, table, th, td, strong {
         @apply transition-colors duration-150;
-    }
-    .card-shadow {
-        @apply drop-shadow-[0_2px_4px_rgba(0,0,0,0.005)]
-    }
-    .expand-animation {
-        @apply relative before:ease-out before:transition active:bg-none hover:before:bg-[var(--btn-plain-bg-hover)] active:before:bg-[var(--btn-plain-bg-active)] z-0
-        before:absolute before:rounded-[inherit] before:inset-0 before:scale-[0.85] hover:before:scale-100 before:-z-10
-    }
-    .link {
-        @apply transition-colors duration-150 rounded-md p-1 -m-1 expand-animation;
-    }
-    .link-lg {
-        @apply transition-colors duration-150 rounded-md p-1.5 -m-1.5 expand-animation;
-    }
-    .float-panel {
-        @apply top-[5.25rem] rounded-[var(--radius-large)] overflow-hidden bg-[var(--float-panel-bg)] transition-colors duration-150 shadow-xl dark:shadow-none
-    }
-    .float-panel-closed {
-        @apply -translate-y-1 opacity-0 pointer-events-none
-    }
-    .search-panel mark {
-        @apply bg-transparent text-[var(--primary)]
-    }
-
-    .btn-card {
-        @apply transition-colors duration-150 flex items-center justify-center bg-[var(--card-bg)] hover:bg-[var(--btn-card-bg-hover)]
-        active:bg-[var(--btn-card-bg-active)]
-    }
-    .btn-card.disabled {
-        @apply pointer-events-none text-black/10 dark:text-white/10
-    }
-    .btn-plain {
-        @apply transition-colors duration-150 relative flex items-center justify-center bg-none
-        text-black/75 hover:text-[var(--primary)] dark:text-white/75 dark:hover:text-[var(--primary)];
-        &:not(.scale-animation) {
-            @apply hover:bg-[var(--btn-plain-bg-hover)] active:bg-[var(--btn-plain-bg-active)]
-        }
-        &.scale-animation {
-            @apply expand-animation;
-        }
-    }
-    .btn-plain:hover .iconify, .btn-plain:hover svg, .btn-plain:hover span {
-        @apply text-[var(--primary)] !important;
-    }
-    .btn-regular {
-        @apply transition-colors duration-150 flex items-center justify-center bg-[var(--btn-regular-bg)] hover:bg-[var(--btn-regular-bg-hover)] active:bg-[var(--btn-regular-bg-active)]
-        text-[var(--btn-content)] dark:text-white/75
-    }
-    .current-theme-btn {
-        @apply text-[var(--primary)] bg-[var(--btn-plain-bg-hover)] hover:bg-[var(--btn-plain-bg-hover)] active:bg-[var(--btn-plain-bg-hover)] !important;
-    }
-    .current-theme-btn .iconify, .current-theme-btn svg, .current-theme-btn span,
-    .current-theme-btn .text-sm, .current-theme-btn .text-lg {
-        @apply text-[var(--primary)] !important;
-    }
-
-    .link-underline {
-        @apply transition-colors duration-150 underline decoration-2 decoration-dashed decoration-[var(--link-underline)]
-        hover:decoration-[var(--link-hover)] active:decoration-[var(--link-active)] underline-offset-[0.25rem]
-    }
-
-    .hide-scrollbar {
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-    }
-    .hide-scrollbar::-webkit-scrollbar {
-        display: none;
-    }
-
-    .text-90 {
-        @apply text-black/90 dark:text-white/90
-    }
-    .text-75 {
-        @apply text-black/75 dark:text-white/75
-    }
-    .text-50 {
-        @apply text-black/50 dark:text-white/50
-    }
-    .text-30 {
-        @apply text-black/30 dark:text-white/30
-    }
-    .text-25 {
-        @apply text-black/25 dark:text-white/25
-    }
-
-    /* 下拉菜单样式 */
-    .dropdown-container {
-        @apply relative;
-    }
-
-    .dropdown-menu {
-        @apply absolute top-full left-0 pt-2 opacity-0 invisible pointer-events-none transition-all duration-200 ease-out transform translate-y-[-8px] z-50;
-    }
-
-    .dropdown-container:hover .dropdown-menu,
-    .dropdown-container:focus-within .dropdown-menu {
-        @apply opacity-100 visible pointer-events-auto translate-y-0;
-    }
-
-    .dropdown-container:hover .dropdown-arrow,
-    .dropdown-container:focus-within .dropdown-arrow {
-        @apply rotate-180;
-    }
-
-    .dropdown-content {
-        @apply bg-[var(--float-panel-bg)] rounded-[var(--radius-large)] shadow-xl dark:shadow-none border border-black/5 dark:border-white/10 py-2 min-w-[12rem];
-    }
-
-    .dropdown-item {
-        @apply flex items-center justify-between px-4 py-2.5 text-black/75 dark:text-white/75 hover:text-[var(--primary)] hover:bg-[var(--btn-plain-bg-hover)] transition-colors duration-150 font-medium;
-    }
-
-    .dropdown-item:first-child {
-        @apply rounded-t-[calc(var(--radius-large)-0.5rem)];
-    }
-
-    .dropdown-item:last-child {
-        @apply rounded-b-[calc(var(--radius-large)-0.5rem)];
-    }
-
-    /* 移动端菜单样式 */
-    .mobile-submenu {
-        @apply max-h-0 overflow-hidden transition-all duration-300 ease-in-out;
-    }
-
-    .mobile-dropdown[data-expanded="true"] .mobile-submenu {
-        @apply max-h-96;
-    }
-
-    .mobile-dropdown[data-expanded="true"] .mobile-dropdown-arrow {
-        @apply rotate-180;
-    }
-
-    /* 无障碍支持 */
-    .dropdown-container:focus-within .dropdown-menu {
-        @apply opacity-100 visible pointer-events-auto translate-y-0;
-    }
-
-    .dropdown-item:focus {
-        @apply outline-none;
-    }
-
-    .mobile-dropdown button:focus {
-        @apply outline-none;
-    }
-
-    .meta-icon {
-        @apply w-8 h-8 transition-colors duration-150 rounded-md flex items-center justify-center bg-[var(--btn-regular-bg)]
-        text-[var(--btn-content)] mr-2
-    }
-    .with-divider {
-        @apply before:content-['/'] before:ml-1.5 before:mr-1.5 before:text-[var(--meta-divider)] before:text-sm
-        before:font-medium before:first-of-type:hidden before:transition-colors before:duration-150
-    }
-
-    .btn-regular-dark {
-        @apply flex items-center justify-center
-        bg-[oklch(0.45_0.01_var(--hue))] hover:bg-[oklch(0.50_0.01_var(--hue))] active:bg-[oklch(0.55_0.01_var(--hue))]
-        dark:bg-[oklch(0.30_0.02_var(--hue))] dark:hover:bg-[oklch(0.35_0.03_var(--hue))] dark:active:bg-[oklch(0.40_0.03_var(--hue))]
-    }
-    .btn-regular-dark.success {
-        @apply bg-[oklch(0.75_0.14_var(--hue))] dark:bg-[oklch(0.75_0.14_var(--hue))]
     }
 }
 
@@ -325,7 +673,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
     border-left: 2px dashed var(--line-color);
     pointer-events: none;
     transition: all 0.3s;
-    transform: translateY(-50%);
+    translate: 0 -50%;
 }
 
 .collapsed {
@@ -334,19 +682,19 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 
 /* 剧透效果 */
 .custom-md spoiler {
-  --_spoiler-mask: var(--primary);
-  @apply hover:bg-transparent px-1 py-0.5 overflow-hidden rounded-md transition-all duration-150;
-  background-color: var(--_spoiler-mask);
+    --_spoiler-mask: var(--primary);
+    @apply hover:bg-transparent px-1 py-0.5 overflow-hidden rounded-md transition-all duration-150;
+    background-color: var(--_spoiler-mask);
 
-  &:not(:hover) {
+    &:not(:hover) {
     color: var(--_spoiler-mask);
     * {
         color: var(--_spoiler-mask);
     }
-  }
+    }
 }
 
 /* 浅色模式：使用更浅的主题色且完全不透明 */
 :root:not(.dark) .custom-md spoiler {
-  --_spoiler-mask: color-mix(in oklch, var(--primary) 55%, white 45%);
+    --_spoiler-mask: color-mix(in oklch, var(--primary) 55%, white 45%);
 }

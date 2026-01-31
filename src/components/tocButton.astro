@@ -22,7 +22,7 @@ const { class: className, style } = Astro.props;
         </div>
         <div class="toc-floating-panel hidden opacity-0 translate-y-4 pointer-events-none">
             <div class="toc-panel-header">
-                <Icon name="material-symbols:format-list-bulleted-rounded" class="text-[var(--primary)]" size={20} />
+                <Icon name="material-symbols:format-list-bulleted-rounded" class="text-(--primary)" size={20} />
                 <span class="text-sm font-bold text-75">{i18n(I18nKey.tableOfContents)}</span>
             </div>
             <div class="toc-inner-content relative"></div>
@@ -59,7 +59,7 @@ const { class: className, style } = Astro.props;
         transition: transform 0.2s, background-color 0.2s
 
         &:active
-            transform: scale(0.9)
+            scale: 0.9
 
     .toc-floating-panel
         position: absolute
@@ -99,10 +99,11 @@ const { class: className, style } = Astro.props;
         border-radius: 10px
     
     .toc-floating-container.move-up
-        transform: translateY(-4rem)
+        translate: 0 -4rem
     
     .toc-floating-container.toc-hide
-        transform: translateY(2rem) scale(0.9)
+        translate: 0 2rem
+        scale: 0.9
         opacity: 0
         pointer-events: none
 
