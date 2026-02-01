@@ -45,6 +45,7 @@
     let tagsChart: any = $state();
 
     let timeScale: 'year' | 'month' | 'day' = $state('year');
+    let lastScale = $state<'year' | 'month' | 'day'>('year');
     let isDark = $state(false);
     let isDesktop = $state(true);
 
@@ -423,12 +424,15 @@
 
     $effect(() => {
         if (timeScale && echarts && isInitialized) {
-            initActivityChart(true);
+            if (timeScale !== lastScale) {
+                lastScale = timeScale;
+                initActivityChart(true);
+            }
         }
     });
 </script>
 
-<div id={`statistics-${side}`} bind:this={container} class={"pb-4 card-base " + className} {style}>
+<div id={`statistics-${side}`} data-swup-persist={`statistics-${side}`} bind:this={container} class={"pb-4 card-base " + className} {style}>
     <div class="font-bold transition text-lg text-neutral-900 dark:text-neutral-100 relative ml-8 mt-4 mb-2
         before:w-1 before:h-4 before:rounded-md before:bg-(--primary)
         before:absolute before:left-[-16px] before:top-[5.5px]">{labels.statistics}</div>
