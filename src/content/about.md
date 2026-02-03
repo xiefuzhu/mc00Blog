@@ -16,3 +16,4 @@ Twilight is a CMS integrated static blog template built with [Astro](https://ast
 - Comprehensive statistics dashboard in [#51](https://github.com/Spr-Aachen/Twilight/pull/51)
 - Low-barrier configuration scheme in [#58](https://github.com/Spr-Aachen/Twilight/pull/58)
 - Dynamic breakpoint handling in [#68](https://github.com/Spr-Aachen/Twilight/pull/68)
+- Advanced content management in [#73](https://github.com/Spr-Aachen/Twilight/pull/73)
