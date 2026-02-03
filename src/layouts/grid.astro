@@ -7,6 +7,7 @@ import {
     BANNER_HEIGHT,
     MAIN_PANEL_OVERLAPS_BANNER_HEIGHT,
 } from "@constants/constants";
+import { pathsEqual, url } from "@utils/url";
 import { widgetManager } from "@utils/widget";
 import IconifyLoader from "@components/common/iconifyLoader.astro";
 import Navbar from "@components/navbar.astro";
@@ -46,7 +47,7 @@ const hasBannerCredit = siteConfig.wallpaper.mode === "banner" && siteConfig.wal
 const hasBannerLink = !!siteConfig.wallpaper.banner?.credit?.url;
 
 // 检查是否为首页
-const isHomePage = Astro.url.pathname === "/" || Astro.url.pathname === "";
+const isHomePage = pathsEqual(Astro.url.pathname, url("/"));
 
 // 计算主内容区域位置
 const mainPanelTop = siteConfig.wallpaper.mode === "banner"
