@@ -63,8 +63,6 @@ async function changeLanguage(languageCode: string) {
     } catch (error) {
         console.error("Failed to execute translation:", error);
     }
-    // 关闭面板
-    isOpen = false;
 }
 
 // 点击外部关闭面板
