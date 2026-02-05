@@ -68,6 +68,35 @@ let lastSaveTime = 0;
 let errorMessage = $state("");
 // 是否显示错误信息
 let showError = $state(false);
+// 音量过渡间隔
+let fadeInterval: number | null = null;
+
+function fadeInVolume(targetVolume: number, duration: number = 2000) {
+    if (!audio) return;
+    if (fadeInterval) clearInterval(fadeInterval);
+    const startVolume = 0;
+    const startTime = Date.now();
+    audio.volume = startVolume;
+    fadeInterval = window.setInterval(() => {
+        if (!audio || isMuted) {
+            if (fadeInterval) {
+                clearInterval(fadeInterval);
+                fadeInterval = null;
+            }
+            return;
+        }
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const currentVolume = startVolume + (targetVolume - startVolume) * progress;
+        audio.volume = currentVolume;
+        if (progress >= 1) {
+            if (fadeInterval) {
+                clearInterval(fadeInterval);
+                fadeInterval = null;
+            }
+        }
+    }, 50);
+}
 
 // 存储键名常量
 const STORAGE_KEYS = {
@@ -81,7 +110,6 @@ const STORAGE_KEYS = {
 
 function restoreLastSong() {
     if (playlist.length === 0) return;
-
     if (typeof localStorage !== 'undefined') {
         const lastId = localStorage.getItem(STORAGE_KEYS.LAST_SONG_ID);
         let index = -1;
@@ -186,12 +214,21 @@ async function toggleMode() {
 function togglePlay() {
     if (!audio || !currentSong.url) return;
     if (isPlaying) {
+        if (fadeInterval) {
+            clearInterval(fadeInterval);
+            fadeInterval = null;
+        }
         audio.pause();
         if (typeof localStorage !== 'undefined') {
             localStorage.setItem(STORAGE_KEYS.USER_PAUSED, "true");
         }
     } else {
-        audio.play();
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                fadeInVolume(volume);
+            }).catch(() => {});
+        }
         if (typeof localStorage !== 'undefined') {
             localStorage.setItem(STORAGE_KEYS.USER_PAUSED, "false");
         }
@@ -326,6 +363,7 @@ function handleLoadSuccess() {
         const playPromise = audio?.play();
         if (playPromise !== undefined) {
             playPromise.then(() => {
+                fadeInVolume(volume);
                 // 播放成功后，关闭自动播放标记，后续由用户控制
                 isAutoplayEnabled = false;
                 autoplayFailed = false;
@@ -347,6 +385,7 @@ function handleUserInteraction() {
         const playPromise = audio.play();
         if (playPromise !== undefined) {
             playPromise.then(() => {
+                fadeInVolume(volume);
                 autoplayFailed = false;
             }).catch(() => {});
         }
@@ -409,6 +448,10 @@ function stopVolumeDrag() {
 
 function updateVolumeLogic(clientX: number) {
     if (!audio || !volumeBar) return;
+    if (fadeInterval) {
+        clearInterval(fadeInterval);
+        fadeInterval = null;
+    }
     const rect = volumeBarRect || volumeBar.getBoundingClientRect();
     const percent = Math.max(
         0,
@@ -424,6 +467,10 @@ function updateVolumeLogic(clientX: number) {
 
 function toggleMute() {
     if (!audio) return;
+    if (fadeInterval) {
+        clearInterval(fadeInterval);
+        fadeInterval = null;
+    }
     isMuted = !isMuted;
     audio.muted = isMuted;
 }
@@ -470,7 +517,9 @@ function handleAudioEvents() {
         // 单曲循环时，重置进度到开始
         if (isRepeating === 1) {
             audio.currentTime = 0;
-            audio.play().catch(() => {});
+            audio.play().then(() => {
+                fadeInVolume(volume);
+            }).catch(() => {});
         } else if (
             isRepeating === 2 ||
             isShuffled ||
@@ -536,6 +585,10 @@ onMount(() => {
 });
 
 onDestroy(() => {
+    if (fadeInterval) {
+        clearInterval(fadeInterval);
+        fadeInterval = null;
+    }
     if (typeof document !== 'undefined') {
         interactionEvents.forEach(event => {
             document.removeEventListener(event, handleUserInteraction, { capture: true });
