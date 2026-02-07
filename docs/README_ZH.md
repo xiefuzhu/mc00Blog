@@ -37,7 +37,7 @@
 ## ✨ 特性
 
 ### 内容
-- **CMS 功能**: 基于 Decap CMS 的便捷内容管理
+- **后台功能**: 基于 Decap CMS 的便捷内容管理
 - **数据可视化**: 可视化的项目、技能等个人数据
 - **自动化导航**: 自动化生成的文章导航
 
@@ -58,20 +58,20 @@
 - **多语言能力**: 内置翻译功能，方便全球访问
 
 
-## 📦 安装
+## 💻 调试
 
 1. **克隆仓库**
    ```bash
    git clone https://github.com/Spr-Aachen/Twilight.git
+   # 切换到项目目录
    cd Twilight
    ```
 
 2. **安装依赖**
    ```bash
-   # Install pnpm if not already installed
+   # 安装 pnpm 如果未安装
    npm install -g pnpm
-   
-   # Install project dependencies
+   # 安装项目依赖
    pnpm install
    ```
 
@@ -89,15 +89,17 @@
 
 ## 🚀 部署
 
-将你的博客部署到任何静态托管平台
+将博客部署到任意静态托管平台
+
+PS: 经用户反馈，**目前包括 ESA 与 EO 在内的部分国内平台无法正常使用后台功能**，请尽量选择 Cloudflare, Netify, Vercel 等国际平台
 
 
 ## ⚡ 命令
 
 | 指令                       | 说明                      |
 |:---------------------------|:-------------------------|
-| `pnpm lint`                | 检查并修复代码问题         |
-| `pnpm format`              | 使用 Biome 格式化代码      |
+| ~~`pnpm lint`~~            | ~~检查并修复代码问题~~     |
+| ~~`pnpm format`~~          | ~~使用 Biome 格式化代码~~  |
 | `pnpm check`               | 运行 Astro 错误检查       |
 | `pnpm dev`                 | 启动本地服务器             |
 | `pnpm build`               | 构建站点到 `./dist/`      |

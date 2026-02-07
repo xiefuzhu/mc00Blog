@@ -58,11 +58,12 @@ English | [**中文**](docs/README_ZH.md)
 - **Multilingual Capability**: Built-in translation functionality for global accessibility
 
 
-## 📦 Installation
+## 💻 Configuration
 
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/Spr-Aachen/Twilight.git
+   # Navigate to the project directory
    cd Twilight
    ```
 
@@ -70,7 +71,6 @@ English | [**中文**](docs/README_ZH.md)
    ```bash
    # Install pnpm if not already installed
    npm install -g pnpm
-   
    # Install project dependencies
    pnpm install
    ```
@@ -94,16 +94,16 @@ Deploy your blog to any static hosting platform
 
 ## ⚡ Commands
 
-| Command                     | Action                      |
-|:----------------------------|:----------------------------|
-| `pnpm lint`                 | Check and fix code issues   |
-| `pnpm format`               | Format code with Biome      |
-| `pnpm check`                | Run Astro error checking    |
-| `pnpm dev`                  | Start local dev server      |
-| `pnpm build`                | Build site to `./dist/`     |
-| `pnpm preview`              | Preview build locally       |
-| `pnpm astro ...`            | Run Astro CLI commands      |
-| `pnpm new-post <filename>`  | Create a new blog post      |
+| Command                     | Action                        |
+|:----------------------------|:------------------------------|
+| ~~`pnpm lint`~~             | ~~Check and fix code issues~~ |
+| ~~`pnpm format`~~           | ~~Format code with Biome~~    |
+| `pnpm check`                | Run Astro error checking      |
+| `pnpm dev`                  | Start local dev server        |
+| `pnpm build`                | Build site to `./dist/`       |
+| `pnpm preview`              | Preview build locally         |
+| `pnpm astro ...`            | Run Astro CLI commands        |
+| `pnpm new-post <filename>`  | Create a new blog post        |
 
 
 ## 🙏 Acknowledgements
