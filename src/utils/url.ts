@@ -1,5 +1,6 @@
 import type { CollectionEntry } from "astro:content";
 
+import { CATEGORY_SEPARATOR } from "@utils/category";
 import { i18n } from "@i18n/translation";
 import I18nKey from "@i18n/i18nKey";
 
@@ -42,19 +43,21 @@ export function getPostUrl(post: any): string {
     return getPostUrlBySlug(post.id);
 }
 
+export function getCategoryUrl(category: string | string[] | null): string {
+    if (!category) return url("/archive/?uncategorized=true");
+    const parts = Array.isArray(category)
+        ? category.map((item) => String(item).trim()).filter((item) => item.length > 0)
+        : [category.trim()];
+    const label = parts.join(CATEGORY_SEPARATOR).trim();
+    if (!label || label.toLowerCase() === i18n(I18nKey.uncategorized).toLowerCase()) {
+        return url("/archive/?uncategorized=true");
+    }
+    return url(`/archive/?category=${encodeURIComponent(label)}`);
+}
+
 export function getTagUrl(tag: string): string {
     if (!tag) return url("/archive/");
     return url(`/archive/?tag=${encodeURIComponent(tag.trim())}`);
-}
-
-export function getCategoryUrl(category: string | null): string {
-    if (
-        !category ||
-        category.trim() === "" ||
-        category.trim().toLowerCase() === i18n(I18nKey.uncategorized).toLowerCase()
-    )
-        return url("/archive/?uncategorized=true");
-    return url(`/archive/?category=${encodeURIComponent(category.trim())}`);
 }
 
 export function getDir(path: string): string {
