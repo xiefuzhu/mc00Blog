@@ -1,5 +1,5 @@
 ---
-title: Guide for Blog Template
+title: Guide for Template - Getting Started
 published: 2001-10-02
 description: "How to use this blog template."
 cover: "./cover.jpg"
