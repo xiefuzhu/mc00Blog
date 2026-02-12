@@ -32,10 +32,14 @@ import { remarkMermaid } from "./src/plugins/remark-mermaid.js";
 import { remarkReadingTime } from "./src/plugins/remark-reading-time.mjs";
 
 
-// https://astro.build/config
 // Choose adapter depending on deployment environment
-const adapter = process.env.CF_PAGES ? cloudflarePages() : vercel({ mode: "serverless" });
+const adapter = process.env.GITHUB_ACTIONS
+    ? undefined
+    : (process.env.CF_PAGES
+        ? cloudflarePages()
+        : vercel({ mode: "serverless" }));
 
+// Ref: https://astro.build/config
 export default defineConfig({
     site: siteConfig.siteURL,
     base: "/",
