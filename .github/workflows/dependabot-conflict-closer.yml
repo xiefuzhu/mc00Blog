@@ -1,0 +1,77 @@
+name: Close Conflicted Dependabot PRs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [synchronize, opened, reopened]
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  close-conflicted-prs:
+    runs-on: ubuntu-latest
+    # Only run on pushes to main or when dependabot triggers a pull_request
+    if: github.event_name == 'push' || github.actor == 'dependabot[bot]'
+    steps:
+      - name: Close Conflicted PRs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pullRequests } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+            });
+
+            for (const pr of pullRequests) {
+              // Only process Dependabot PRs
+              if (pr.user.login !== 'dependabot[bot]') continue;
+
+              console.log(`Checking Dependabot PR #${pr.number}: ${pr.title}`);
+
+              // Fetch full PR details to check mergeable status
+              let { data: fullPr } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+              });
+
+              // If mergeable is null, GitHub is still calculating the merge status. Retry a few times.
+              let retries = 5;
+              while (fullPr.mergeable === null && retries > 0) {
+                console.log(`PR #${pr.number} mergeable status is unknown (null), retrying in 10 seconds...`);
+                await new Promise(r => setTimeout(r, 10000));
+                ({ data: fullPr } = await github.rest.pulls.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                }));
+                retries--;
+              }
+
+              console.log(`PR #${pr.number} mergeable status: ${fullPr.mergeable}`);
+
+              // If mergeable is false, there are merge conflicts
+              if (fullPr.mergeable === false) {
+                console.log(`Closing PR #${pr.number} due to merge conflicts.`);
+                
+                // Add an explanatory comment
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  body: `This Dependabot PR has been automatically closed due to merge conflicts.`,
+                });
+
+                // Close the PR
+                await github.rest.pulls.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                  state: 'closed',
+                });
+              }
+            }
