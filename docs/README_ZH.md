@@ -91,7 +91,7 @@
 
 将博客部署到任意静态托管平台
 
-PS: 经用户反馈，**目前包括 ESA 与 EO 在内的部分国内平台无法正常使用后台功能**，请尽量选择 Cloudflare, Netify, Vercel 等国际平台
+PS: 经用户反馈，目前包括 ESA 在内的部分平台无法正常使用后台功能，**请尽量选择 GitHub, Cloudflare, Netify, Vercel 等[推荐部署的平台](https://docs.twilight.spr-aachen.com/guide/deployment/)**
 
 
 ## ⚡ 命令
