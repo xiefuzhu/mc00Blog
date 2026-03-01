@@ -1,5 +1,4 @@
 <script lang="ts">
-import Icon from "@iconify/svelte";
 import { onMount } from "svelte";
 
 import { BREAKPOINT_LG } from "@/constants/breakpoints";
@@ -15,6 +14,7 @@ import { i18n } from "@i18n/translation";
 import I18nKey from "@i18n/i18nKey";
 import DropdownItem from "@/components/common/DropdownItem.svelte";
 import DropdownPanel from "@/components/common/DropdownPanel.svelte";
+import Icon from "@components/common/icon.svelte";
 
 
 const seq: WALLPAPER_MODE[] = [WALLPAPER_BANNER, WALLPAPER_FULLSCREEN, WALLPAPER_NONE];
@@ -64,14 +64,14 @@ onMount(() => {
 
 <!-- z-50 make the panel higher than other float panels -->
 <div class="relative z-50" role="menu" tabindex="-1" onmouseleave={closePanel}>
-    <button aria-label="Wallpaper Mode" role="menuitem" class="relative btn-plain scale-animation rounded-lg h-11 w-11 active:scale-90" id="wallpaper-mode-switch" onmouseenter={openPanel} onclick={() => { if (window.innerWidth < BREAKPOINT_LG) { openPanel(); } else { toggleWallpaperMode(); } }}>
-        <div class="absolute" class:opacity-0={mode !== WALLPAPER_BANNER}>
+    <button aria-label="Wallpaper Mode" role="menuitem" class="relative btn-plain scale-animation rounded-lg h-11 w-11 active:scale-90 flex items-center justify-center" id="wallpaper-mode-switch" onmouseenter={openPanel} onclick={() => { if (window.innerWidth < BREAKPOINT_LG) { openPanel(); } else { toggleWallpaperMode(); } }}>
+        <div class="absolute inset-0 flex items-center justify-center" class:opacity-0={mode !== WALLPAPER_BANNER}>
             <Icon icon="material-symbols:image-outline" class="text-[1.25rem]"></Icon>
         </div>
-        <div class="absolute" class:opacity-0={mode !== WALLPAPER_FULLSCREEN}>
+        <div class="absolute inset-0 flex items-center justify-center" class:opacity-0={mode !== WALLPAPER_FULLSCREEN}>
             <Icon icon="material-symbols:wallpaper" class="text-[1.25rem]"></Icon>
         </div>
-        <div class="absolute" class:opacity-0={mode !== WALLPAPER_NONE}>
+        <div class="absolute inset-0 flex items-center justify-center" class:opacity-0={mode !== WALLPAPER_NONE}>
             <Icon icon="material-symbols:hide-image-outline" class="text-[1.25rem]"></Icon>
         </div>
     </button>

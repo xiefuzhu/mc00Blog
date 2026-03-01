@@ -1,6 +1,5 @@
 <script lang="ts">
 import { onMount, onDestroy } from "svelte";
-import Icon from "@iconify/svelte";
 
 import type { SearchResult } from "@/global";
 import { url } from "@utils/url";
@@ -9,6 +8,7 @@ import { onClickOutside } from "@utils/widget";
 import { i18n } from "@i18n/translation";
 import I18nKey from "@i18n/i18nKey";
 import DropdownPanel from "@/components/common/DropdownPanel.svelte";
+import Icon from "@components/common/icon.svelte";
 
 
 let keywordDesktop = $state("");
@@ -238,7 +238,7 @@ onDestroy(() => {
 
 <!-- toggle btn for phone/tablet view -->
 <button onclick={togglePanel} aria-label="Search Panel" id="search-switch"
-        class="btn-plain scale-animation lg:hidden! rounded-lg w-11 h-11 active:scale-90">
+        class="btn-plain scale-animation lg:hidden! rounded-lg w-11 h-11 active:scale-90 flex items-center justify-center">
     <Icon icon="material-symbols:search" class="text-[1.25rem]"></Icon>
 </button>
 
