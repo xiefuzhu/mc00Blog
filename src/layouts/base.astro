@@ -519,10 +519,21 @@ if (typeof window !== 'undefined') {
         }, 600);
     };
 
-    if (document.readyState !== 'loading') {
-        onPageLoaded();
+    const configCarrier = document.getElementById('config-carrier');
+    const waitForAllResources = configCarrier?.dataset.waitForAllResources === 'true';
+
+    if (waitForAllResources) {
+        if (document.readyState === 'complete') {
+            onPageLoaded();
+        } else {
+            window.addEventListener('load', onPageLoaded);
+        }
     } else {
-        document.addEventListener('DOMContentLoaded', onPageLoaded);
+        if (document.readyState !== 'loading') {
+            onPageLoaded();
+        } else {
+            document.addEventListener('DOMContentLoaded', onPageLoaded);
+        }
     }
 }
 </script>
