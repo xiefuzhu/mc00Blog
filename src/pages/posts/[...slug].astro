@@ -9,7 +9,8 @@ import { siteConfig, profileConfig, postConfig } from "@/config";
 import { getSortedPosts } from "@utils/content";
 import { formatDateToYYYYMMDD } from "@utils/date";
 import { getFileDirFromPath, getPostUrl, getPostUrlBySlug, removeFileExtension} from "@utils/url";
-import { i18n } from "@i18n/translation";
+import { SUPPORTED_LANGUAGES, langToTranslateMap } from "@i18n/language";
+import { i18n, getTranslation } from "@i18n/translation";
 import I18nKey from "@i18n/i18nKey";
 import License from "@components/post/license.astro";
 import Markdown from "@components/common/markdown.astro";
@@ -18,7 +19,6 @@ import Comment from "@components/post/comment.astro";
 import PasswordProtection from "@components/common/passwordProtection.astro";
 import PostMetadata from "@components/post/postMeta.astro";
 import GridLayout from "@layouts/grid.astro";
-
 
 
 export async function getStaticPaths() {
@@ -69,6 +69,26 @@ dayjs.extend(utc);
 const lastModified = dayjs(entry.data.updated || entry.data.published)
     .utc()
     .format("YYYY-MM-DDTHH:mm:ss");
+
+const lastModifiedKeys = [
+    I18nKey.lastModifiedPrefix,
+    I18nKey.year,
+    I18nKey.month,
+    I18nKey.day,
+    I18nKey.hour,
+    I18nKey.minute,
+    I18nKey.second
+];
+
+const lastModifiedTranslations = {};
+for (const lang of SUPPORTED_LANGUAGES) {
+    const translateCode = langToTranslateMap[lang];
+    lastModifiedTranslations[translateCode] = {};
+    const translation = getTranslation(lang);
+    for (const key of lastModifiedKeys) {
+        lastModifiedTranslations[translateCode][key] = translation[key];
+    }
+}
 
 const jsonLd = {
     "@context": "https://schema.org",
@@ -227,14 +247,10 @@ const jsonLd = {
         <>
             <div
                 id="last-modified"
+                class="ignore"
                 data-last-modified={lastModified}
-                data-prefix={i18n(I18nKey.lastModifiedPrefix)}
-                data-year={i18n(I18nKey.year)}
-                data-month={i18n(I18nKey.month)}
-                data-day={i18n(I18nKey.day)}
-                data-hour={i18n(I18nKey.hour)}
-                data-minute={i18n(I18nKey.minute)}
-                data-second={i18n(I18nKey.second)}
+                data-translations={JSON.stringify(lastModifiedTranslations)}
+                data-default-lang={langToTranslateMap[siteConfig.lang]}
                 style="display: none;"
             ></div>
 
@@ -254,13 +270,24 @@ const jsonLd = {
                         const years = Math.floor(days / 365);
                         const months = Math.floor((days % 365) / 30);
                         const remainingDays = days % 30;
-                        const prefix = lastModifiedElement.dataset.prefix;
-                        const yearKey = lastModifiedElement.dataset.year;
-                        const monthKey = lastModifiedElement.dataset.month;
-                        const dayKey = lastModifiedElement.dataset.day;
-                        const hourKey = lastModifiedElement.dataset.hour;
-                        const minuteKey = lastModifiedElement.dataset.minute;
-                        const secondKey = lastModifiedElement.dataset.second;
+
+                        // 获取当前语言翻译数据
+                        const translations = JSON.parse(lastModifiedElement.dataset.translations);
+                        const defaultLang = lastModifiedElement.dataset.defaultLang;
+                        // translate.js 在 localStorage 中使用 'selected-language' 存储目标语言
+                        const currentLang = localStorage.getItem('selected-language') || defaultLang;
+                        
+                        // 获取对应的翻译文本
+                        const langTranslations = translations[currentLang] || translations[defaultLang] || Object.values(translations)[0];
+
+                        const prefix = langTranslations.lastModifiedPrefix;
+                        const yearKey = langTranslations.year;
+                        const monthKey = langTranslations.month;
+                        const dayKey = langTranslations.day;
+                        const hourKey = langTranslations.hour;
+                        const minuteKey = langTranslations.minute;
+                        const secondKey = langTranslations.second;
+
                         let runtimeString = prefix + ' ';
                         if (years > 0) {
                             runtimeString += `${years} ${yearKey} `;
@@ -295,7 +322,7 @@ const jsonLd = {
                             />
                         </div>
                         <div class="flex flex-col gap-0.1">
-                            <div id="modifiedtime" class="text-[1.0rem] leading-tight text-black/75 dark:text-white/75"></div>
+                            <div id="modifiedtime" class="text-[1.0rem] leading-tight text-black/75 dark:text-white/75 ignore"></div>
                             <p class="text-[0.8rem] leading-tight text-black/75 dark:text-white/75">
                                 {i18n(I18nKey.lastModifiedOutdated)}
                             </p>
