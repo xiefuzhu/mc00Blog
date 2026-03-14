@@ -1,3 +1,8 @@
+<script context="module" lang="ts">
+    let isGlobalInitialized = false;
+    let cachedEcharts: any = null;
+</script>
+
 <script lang="ts">
     import { onMount } from 'svelte';
     import dayjs from 'dayjs';
@@ -43,9 +48,9 @@
     let heatmapChart: any = $state();
     let categoriesChart: any = $state();
     let tagsChart: any = $state();
-    let isHeatmapLoading = $state(true);
-    let isCategoriesLoading = $state(true);
-    let isTagsLoading = $state(true);
+    let isHeatmapLoading = $state(!isGlobalInitialized);
+    let isCategoriesLoading = $state(!isGlobalInitialized);
+    let isTagsLoading = $state(!isGlobalInitialized);
 
     let timeScale: 'year' | 'month' | 'day' = $state('year');
     let lastScale = $state<'year' | 'month' | 'day'>('year');
@@ -81,6 +86,11 @@
         if (typeof window === 'undefined') return;
         isDark = document.documentElement.classList.contains('dark');
 
+        if (cachedEcharts) {
+            echarts = cachedEcharts;
+            return;
+        }
+
         // 动态导入 ECharts 及其组件，启用 Tree Shaking
         const echartsCore = await import('echarts/core');
         const { LineChart, RadarChart } = await import('echarts/charts');
@@ -104,6 +114,7 @@
         ]);
 
         echarts = echartsCore;
+        cachedEcharts = echartsCore;
     };
 
     let isInitialized = $state(false);
@@ -117,11 +128,12 @@
             await initCategoriesChart();
             await initTagsChart();
         }
+        isGlobalInitialized = true;
     };
 
     const initActivityChart = async (isUpdate = false) => {
         if (!heatmapContainer || !echarts) return;
-        if (!isUpdate) isHeatmapLoading = true;
+        if (!isUpdate && !isGlobalInitialized) isHeatmapLoading = true;
 
         // 模拟加载延迟以测试效果
         //if (!isUpdate) await new Promise(resolve => setTimeout(resolve, 300));
@@ -179,7 +191,7 @@
         const option = {
             backgroundColor: 'transparent',
             textStyle: { fontFamily },
-            animation: isNew || isUpdate,
+            animation: (isNew && !isGlobalInitialized) || isUpdate,
             animationDuration: isNew ? 2000 : 500,
             animationEasing: 'cubicOut',
             title: {
@@ -229,8 +241,8 @@
 
     const initCategoriesChart = async (isUpdate = false) => {
         if (!categoriesContainer || !echarts) return;
-        if (!isUpdate) isCategoriesLoading = true;
-        if (!isUpdate) await new Promise(resolve => setTimeout(resolve, 300));
+        if (!isUpdate && !isGlobalInitialized) isCategoriesLoading = true;
+        if (!isUpdate && !isGlobalInitialized) await new Promise(resolve => setTimeout(resolve, 300));
 
         const colors = getThemeColors();
         const fontFamily = getChartsFontFamily();
@@ -248,7 +260,7 @@
         categoriesChart.setOption({
             backgroundColor: 'transparent',
             textStyle: { fontFamily },
-            animation: true,
+            animation: !isGlobalInitialized || isUpdate,
             animationDuration: 2000,
             animationEasing: 'exponentialOut',
             tooltip: {
@@ -285,8 +297,8 @@
 
     const initTagsChart = async (isUpdate = false) => {
         if (!tagsContainer || !echarts) return;
-        if (!isUpdate) isTagsLoading = true;
-        if (!isUpdate) await new Promise(resolve => setTimeout(resolve, 300));
+        if (!isUpdate && !isGlobalInitialized) isTagsLoading = true;
+        if (!isUpdate && !isGlobalInitialized) await new Promise(resolve => setTimeout(resolve, 300));
 
         const colors = getThemeColors();
         const fontFamily = getChartsFontFamily();
@@ -305,7 +317,7 @@
         tagsChart.setOption({
             backgroundColor: 'transparent',
             textStyle: { fontFamily },
-            animation: true,
+            animation: !isGlobalInitialized || isUpdate,
             animationDuration: 2000,
             animationEasing: 'exponentialOut',
             tooltip: {
