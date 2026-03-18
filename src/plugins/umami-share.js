@@ -24,7 +24,8 @@
         }
 
         const currentTimestamp = Date.now();
-        const statsUrl = `${baseUrl}/v1/websites/${websiteId}/stats?startAt=0&endAt=${currentTimestamp}`;
+        const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+        const statsUrl = `${cleanBaseUrl}/v1/websites/${websiteId}/stats?startAt=0&endAt=${currentTimestamp}`;
 
         const res = await fetch(statsUrl, {
             headers: {
@@ -38,10 +39,19 @@
 
         const stats = await res.json();
 
-        // 缓存结果
-        localStorage.setItem(cacheKey, JSON.stringify({ timestamp: Date.now(), value: stats }));
+        // 处理 V3 响应格式
+        const normalizedStats = {
+            pageviews: typeof stats.pageviews === 'object' ? stats.pageviews.value : (stats.pageviews || 0),
+            visitors: typeof stats.visitors === 'object' ? stats.visitors.value : (stats.visitors || 0),
+            visits: typeof stats.visits === 'object' ? stats.visits.value : (stats.visits || 0),
+            bounces: typeof stats.bounces === 'object' ? stats.bounces.value : (stats.bounces || 0),
+            totaltime: typeof stats.totaltime === 'object' ? stats.totaltime.value : (stats.totaltime || 0)
+        };
 
-        return stats;
+        // 缓存结果
+        localStorage.setItem(cacheKey, JSON.stringify({ timestamp: Date.now(), value: normalizedStats }));
+
+        return normalizedStats;
     }
 
     /**
@@ -55,7 +65,8 @@
      * @returns {Promise<object>} 页面统计数据
      */
     async function fetchPageStats(baseUrl, apiKey, websiteId, urlPath, startAt = 0, endAt = Date.now()) {
-        const statsUrl = `${baseUrl}/v1/websites/${websiteId}/stats?startAt=${startAt}&endAt=${endAt}&url=${encodeURIComponent(urlPath)}`;
+        const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+        const statsUrl = `${cleanBaseUrl}/v1/websites/${websiteId}/stats?startAt=${startAt}&endAt=${endAt}&path=${encodeURIComponent(urlPath)}`;
 
         const res = await fetch(statsUrl, {
             headers: {
@@ -67,7 +78,16 @@
             throw new Error('获取页面统计数据失败');
         }
 
-        return await res.json();
+        const stats = await res.json();
+        
+        // 处理 V3 响应格式，可能是 { pageviews: { value: 123 }, visitors: { value: 45 } } 或者是 { pageviews: 123, visitors: 45 }
+        return {
+            pageviews: typeof stats.pageviews === 'object' ? stats.pageviews.value : (stats.pageviews || 0),
+            visitors: typeof stats.visitors === 'object' ? stats.visitors.value : (stats.visitors || 0),
+            visits: typeof stats.visits === 'object' ? stats.visits.value : (stats.visits || 0),
+            bounces: typeof stats.bounces === 'object' ? stats.bounces.value : (stats.bounces || 0),
+            totaltime: typeof stats.totaltime === 'object' ? stats.totaltime.value : (stats.totaltime || 0)
+        };
     }
 
     /**
