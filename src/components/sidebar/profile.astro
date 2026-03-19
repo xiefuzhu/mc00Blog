@@ -53,8 +53,7 @@ const id = `profile-${side}`;
         </div>
         {umamiEnabled && (
             <hr class="my-2 border-t border-dashed border-gray-300 dark:border-gray-700" />
-            <div class="text-sm text-gray-500 mt-2 text-center"
-                 id="site-stats-container"
+            <div class="text-sm text-gray-500 mt-2 text-center site-stats-container"
                  data-umami-base-url={umamiBaseUrl}
                  data-umami-api-key={umamiApiKey}
                  data-umami-website-id={umamiWebsiteId}
@@ -63,7 +62,7 @@ const id = `profile-${side}`;
                  data-i18n-error={i18n(I18nKey.statsError)}
             >
                 <Icon name="fa6-solid:eye" class="inline-block mr-1 text-gray-400 text-sm align-middle" />
-                <span id="site-stats-display">{i18n(I18nKey.statsLoading)}</span>
+                <span class="site-stats-display">{i18n(I18nKey.statsLoading)}</span>
             </div>
         )}
     </div>
@@ -79,35 +78,40 @@ const id = `profile-${side}`;
         }
         // 获取访问量统计
         async function fetchSiteStats() {
-            const container = document.getElementById('site-stats-container');
-            if (!container) return;
+            const containers = document.querySelectorAll('.site-stats-container');
 
-            const umamiBaseUrl = container.dataset.umamiBaseUrl;
-            const umamiApiKey = container.dataset.umamiApiKey;
-            const umamiWebsiteId = container.dataset.umamiWebsiteId;
-            const i18n_views = container.dataset.i18nViews;
-            const i18n_visitors = container.dataset.i18nVisitors;
-            const i18nError = container.dataset.i18nError;
+            containers.forEach(async (containerElement) => {
+                const container = containerElement as HTMLElement;
+                if (container.dataset.processed) return;
+                container.dataset.processed = "true";
 
-            try {
-                // 调用全局工具获取 Umami 统计数据
-                // @ts-ignore
-                const stats = await window.getUmamiWebsiteStats(umamiBaseUrl, umamiApiKey, umamiWebsiteId);
-                // 从返回的数据中提取页面浏览量和访客数
-                const pageViews = stats.pageviews || 0;
-                const visitors = stats.visitors || 0;
-                // 更新页面上的显示内容
-                const displayElement = document.getElementById('site-stats-display');
-                if (displayElement) {
-                    displayElement.textContent = generateStatsText(pageViews, visitors, i18n_views, i18n_visitors);
+                const umamiBaseUrl = container.dataset.umamiBaseUrl;
+                const umamiApiKey = container.dataset.umamiApiKey;
+                const umamiWebsiteId = container.dataset.umamiWebsiteId;
+                const i18n_views = container.dataset.i18nViews;
+                const i18n_visitors = container.dataset.i18nVisitors;
+                const i18nError = container.dataset.i18nError;
+
+                try {
+                    // 调用全局工具获取 Umami 统计数据
+                    // @ts-ignore
+                    const stats = await window.getUmamiWebsiteStats(umamiBaseUrl, umamiApiKey, umamiWebsiteId);
+                    // 从返回的数据中提取页面浏览量和访客数
+                    const pageViews = stats.pageviews || 0;
+                    const visitors = stats.visitors || 0;
+                    // 更新页面上的显示内容
+                    const displayElement = container.querySelector('.site-stats-display');
+                    if (displayElement) {
+                        displayElement.textContent = generateStatsText(pageViews, visitors, i18n_views, i18n_visitors);
+                    }
+                } catch (error) {
+                    console.error('Error fetching site stats:', error);
+                    const displayElement = container.querySelector('.site-stats-display');
+                    if (displayElement) {
+                        displayElement.textContent = i18nError || null;
+                    }
                 }
-            } catch (error) {
-                console.error('Error fetching site stats:', error);
-                const displayElement = document.getElementById('site-stats-display');
-                if (displayElement) {
-                    displayElement.textContent = i18nError || null;
-                }
-            }
+            });
         }
         // 页面加载完成后获取统计数据
         fetchSiteStats();
