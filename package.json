@@ -6,8 +6,6 @@
 	"scripts": {
 		"type-check": "tsc --noEmit --isolatedDeclarations",
 		"check-stylus": "node scripts/compile-inline-stylus.cjs",
-		"lint": "biome check --write ./src",
-		"format": "biome format --write ./src",
 		"check": "astro check",
 		"dev": "node scripts/generate-icons.js && astro dev",
 		"build": "node scripts/generate-icons.js && node scripts/build-with-pagefind.cjs",
@@ -78,7 +76,6 @@
 	},
 	"devDependencies": {
 		"@astrojs/ts-plugin": "^1.10.6",
-		"@biomejs/biome": "2.3.13",
 		"@iconify-json/mdi": "^1.2.3",
 		"@rollup/plugin-yaml": "^4.1.2",
 		"@types/hast": "^3.0.4",
