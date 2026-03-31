@@ -16,4 +16,4 @@ interface Props {
 const { class: className, style, side } = Astro.props;
 ---
 
-<StatsCharts client:load {posts} {categories} {tags} class={className} style={style} {side} />
+<StatsCharts client:visible {posts} {categories} {tags} class={className} style={style} {side} />
