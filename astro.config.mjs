@@ -202,9 +202,14 @@ export default defineConfig({
     vite: {
         plugins: [tailwindcss()],
         build: {
+            cssCodeSplit: true,
+            cssMinify: "esbuild",
+            minify: "esbuild",
+            esbuildOptions: {
+                drop: process.env.NODE_ENV === "production" ? ["console", "debugger"] : [],
+            },
             rollupOptions: {
                 onwarn(warning, warn) {
-                    // temporarily suppress this warning
                     if (
                         warning.message.includes("is dynamically imported by") &&
                         warning.message.includes("but also statically imported by")
@@ -216,7 +221,7 @@ export default defineConfig({
             },
         },
     },
-    build: {
-        inlineStylesheets: "always",
-    },
+    //build: {
+    //    inlineStylesheets: "always",
+    //},
 });
