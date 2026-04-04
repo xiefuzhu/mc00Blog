@@ -5,7 +5,7 @@ import MarkdownIt from "markdown-it";
 import sanitizeHtml from "sanitize-html";
 
 import { siteConfig, profileConfig } from "@/config";
-import { getSortedPosts } from "@utils/content";
+import { getSortedPosts } from "@utils/post";
 import { getCategoryPathParts } from "@utils/category";
 import { parseTags } from "@utils/tag";
 import { getFileDirFromPath, getPostUrl } from "@utils/url";
