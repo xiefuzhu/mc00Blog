@@ -38,21 +38,31 @@ export function parseLRC(lrc: string): { time: number; text: string }[] {
     if (!lrc) return [];
     const lines = lrc.split('\n');
     const result: { time: number; text: string }[] = [];
-    const timeReg = /\[(\d{2}):(\d{2})\.(\d{2,3})\]/g;
-    
+    const timeRegDot = /\[(\d{2}):(\d{2})\.(\d{2,3})\]/g;
+    const timeRegColon = /\[(\d{2}):(\d{2}):(\d{2})\]/g;
     lines.forEach(line => {
-        const matches = Array.from(line.matchAll(timeReg));
-        if (matches.length > 0) {
-            const text = line.replace(timeReg, '').trim();
-            if (text) {
-                matches.forEach(match => {
-                    const m = parseInt(match[1]);
-                    const s = parseInt(match[2]);
-                    const ms = parseInt(match[3]);
-                    const time = m * 60 + s + ms / (match[3].length === 3 ? 1000 : 100);
-                    result.push({ time, text });
-                });
-            }
+        let text = line.trim();
+        const dotMatches = Array.from(line.matchAll(timeRegDot));
+        const colonMatches = Array.from(line.matchAll(timeRegColon));
+        if (dotMatches.length > 0) {
+            text = line.replace(timeRegDot, '').trim();
+            dotMatches.forEach(match => {
+                const m = parseInt(match[1]);
+                const s = parseInt(match[2]);
+                const ms = parseInt(match[3]);
+                const time = m * 60 + s + ms / (match[3].length === 3 ? 1000 : 100);
+                result.push({ time, text });
+            });
+        }
+        if (colonMatches.length > 0) {
+            text = line.replace(timeRegColon, '').trim();
+            colonMatches.forEach(match => {
+                const m = parseInt(match[1]);
+                const s = parseInt(match[2]);
+                const ms = parseInt(match[3]);
+                const time = m * 60 + s + ms / 100;
+                result.push({ time, text });
+            });
         }
     });
     return result.sort((a, b) => a.time - b.time);
@@ -64,9 +74,11 @@ export function parseLRC(lrc: string): { time: number; text: string }[] {
 export async function fetchLyrics(lrcSource: string): Promise<string> {
     if (!lrcSource) return "";
     
-    if (lrcSource.startsWith('http') || lrcSource.endsWith('.lrc') || lrcSource.startsWith('/')) {
+    const assetPath = getAssetPath(lrcSource);
+    
+    if (assetPath.startsWith('http') || assetPath.startsWith('/')) {
          try {
-             const res = await fetch(lrcSource);
+             const res = await fetch(assetPath);
              if (res.ok) {
                  return await res.text();
              }
@@ -105,16 +117,17 @@ export async function fetchMetingPlaylist(
         const list = await res.json();
         
         return list.map((song: any, index: number) => {
-            let title = song.name ?? song.title ?? i18n(Key.musicUnknownTrack);
-            let artist = song.artist ?? song.author ?? i18n(Key.musicUnknownArtist);
+            let title = song.title ?? song.name ?? i18n(Key.musicUnknownTrack);
+            let author = song.author ?? song.artist ?? i18n(Key.musicUnknownArtist);
+            let cover = song.pic ?? song.cover ?? "";
             let dur = song.duration ?? 0;
             if (dur > 10000) dur = Math.floor(dur / 1000);
             if (!Number.isFinite(dur) || dur <= 0) dur = 0;
             return {
                 id: song.id ?? `meting-${index}`,
                 title,
-                artist,
-                cover: song.pic ?? "",
+                author,
+                cover,
                 url: song.url ?? "",
                 lrc: song.lrc ?? "",
                 duration: dur,

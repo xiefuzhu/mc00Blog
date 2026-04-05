@@ -128,15 +128,27 @@ export function MusicCardComponent(properties, children) {
         }
 
         // Helper: Parse LRC
-        const stripTimestampPrefix = (line) => line.replace(/^\\s*\\[[^\\]]+\\]\\s*/g, "").trim();
+        const stripTimestampPrefix = (line) => line.replace(/^\s*\[[^\]]+\]\s*/g, "").trim();
 
         const parseTimestamp = (token) => {
             if (!token) return null;
             const normalized = token.trim().replaceAll("：", ":");
             if (!normalized) return null;
 
-            // mm:ss(.xxx)
-            if (normalized.includes(":")) {
+            const colonCount = (normalized.match(/:/g) || []).length;
+
+            // mm:ss:xx format (colon-separated seconds and centiseconds)
+            if (colonCount === 2) {
+                const parts = normalized.split(":");
+                const minute = Number(parts[0]);
+                const second = Number(parts[1]);
+                const fraction = Number(parts[2]);
+                if (!Number.isFinite(minute) || !Number.isFinite(second) || !Number.isFinite(fraction)) return null;
+                return minute * 60 + second + fraction / 100;
+            }
+
+            // mm:ss(.xxx) format
+            if (colonCount === 1 && normalized.includes(":")) {
                 const [mRaw, secRaw] = normalized.split(":", 2);
                 const minute = Number(mRaw);
                 if (!Number.isFinite(minute)) return null;
@@ -147,7 +159,7 @@ export function MusicCardComponent(properties, children) {
                     const [sRaw, fRaw] = secRaw.split(".", 2);
                     second = Number(sRaw);
                     if (!Number.isFinite(second)) return null;
-                    const fracStr = (fRaw || "0").replace(/[^\\d]/g, "");
+                    const fracStr = (fRaw || "0").replace(/[^\d]/g, "");
                     fraction = fracStr ? Number(fracStr) / Math.pow(10, fracStr.length) : 0;
                 } else {
                     second = Number(secRaw);
@@ -156,12 +168,12 @@ export function MusicCardComponent(properties, children) {
                 return minute * 60 + second + fraction;
             }
 
-            // ss(.xxx)
+            // ss(.xxx) format
             if (normalized.includes(".")) {
                 const [sRaw, fRaw] = normalized.split(".", 2);
                 const second = Number(sRaw);
                 if (!Number.isFinite(second)) return null;
-                const fracStr = (fRaw || "0").replace(/[^\\d]/g, "");
+                const fracStr = (fRaw || "0").replace(/[^\d]/g, "");
                 const fraction = fracStr ? Number(fracStr) / Math.pow(10, fracStr.length) : 0;
                 return second + fraction;
             }
