@@ -13,6 +13,7 @@ export const zh: Translation = {
     [Key.search]: "搜索",
 
     // 文章
+    [Key.directory]: "目录",
     [Key.tags]: "标签",
     [Key.categories]: "分类",
     [Key.series]: "系列",

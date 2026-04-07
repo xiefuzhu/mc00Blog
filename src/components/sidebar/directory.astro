@@ -1,0 +1,42 @@
+---
+import { getDirectoryTree } from "@utils/directory";
+import { widgetManager, getComponentConfig } from "@utils/widget";
+import { i18n } from "@i18n/translation";
+import I18nKey from "@i18n/i18nKey";
+import WidgetLayout from "./widgetLayout.astro";
+import DirectoryTree from "./directoryTree.svelte";
+
+
+const directoryTree = await getDirectoryTree();
+
+const COLLAPSED_HEIGHT = "12rem";
+
+// 使用统一的组件管理器检查是否应该折叠
+const directoryComponent = getComponentConfig("directory");
+const countNodes = (nodes: any[]): number =>
+    nodes.reduce((total, node) => total + 1 + (node.children ? countNodes(node.children) : 0), 0);
+const totalDirectoryCount = countNodes(directoryTree);
+const isCollapsed = directoryComponent ? widgetManager.isCollapsed(directoryComponent, totalDirectoryCount) : false;
+
+interface Props {
+    class?: string;
+    style?: string;
+    side?: string;
+}
+const { class: className, style, side = "default" } = Astro.props;
+
+const currentPath = Astro.url.pathname;
+---
+
+<WidgetLayout
+    name={i18n(I18nKey.directory)}
+    id={`directory-${side}`}
+    isCollapsed={isCollapsed}
+    collapsedHeight={COLLAPSED_HEIGHT}
+    class={className}
+    style={style}
+>
+    <div class="directory-container">
+        <DirectoryTree client:idle tree={directoryTree} currentPath={currentPath} />
+    </div>
+</WidgetLayout>

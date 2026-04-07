@@ -13,6 +13,7 @@ export const en: Translation = {
     [Key.search]: "Search",
 
     // Posts
+    [Key.directory]: "Directory",
     [Key.tags]: "Tags",
     [Key.categories]: "Categories",
     [Key.series]: "Series",

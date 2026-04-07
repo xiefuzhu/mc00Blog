@@ -9,6 +9,7 @@ enum I18nKey {
     search = "search",
 
     // 文章
+    directory = "directory",
     tags = "tags",
     categories = "categories",
     series = "series",
