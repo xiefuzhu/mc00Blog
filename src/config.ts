@@ -2,6 +2,7 @@ import yaml from "js-yaml";
 
 import type {
     SiteConfig,
+    AnalyticsConfig,
     NavbarLink,
     NavbarConfig,
     SidebarConfig,
@@ -19,12 +20,7 @@ import rawConfig from "../twilight.config.yaml?raw";
 
 type ConfigFile = {
     site: SiteConfig;
-    umami: {
-        enabled: boolean;
-        apiKey?: string;
-        baseUrl: string;
-        scripts?: string;
-    };
+    analytics: AnalyticsConfig;
     navbar: {
         links: Array<NavbarLink | LinkPreset | string>;
     };
@@ -89,13 +85,16 @@ const resolvedPostConfig: PostConfig = {
 // 站点配置
 export const siteConfig: SiteConfig = config.site;
 
-// Umami统计配置
-export const umamiConfig = {
-    enabled: config.umami.enabled,
-    apiKey: import.meta.env.UMAMI_API_KEY ?? config.umami.apiKey,
-    baseUrl: config.umami.baseUrl,
-    scripts: import.meta.env.UMAMI_TRACKING_CODE ?? config.umami.scripts,
-} as const;
+// 统计配置
+export const analyticsConfig: AnalyticsConfig = {
+    enabled: config.analytics.enabled,
+    platform: config.analytics.platform,
+    umami: {
+        apiKey: config.analytics.umami.apiKey ?? import.meta.env.UMAMI_API_KEY,
+        baseUrl: config.analytics.umami.baseUrl,
+        code: config.analytics.umami.code ?? import.meta.env.UMAMI_TRACKING_CODE,
+    }
+};
 
 // 导航栏配置
 export const navbarConfig: NavbarConfig = {
