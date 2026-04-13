@@ -6,8 +6,9 @@ import tailwindcss from "@tailwindcss/vite";
 import swup from "@swup/astro";
 import sitemap from "@astrojs/sitemap";
 import cloudflarePages from "@astrojs/cloudflare";
-import edgeone from "@edgeone/astro";
+import netlify from "@astrojs/netlify";
 import vercel from "@astrojs/vercel";
+import edgeone from "@edgeone/astro";
 import decapCmsOauth from "decap-cms-oauth-astro";
 import expressiveCode from "astro-expressive-code";
 import icon from "astro-icon";
@@ -40,9 +41,14 @@ const adapter = process.env.GITHUB_ACTIONS
     ? undefined
     : (process.env.CF_PAGES
         ? cloudflarePages()
-        : (process.env.EDGEONE
-            ? edgeone()
-            : vercel({ mode: "serverless" })));
+        : (process.env.NETLIFY
+            ? netlify()
+            : (process.env.EDGEONE
+                ? edgeone()
+                : vercel({ mode: "serverless" })
+            )
+        )
+    );
 
 // Ref: https://astro.build/config
 export default defineConfig({
