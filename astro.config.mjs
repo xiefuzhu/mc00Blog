@@ -15,9 +15,9 @@ import icon from "astro-icon";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeSlug from "rehype-slug";
 import rehypeKatex from "rehype-katex";
-import rehypeComponents from "rehype-components"; /* Render the custom directive content */
-import remarkDirective from "remark-directive"; /* Handle directives */
-import remarkGithubAdmonitionsToDirectives from "remark-github-admonitions-to-directives";
+import rehypeComponents from "rehype-components";
+import rehypeCallouts from "rehype-callouts";
+import remarkDirective from "remark-directive";
 import remarkMath from "remark-math";
 import remarkSectionize from "remark-sectionize";
 
@@ -25,7 +25,6 @@ import { siteConfig } from "./src/config.ts";
 import { pluginCollapseButton } from "./src/plugins/expressive-code/collapse-button.ts";
 import { pluginCopyButton } from "./src/plugins/expressive-code/copy-button.js";
 import { pluginLanguageBadge } from "./src/plugins/expressive-code/language-badge.ts";
-import { AdmonitionComponent } from "./src/plugins/rehype-component-admonition.mjs";
 import { GithubCardComponent } from "./src/plugins/rehype-component-github-card.mjs";
 import { MusicCardComponent } from "./src/plugins/rehype-component-music-card.mjs";
 import { rehypeMermaid } from "./src/plugins/rehype-mermaid.mjs";
@@ -155,7 +154,6 @@ export default defineConfig({
             remarkMath,
             remarkReadingTime,
             remarkExcerpt,
-            remarkGithubAdmonitionsToDirectives,
             remarkDirective,
             remarkSectionize,
             parseDirectiveNode,
@@ -193,13 +191,14 @@ export default defineConfig({
                     components: {
                         github: GithubCardComponent,
                         music: MusicCardComponent,
-                        note: (x, y) => AdmonitionComponent(x, y, "note"),
-                        tip: (x, y) => AdmonitionComponent(x, y, "tip"),
-                        important: (x, y) => AdmonitionComponent(x, y, "important"),
-                        caution: (x, y) => AdmonitionComponent(x, y, "caution"),
-                        warning: (x, y) => AdmonitionComponent(x, y, "warning"),
                     },
                 },
+            ],
+            [
+                rehypeCallouts,
+                {
+                    theme: "github"
+                }
             ],
             rehypeMermaid,
             rehypeLazyLoadMedia,
