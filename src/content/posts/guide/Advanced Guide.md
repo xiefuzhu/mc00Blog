@@ -60,10 +60,10 @@ Create a GitHub repository card with the code `::github{repo="Spr-Aachen/Twiligh
 ### Music Cards
 
 - Online
-::music{meting="https://api.i-meto.com/meting/api?server=netease&type=song&id=1390882521"}
+::music{meting="https://meting.spr-aachen.com/api?server=netease&type=song&id=1390882521"}
 
 ```markdown
-::music{meting="https://api.i-meto.com/meting/api?server=netease&type=song&id=1390882521"}
+::music{meting="https://meting.spr-aachen.com/api?server=netease&type=song&id=1390882521"}
 ```
 
 - Local

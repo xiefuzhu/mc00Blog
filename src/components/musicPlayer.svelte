@@ -22,7 +22,7 @@ import "@styles/musicplayer.css";
 // 音乐播放器模式，可选 "local" 或 "meting"
 let mode = $state(musicPlayerConfig.mode ?? "meting");
 // Meting API 地址，从配置中获取或使用默认值
-let meting_api = musicPlayerConfig.meting?.meting_api ?? "https://api.i-meto.com/meting/api";
+let meting_api = musicPlayerConfig.meting?.meting_api ?? "https://meting.spr-aachen.com/api";
 // Meting API 的数据源，从配置中获取或使用默认值
 let meting_server = musicPlayerConfig.meting?.server ?? "netease";
 // Meting API 的类型，从配置中获取或使用默认值
@@ -790,7 +790,7 @@ onDestroy(() => {
             </div>
         </div>
         {#if showLyrics}
-        <div class="lyrics-section mb-2 px-1">
+        <div class="lyrics-section mb-2 px-1" transition:slide={{ duration: 300 }}>
             <div class="lyrics-container h-[88px] overflow-y-auto overflow-x-hidden relative text-center scroll-smooth"
                  bind:this={lrcContainer}
                  onscroll={handleLrcScroll}>
