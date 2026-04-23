@@ -5,12 +5,16 @@
     import type { DirectoryNode } from "@utils/directory";
 
 
-    let { tree, currentPath } = $props<{
+    let { tree } = $props<{
         tree: DirectoryNode[];
-        currentPath: string;
     }>();
 
+    let currentPath = $state<string>("");
     let expandedFolders = $state<Record<string, boolean>>({});
+
+    function getCurrentPath(): string {
+        return window.location.pathname.replace(/\/$/, "") || "/";
+    }
 
     function isPathActive(nodeUrl?: string): boolean {
         if (!nodeUrl || !currentPath) return false;
@@ -22,6 +26,12 @@
     function toggleFolder(folderPath: string, event: Event) {
         event.stopPropagation();
         expandedFolders[folderPath] = !expandedFolders[folderPath];
+    }
+
+    function resetAndExpand() {
+        expandedFolders = {};
+        currentPath = getCurrentPath();
+        autoExpand(tree, "");
     }
 
     function autoExpand(nodes: DirectoryNode[], parentPath: string): boolean {
@@ -43,8 +53,18 @@
         return hasActiveChild;
     }
 
+    function setupSwupSync() {
+        if (window.swup?.hooks) {
+            window.swup.hooks.on("page:view", resetAndExpand);
+        }
+    }
+
     onMount(() => {
-        autoExpand(tree, "");
+        resetAndExpand();
+        setupSwupSync();
+        if (!window.swup) {
+            document.addEventListener("swup:enable", setupSwupSync, { once: true });
+        }
     });
 </script>
 
