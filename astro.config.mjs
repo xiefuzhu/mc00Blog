@@ -27,6 +27,7 @@ import { pluginCopyButton } from "./src/plugins/expressive-code/copy-button.js";
 import { pluginLanguageBadge } from "./src/plugins/expressive-code/language-badge.ts";
 import { GithubCardComponent } from "./src/plugins/rehype-component-github-card.mjs";
 import { MusicCardComponent } from "./src/plugins/rehype-component-music-card.mjs";
+import { rehypeAdmonitions } from "./src/plugins/rehype-admonitions.mjs";
 import { rehypeMermaid } from "./src/plugins/rehype-mermaid.mjs";
 import { rehypeLazyLoadMedia } from "./src/plugins/rehype-lazy-load-media.mjs";
 import { parseDirectiveNode } from "./src/plugins/remark-directive-rehype.js";
@@ -197,9 +198,19 @@ export default defineConfig({
             [
                 rehypeCallouts,
                 {
-                    theme: "github"
-                }
+                    theme: "github",
+                    showIndicator: false,
+                    tags: {
+                        nonCollapsibleContainerTagName: "blockquote",
+                    },
+                    props: {
+                        containerProps: (node, type) => ({ className: ["admonition", `bdm-${type}`] }),
+                        titleProps: { className: "bdm-title" },
+                        contentProps: { className: "bdm-content" },
+                    },
+                },
             ],
+            rehypeAdmonitions,
             rehypeMermaid,
             rehypeLazyLoadMedia,
         ],
