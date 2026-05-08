@@ -7,6 +7,7 @@ import { getEntry, render } from "astro:content";
 import { LinkPresets } from "@constants/link-presets";
 import { LinkPreset } from "@/types/config";
 import Markdown from "@components/common/markdown.astro";
+import Comment from "@components/comment.astro";
 import GridLayout from "@layouts/grid.astro";
 import BackwardButton from "@components/backwardButton.astro";
 
@@ -15,7 +16,6 @@ const pageTitle = LinkPresets[LinkPreset.About].name;
 const pageDescription = LinkPresets[LinkPreset.About].description;
 
 const aboutPost = await getEntry("spec", "about");
-
 if (!aboutPost) {
     throw new Error("About page content not found");
 }
@@ -32,4 +32,5 @@ const { Content, headings } = await render(aboutPost);
             </Markdown>
         </div>
     </div>
+    <Comment path="/about/" />
 </GridLayout>
