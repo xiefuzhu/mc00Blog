@@ -2,7 +2,7 @@
 title: Guide for Template - Getting Started
 published: 2001-10-02
 description: "How to use this blog template."
-cover: "./cover.jpg"
+cover: "./Cover - Getting Started.jpg"
 coverInContent: false
 pinned: true
 tags: []
@@ -26,7 +26,7 @@ description: This is the first post of my new Astro blog.
 cover: ./cover.jpg
 coverInContent: false
 tags: []
-category: Guides
+category: Chore
 comment: true
 draft: false
 ---

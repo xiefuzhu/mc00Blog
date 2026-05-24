@@ -2,7 +2,7 @@
 title: Guide for Template - Advanced Customization
 published: 2024-02-10
 description: "Master the advanced features and customization options of the Twilight template."
-cover: ""
+cover: "./Cover - Advanced Customization.jpg"
 coverInContent: false
 pinned: false
 tags: []

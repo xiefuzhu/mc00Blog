@@ -2,6 +2,8 @@
 title: Video Example
 published: 2021-12-02
 description: This post demonstrates how to embed video in a blog post.
+cover: "https://picsum.photos/200/300?random=22"
+coverInContent: false
 tags: [Markdown, Video]
 category: Examples
 draft: false

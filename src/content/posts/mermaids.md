@@ -3,6 +3,8 @@ title: Mermaid Example
 published: 2011-11-02
 pinned: false
 description: A simple example of a Markdown blog post with Mermaid.
+cover: "https://picsum.photos/200/300?random=18"
+coverInContent: false
 tags: [Markdown, Mermaid]
 category: Examples
 draft: false
