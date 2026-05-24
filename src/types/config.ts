@@ -370,6 +370,18 @@ export type BlogPostData = {
 
 // 文章配置
 export type PostConfig = {
+    // 文章卡片配置
+    card: {
+        // 封面配置
+        cover: {
+            // 封面位置 ("left" | "right")
+            side: "left" | "right";
+            // 封面宽度
+            width: string;
+            // 封面上是否显示文字（标题、标签、摘要）
+            showContent: boolean;
+        };
+    };
     // 显示“上次编辑”卡片
     showLastModified: boolean;
     // 代码高亮配置
