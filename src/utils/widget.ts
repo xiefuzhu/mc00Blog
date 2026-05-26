@@ -357,7 +357,7 @@ export class WidgetManager {
         // Tablet: Visible if hasAnyComponents (merged)
         // Desktop: Visible if hasLeftSidebar
         const leftSidebarClass = `
-            mb-0 col-span-1 hidden
+            mb-0 col-span-1 hidden min-w-0
             ${hasAnyComponents ? "md:flex md:flex-col md:max-w-70" : ""}
             ${hasLeftSidebar ? "lg:flex lg:flex-col lg:max-w-70 lg:col-start-1 lg:col-end-2 lg:row-start-1 lg:row-end-2" : "lg:hidden"}
         `.trim().replace(/\s+/g, " ");
@@ -367,7 +367,7 @@ export class WidgetManager {
         // Tablet: Hidden
         // Desktop: Visible if hasRightSidebar
         const rightSidebarClass = `
-            mb-0 col-span-1 hidden
+            mb-0 col-span-1 hidden min-w-0
             md:hidden
             ${
                 hasRightSidebar
@@ -388,7 +388,7 @@ export class WidgetManager {
         
         // 移动端侧边栏类名
         const middleSidebarClass = `
-            col-span-1 flex flex-col md:hidden
+            min-w-0 col-span-1 flex flex-col md:hidden
             ${!hasAnyComponents ? "hidden" : ""}
         `.trim().replace(/\s+/g, " ");
 

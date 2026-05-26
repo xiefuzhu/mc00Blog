@@ -75,7 +75,7 @@
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div 
-                class="flex items-center px-2 py-1.5 my-0.5 rounded-md cursor-pointer transition-colors duration-300 hover:text-(--primary) hover:bg-(--btn-plain-bg-hover) {expandedFolders[currentPathStr] ? 'font-medium text-90' : 'font-medium text-75'}" 
+                class="min-w-0 flex items-center px-2 py-1.5 my-0.5 rounded-md cursor-pointer transition-colors duration-300 hover:text-(--primary) hover:bg-(--btn-plain-bg-hover) {expandedFolders[currentPathStr] ? 'font-medium text-90' : 'font-medium text-75'}" 
                 onclick={(e) => toggleFolder(currentPathStr, e)}
             >
                 <svg class="w-4 h-4 mr-1.5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
@@ -90,14 +90,14 @@
             </div>
             
             {#if expandedFolders[currentPathStr] && node.children}
-                <div class="flex flex-col pl-3 ml-2 border-l border-(--line-divider)" transition:slide={{ duration: 300 }}>
+                <div class="min-w-0 flex flex-col pl-3 ml-2 border-l border-(--line-divider)" transition:slide={{ duration: 300 }}>
                     {#each node.children as child}
                         {@render renderNode(child, currentPathStr, depth + 1)}
                     {/each}
                 </div>
             {/if}
         {:else}
-            <a href={node.url} class="flex items-center px-2 py-1.5 my-0.5 rounded-md cursor-pointer transition-colors duration-300 hover:text-(--primary) hover:bg-(--btn-plain-bg-hover) {isPathActive(node.url) ? 'text-(--primary) bg-(--btn-plain-bg-hover) font-medium' : 'text-75'}">
+            <a href={node.url} class="min-w-0 flex items-center px-2 py-1.5 my-0.5 rounded-md cursor-pointer transition-colors duration-300 hover:text-(--primary) hover:bg-(--btn-plain-bg-hover) {isPathActive(node.url) ? 'text-(--primary) bg-(--btn-plain-bg-hover) font-medium' : 'text-75'}">
                 <svg class="w-4 h-4 mr-1.5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
                 </svg>
