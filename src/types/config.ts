@@ -378,11 +378,13 @@ export type PostConfig = {
             side: "left" | "right";
             // 封面宽度
             width: string;
-            // 封面上是否显示文字（标题、标签、摘要）
+            // 封面上是否显示文字 (标题、标签、摘要)
             showContent: boolean;
         };
+        // 标题大小 (Tailwind 文本大小类，例如 "text-3xl")
+        titleSize: string;
     };
-    // 显示“上次编辑”卡片
+    // 显示"上次编辑"卡片
     showLastModified: boolean;
     // 代码高亮配置
     expressiveCode: {

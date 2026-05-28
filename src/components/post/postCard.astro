@@ -42,6 +42,7 @@ const coverWidth = postConfig.card.cover.width;
 const coverMargin = "12px";
 const coverGap = "12px";
 const showContentOnCover = postConfig.card.cover.showContent;
+const titleSize = postConfig.card.titleSize;
 
 const { remarkPluginFrontmatter } = await render(entry);
 
@@ -57,12 +58,10 @@ const defaultCoverGradient = "linear-gradient(135deg, color-mix(in oklch, oklch(
          "ml-0 @min-[768px]:ml-[calc(var(--coverWidth)+var(--coverGap))]": !isCoverOnRight}
     ]}>
         <a href={url}
-            class="transition group w-full block font-bold mb-3 text-3xl text-90
-                hover:text-(--primary) dark:hover:text-(--primary)
-                active:text-(--title-active) dark:active:text-(--title-active)
-                before:w-1 before:h-5 before:rounded-md before:bg-(--primary)
-                before:absolute before:top-[35px] before:left-[18px] before:hidden @min-[768px]:before:block
-        ">
+            class:list={["transition group w-full block font-bold mb-3 text-90 hover:text-(--primary) dark:hover:text-(--primary) active:text-(--title-active) dark:active:text-(--title-active) before:w-1 before:h-5 before:rounded-md before:bg-(--primary) before:absolute before:top-[35px] before:left-[18px] before:hidden @min-[768px]:before:block",
+                titleSize
+            ]}
+        >
             {pinned && <Icon name="mdi:pin" class="inline text-(--primary) text-2xl mr-2 -translate-y-0.5"></Icon>}
             {title}
         </a>

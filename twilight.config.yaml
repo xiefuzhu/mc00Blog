@@ -321,9 +321,11 @@ post:
             side: "left"
             # 封面宽度
             width: "33%"
-            # 封面上是否显示文字（标题、标签、摘要）
+            # 封面上是否显示文字 (标题、标签、摘要)
             showContent: true
-    # 显示“上次编辑”卡片
+        # 标题大小 (Tailwind 文本大小类，例如 "text-3xl")
+        titleSize: "text-2xl"
+    # 显示"上次编辑"卡片
     showLastModified: true
     # 代码高亮配置
     expressiveCode:
