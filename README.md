@@ -36,26 +36,50 @@ English | [**中文**](docs/README_ZH.md)
 
 ## ✨ Features
 
-### Content
-- **CMS Functionality**: Easy content management with headless CMS integration
-- **Data Visualization**: Visualized personal data like projects, skills etc.
-- **Automatic Navigation**: Automatic generation of post navigation
+### Content Management
+- **CMS Integration**: Headless CMS with OAuth for easy content management
+- **Pinned & Draft Posts**: Pin important posts or hide drafts in production
+- **Password-Protected Posts**: AES-encrypted articles with password access
+- **Automatic Navigation**: Auto-generated post navigation, archive, and TOC
+- **Data Visualization**: Visualized personal data like projects, skills, timeline
 
-### Components
+### Content Pages
+- **Blog Posts**: Full-featured markdown blogging with tags and categories
+- **Projects & Skills Showcase**: Visual galleries for your portfolio
+- **Timeline**: Biography page with education, work, achievements, and skills
+- **Diary**: Short-form microblog-style posts with timestamps
+- **Albums**: Image gallery with Fancybox lightbox integration
+- **Friends Links**: Friend link exchange with icons and descriptions
+- **RSS & Atom Feeds**: Dedicated info pages with auto-generated XML feeds
+
+### Markdown Enhancements
+- **GitHub Repository Cards**: Embed live repo cards via `::github{repo="..."}`
+- **Music Cards**: Inline audio player with lyrics via `::music{...}`
+- **Admonitions / Callouts**: Note, tip, warning, and caution styled blocks
+- **Code Block Enhancements**: Copy button, collapse, line numbers, language badges
+- **Mermaid Diagrams**: Render ` ```mermaid ` code blocks as diagrams
+- **KaTeX Math Rendering**: LaTeX math expressions with `$...$` and `$$...$$`
+
+### UI Components
+- **Loading Overlay**: Configurable splash screen with spinner animation
+- **Sidebar Widget System**: Configurable profile, announcement, TOC, categories, tags, directory, statistics etc.
 - **Analytics Support**: Umami analytics integration for visitor insights
 - **Comment System**: Twikoo-powered comment functionality
-- **Music Player**: Background music support with playlist management
-- **PIO Widget**: Interactive live2d character support
+- **Music Player**: Background music with meting API or local playlist support
+- **PIO Widget**: Interactive Live2D character with customizable dialog
 
-### VFX
+### Visual Effects
 - **Smooth Transition Animations**: Polished page component transition animations
-- **Customizable Theme Colors**: Realtime customizable color schemes
+- **Customizable Theme Colors**: Real-time customizable color schemes
 - **Dynamic Wallpaper System**: Carousel support with multiple display modes
 - **Immersive Particle Effects**: Highly customizable animated particles
+- **Custom Fonts**: Configurable web fonts via CSS links or local files
 
-### Compability
+### Compatibility
 - **Modern & Responsive Design**: Fully optimized for desktop and mobile devices
-- **Multilingual Capability**: Built-in translation functionality for global accessibility
+- **Multilingual Capability**: 3 UI languages (en/zh/ja) & 12+ page translation languages
+- **Multiple Deployment Adapters**: Support Cloudflare, Netlify, Vercel, EdgeOne and other static hosting platforms
+- **Docker Support**: Ready-to-use Docker and docker-compose setup
 
 
 ## 💻 Configuration
