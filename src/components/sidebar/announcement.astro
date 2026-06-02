@@ -10,6 +10,7 @@ import WidgetLayout from "./widgetLayout.astro";
 const config = announcementConfig;
 
 interface Props {
+    side?: string;
     class?: string;
     style?: string;
 }
@@ -19,7 +20,7 @@ const style = Astro.props.style;
 
 <WidgetLayout
     name={config.title || i18n(I18nKey.announcement)}
-    id="announcement"
+    id={`announcement-${Astro.props.side || "default"}`}
     class={className}
     style={style}
 >
