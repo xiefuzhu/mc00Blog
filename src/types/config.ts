@@ -6,6 +6,7 @@ import type {
     WALLPAPER_BANNER,
     WALLPAPER_NONE
 } from "@constants/constants";
+import type { SupportedLanguage } from "@i18n/language";
 
 
 /**
@@ -71,7 +72,7 @@ export type SiteConfig = {
     // 站点关键词，用于生成 <meta name="keywords">
     keywords?: string[];
     // 语言配置
-    lang: "zh" | "en" | "ko" | "ja" | "es" | "th" | "vi" | "tr" | "id" | "fr" | "de" | "ru" | "ar";
+    lang: SupportedLanguage;
     // 翻译配置
     translate?: {
         // 启用翻译功能

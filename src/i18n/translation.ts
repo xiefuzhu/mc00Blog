@@ -1,7 +1,7 @@
 import { getResolvedSiteLang } from "@utils/language";
 import { en } from "./languages/en";
-import { ja } from "./languages/ja";
 import { zh } from "./languages/zh";
+import { ja } from "./languages/ja";
 import type I18nKey from "./i18nKey";
 
 
@@ -18,6 +18,10 @@ const map: { [key: string]: Translation } = {
     en_au: en,
     zh: zh,
     zh_cn: zh,
+    zh_hk: zh,
+    zh_mo: zh,
+    zh_tw: zh,
+    zh_sg: zh,
     ja: ja,
     ja_jp: ja,
 };
