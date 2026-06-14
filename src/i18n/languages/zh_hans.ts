@@ -2,7 +2,7 @@ import Key from "@i18n/i18nKey";
 import type { Translation } from "@i18n/translation";
 
 
-export const zh: Translation = {
+export const zh_hans: Translation = {
     // 加载遮罩
     [Key.loading]: "加载中",
 

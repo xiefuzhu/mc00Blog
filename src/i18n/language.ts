@@ -25,10 +25,16 @@ export const LANGUAGE_CONFIG = {
         locale: "en-US",
         icon: "🇺🇸",
     },
+    zh_hant: {
+        translateCode: "chinese_traditional",
+        displayName: "繁體中文",
+        locale: "zh-Hant",
+        icon: "🇨🇳",
+    },
     zh: {
         translateCode: "chinese_simplified",
-        displayName: "中文",
-        locale: "zh-CN",
+        displayName: "简体中文",
+        locale: "zh-Hans",
         icon: "🇨🇳",
     },
     ru: {
