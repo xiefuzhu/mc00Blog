@@ -4,6 +4,7 @@ import {
     langToTranslateMap,
     translateToLangMap,
     LANGUAGE_CONFIG,
+    LANGUAGE_REGION_MAP,
 } from "@i18n/language";
 import {
     siteConfig,
@@ -47,19 +48,32 @@ export function getTranslateLanguageFromConfig(configLang: string): string {
     return langToTranslateMap[configLang] || "chinese_simplified";
 }
 
+/**
+ * 解析语言代码为 SupportedLanguage。
+ * 如果 code 不在 SUPPORTED_LANGUAGES 中，尝试在 LANGUAGE_REGION_MAP 中查找。
+ */
+function resolveSupportedLang(code: string): SupportedLanguage | undefined {
+    if (SUPPORTED_LANGUAGES.includes(code as SupportedLanguage)) {
+        return code as SupportedLanguage;
+    }
+    if (code in LANGUAGE_REGION_MAP) {
+        return LANGUAGE_REGION_MAP[code];
+    }
+    return undefined;
+}
+
 // 获取解析后的站点语言代码
 export function getResolvedSiteLang(): SupportedLanguage {
-    const configLang = getDefaultLanguage() as any;
-    if (SUPPORTED_LANGUAGES.includes(configLang)) {
-        return configLang as SupportedLanguage;
-    }
+    const configLang = getDefaultLanguage();
+    const resolved = resolveSupportedLang(configLang);
+    if (resolved) return resolved;
     // 如果 siteConfig.lang 不合规，则使用浏览器检测到的语言
     return detectBrowserLanguage();
 }
 
 // 将翻译服务的语言代码转换为配置文件的语言代码
 export function getConfigLanguageFromTranslate(translateLang: string): string {
-    return translateToLangMap[translateLang] || "zh";
+    return translateToLangMap[translateLang] || "en";
 }
 
 // 获取语言的显示名称
@@ -72,6 +86,11 @@ export function getLanguageDisplayName(langCode: string): string {
     const configLang = translateToLangMap[langCode];
     if (configLang && configLang in LANGUAGE_CONFIG) {
         return LANGUAGE_CONFIG[configLang as SupportedLanguage].displayName;
+    }
+    // 尝试在 LANGUAGE_REGION_MAP 中查找（例如 zh → zh_hans）
+    if (langCode in LANGUAGE_REGION_MAP) {
+        const baseCode = LANGUAGE_REGION_MAP[langCode];
+        return LANGUAGE_CONFIG[baseCode].displayName;
     }
     // 如果都找不到，返回原始代码
     return langCode;
@@ -87,12 +106,15 @@ export function detectBrowserLanguage(fallbackLang: SupportedLanguage = "en"): S
     const browserLangs = navigator.languages || [navigator.language];
     // 遍历浏览器语言列表，找到第一个支持的语言
     for (const browserLang of browserLangs) {
-        // 提取主语言代码（例如：'zh-CN' -> 'zh', 'en-US' -> 'en'）
-        const langCode = browserLang.toLowerCase().split("-")[0];
-        // 检查是否在支持的语言列表中
-        if (SUPPORTED_LANGUAGES.includes(langCode as SupportedLanguage)) {
-            return langCode as SupportedLanguage;
-        }
+        // 尝试完整 BCP 47 标签匹配（例如 zh-CN → zh_cn → LANGUAGE_REGION_MAP）
+        const normalized = browserLang.toLowerCase().replace("-", "_");
+        const resolved = resolveSupportedLang(normalized);
+        if (resolved) return resolved;
+        // 尝试主语言代码匹配（例如 zh-CN → zh → LANGUAGE_REGION_MAP）
+        const langCode = normalized.split("_")[0];
+        if (!langCode) continue;
+        const resolvedPrimary = resolveSupportedLang(langCode);
+        if (resolvedPrimary) return resolvedPrimary;
     }
     // 如果没有找到支持的语言，返回备用语言
     return fallbackLang;
@@ -105,12 +127,13 @@ export function getSiteLanguage(configLang?: string): string {
     if (storedLang) return storedLang;
     // 其次使用传入的配置语言或从 carrier 获取的默认语言
     const defaultLang = configLang || getDefaultLanguage();
-    if (SUPPORTED_LANGUAGES.includes(defaultLang as SupportedLanguage)) {
-        return langToTranslateMap[defaultLang];
+    const resolved = resolveSupportedLang(defaultLang);
+    if (resolved) {
+        return langToTranslateMap[resolved] || "chinese_simplified";
     }
     // 最后自动检测浏览器语言并转换为翻译服务代码
     const browserLang = detectBrowserLanguage();
-    return langToTranslateMap[browserLang];
+    return langToTranslateMap[browserLang] || "chinese_simplified";
 }
 
 // 初始化翻译功能

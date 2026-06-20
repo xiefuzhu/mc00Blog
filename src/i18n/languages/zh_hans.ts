@@ -1,5 +1,5 @@
 import Key from "@i18n/i18nKey";
-import type { Translation } from "@i18n/translation";
+import type { Translation } from "@i18n/language";
 
 
 export const zh_hans: Translation = {
