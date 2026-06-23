@@ -26,6 +26,7 @@ const ICON_SETS = {
     "fa6-regular": "@iconify-json/fa6-regular",
     "mdi": "@iconify-json/mdi",
     "eos-icons": "@iconify-json/eos-icons",
+    "logos": "@iconify-json/logos",
 };
 
 // 图标集数据缓存
@@ -34,7 +35,7 @@ const iconSetCache = new Map();
 /**
  * 递归获取目录下所有文件
  */
-function getAllFiles(dir, extensions = [".svelte", ".astro"]) {
+function getAllFiles(dir, extensions = [".svelte", ".astro", ".json"]) {
     const files = [];
 
     function walk(currentDir) {
@@ -70,6 +71,8 @@ function extractIconNames(content) {
         /icon=["']([a-z0-9-]+:[a-z0-9-]+)["']/gi,
         // icon={`xxx:yyy`}
         /icon=\{[`"']([a-z0-9-]+:[a-z0-9-]+)[`"']\}/gi,
+        // JSON 格式: "icon": "xxx:yyy"
+        /"icon"\s*:\s*"([a-z0-9-]+:[a-z0-9-]+)"/gi,
     ];
 
     for (const pattern of patterns) {
