@@ -1,143 +1,28 @@
 ---
 // 全局Iconify加载器组件
-// 在页面头部加载，确保图标库尽早可用
 
 export interface Props {
-    preloadIcons?: string[]; // 需要预加载的图标列表
-    timeout?: number; // 加载超时时间
-    retryCount?: number; // 重试次数
+    preloadIcons?: string[];
 }
 
-const { preloadIcons = [], timeout = 10000, retryCount = 3 } = Astro.props;
+const { preloadIcons = [] } = Astro.props;
 ---
 
-<!-- Iconify图标库加载器 -->
-<script define:vars={{ preloadIcons, timeout, retryCount }}>
-    // 全局图标加载逻辑
+<!-- 内联加载逻辑: 按需动态注入 CDN 脚本，然后处理图标渲染 -->
+<script define:vars={{ preloadIcons }}>
     (function() {
         'use strict';
 
-        // 避免重复加载
         if (window.__iconifyLoaderInitialized) {
             return;
         }
         window.__iconifyLoaderInitialized = true;
 
-        // 图标加载器类
         class IconifyLoader {
             constructor() {
                 this.isLoaded = false;
-                this.isLoading = false;
-                this.loadPromise = null;
                 this.observers = new Set();
-                this.preloadQueue = new Set();
-            }
-
-            async load(options = {}) {
-                const { timeout: loadTimeout = timeout, retryCount: maxRetries = retryCount } = options;
-
-                if (this.isLoaded) {
-                    return Promise.resolve();
-                }
-
-                if (this.isLoading && this.loadPromise) {
-                    return this.loadPromise;
-                }
-
-                this.isLoading = true;
-                this.loadPromise = this.loadWithRetry(loadTimeout, maxRetries);
-
-                try {
-                    await this.loadPromise;
-                    this.isLoaded = true;
-                    this.notifyObservers();
-                    await this.processPreloadQueue();
-                } catch (error) {
-                    console.error('Failed to load Iconify:', error);
-                    throw error;
-                } finally {
-                    this.isLoading = false;
-                }
-            }
-
-            async loadWithRetry(timeout, retryCount) {
-                for (let attempt = 1; attempt <= retryCount; attempt++) {
-                    try {
-                        await this.loadScript(timeout);
-                        return;
-                    } catch (error) {
-                        console.warn(`Iconify load attempt ${attempt} failed:`, error);
-                        if (attempt === retryCount) {
-                            throw new Error(`Failed to load Iconify after ${retryCount} attempts`);
-                        }
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-                    }
-                }
-            }
-
-            loadScript(timeout) {
-                return new Promise((resolve, reject) => {
-                    // 检查是否已经存在
-                    if (this.isIconifyReady()) {
-                        resolve();
-                        return;
-                    }
-
-                    const existingScript = document.querySelector('script[src*="iconify-icon"]');
-                    if (existingScript) {
-                        this.waitForIconifyReady().then(resolve).catch(reject);
-                        return;
-                    }
-
-                    const script = document.createElement('script');
-                    script.src = 'https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js';
-                    script.async = true;
-                    script.crossOrigin = 'anonymous';
-
-                    const timeoutId = setTimeout(() => {
-                        script.remove();
-                        reject(new Error('Script load timeout'));
-                    }, timeout);
-
-                    script.onload = () => {
-                        clearTimeout(timeoutId);
-                        this.waitForIconifyReady().then(resolve).catch(reject);
-                    };
-
-                    script.onerror = () => {
-                        clearTimeout(timeoutId);
-                        script.remove();
-                        reject(new Error('Script load error'));
-                    };
-
-                    document.head.appendChild(script);
-                });
-            }
-
-            waitForIconifyReady(maxWait = 5000) {
-                return new Promise((resolve, reject) => {
-                    const startTime = Date.now();
-
-                    const checkReady = () => {
-                        if (this.isIconifyReady()) {
-                            resolve();
-                            return;
-                        }
-
-                        if (Date.now() - startTime > maxWait) {
-                            reject(new Error('Iconify initialization timeout'));
-                            return;
-                        }
-
-                        setTimeout(checkReady, 50);
-                    };
-
-                    checkReady();
-                });
-            }
-
-            isIconifyReady() {
-                return typeof window !== 'undefined' && 'customElements' in window && customElements.get('iconify-icon') !== undefined;
+                this.preloadQueue = new Set(preloadIcons);
             }
 
             onLoad(callback) {
@@ -148,14 +33,96 @@ const { preloadIcons = [], timeout = 10000, retryCount = 3 } = Astro.props;
                 }
             }
 
-            notifyObservers() {
-                this.observers.forEach(callback => {
-                    try {
-                        callback();
-                    } catch (error) {
-                        console.error('Error in icon load observer:', error);
+            injectScript() {
+                return new Promise((resolve, reject) => {
+                    if (typeof customElements !== 'undefined' && customElements.get('iconify-icon')) {
+                        resolve();
+                        return;
+                    }
+                    const existing = document.querySelector('script[src*="iconify-icon"]');
+                    if (existing) {
+                        if (customElements.whenDefined) {
+                            customElements.whenDefined('iconify-icon').then(resolve).catch(reject);
+                        } else {
+                            const check = () => {
+                                if (customElements && customElements.get('iconify-icon')) {
+                                    resolve();
+                                } else {
+                                    requestAnimationFrame(check);
+                                }
+                            };
+                            check();
+                        }
+                        return;
+                    }
+                    const script = document.createElement('script');
+                    script.src = 'https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js';
+                    script.onload = resolve;
+                    script.onerror = () => { script.remove(); reject(new Error('CDN script load failed')); };
+                    document.head.appendChild(script);
+                });
+            }
+
+            waitForReady() {
+                if (typeof customElements !== 'undefined' && customElements.get('iconify-icon')) {
+                    return Promise.resolve();
+                }
+                if (typeof customElements !== 'undefined' && customElements.whenDefined) {
+                    return customElements.whenDefined('iconify-icon');
+                }
+                return new Promise((resolve) => {
+                    const check = () => {
+                        if (customElements && customElements.get('iconify-icon')) {
+                            resolve();
+                        } else {
+                            requestAnimationFrame(check);
+                        }
+                    };
+                    check();
+                });
+            }
+
+            forceRefresh() {
+                document.querySelectorAll('iconify-icon').forEach(el => {
+                    const icon = el.getAttribute('icon');
+                    if (icon) {
+                        el.removeAttribute('icon');
+                        requestAnimationFrame(() => el.setAttribute('icon', icon));
                     }
                 });
+            }
+
+            setupObserver() {
+                if (this._observer) return;
+                const loader = this;
+                this._observer = new MutationObserver((mutations) => {
+                    if (!loader.isLoaded) return;
+                    mutations.forEach(mutation => {
+                        mutation.addedNodes.forEach(node => {
+                            if (node.nodeType === 1) {
+                                if (node.tagName === 'ICONIFY-ICON') {
+                                    loader.refreshNode(node);
+                                }
+                                if (node.querySelectorAll) {
+                                    node.querySelectorAll('iconify-icon').forEach(el => loader.refreshNode(el));
+                                }
+                            }
+                        });
+                    });
+                });
+                this._observer.observe(document.body, { childList: true, subtree: true });
+            }
+
+            refreshNode(el) {
+                const icon = el.getAttribute('icon');
+                if (icon) {
+                    el.removeAttribute('icon');
+                    requestAnimationFrame(() => el.setAttribute('icon', icon));
+                }
+            }
+
+            notifyObservers() {
+                this.observers.forEach(cb => { try { cb(); } catch (e) { console.error(e); } });
                 this.observers.clear();
             }
 
@@ -165,91 +132,57 @@ const { preloadIcons = [], timeout = 10000, retryCount = 3 } = Astro.props;
                 } else {
                     this.preloadQueue.add(icons);
                 }
-
                 if (this.isLoaded) {
                     this.processPreloadQueue();
                 }
             }
 
-            async processPreloadQueue() {
+            processPreloadQueue() {
                 if (this.preloadQueue.size === 0) return;
-
-                const iconsToLoad = Array.from(this.preloadQueue);
+                const icons = Array.from(this.preloadQueue);
                 this.preloadQueue.clear();
-
-                await this.preloadIcons(iconsToLoad);
-            }
-
-            async preloadIcons(icons) {
-                if (!this.isLoaded || icons.length === 0) return;
-
-                return new Promise((resolve) => {
-                    let loadedCount = 0;
-                    const totalIcons = icons.length;
-                    const tempElements = [];
-
-                    const cleanup = () => {
-                        tempElements.forEach(el => {
-                            if (el.parentNode) {
-                                el.parentNode.removeChild(el);
-                            }
-                        });
-                    };
-
-                    const checkComplete = () => {
-                        loadedCount++;
-                        if (loadedCount >= totalIcons) {
-                            cleanup();
-                            resolve();
-                        }
-                    };
-
-                    icons.forEach(icon => {
-                        const tempIcon = document.createElement('iconify-icon');
-                        tempIcon.setAttribute('icon', icon);
-                        tempIcon.style.cssText = 'position:absolute;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;';
-
-                        tempIcon.addEventListener('load', checkComplete);
-                        tempIcon.addEventListener('error', checkComplete);
-
-                        tempElements.push(tempIcon);
-                        document.body.appendChild(tempIcon);
+                icons.forEach(icon => {
+                    const el = document.createElement('iconify-icon');
+                    el.setAttribute('icon', icon);
+                    el.style.cssText = 'display:none';
+                    document.body.appendChild(el);
+                    requestAnimationFrame(() => {
+                        if (el.parentNode) el.parentNode.removeChild(el);
                     });
-
-                    // 设置超时清理
-                    setTimeout(() => {
-                        cleanup();
-                        resolve();
-                    }, 3000);
                 });
             }
-        }
 
-        // 创建全局实例
-        window.__iconifyLoader = new IconifyLoader();
-
-        // 立即开始加载
-        window.__iconifyLoader.load().catch(error => {
-            console.error('Failed to initialize Iconify:', error);
-        });
-
-        // 如果有预加载图标，添加到队列
-        if (preloadIcons && preloadIcons.length > 0) {
-            window.__iconifyLoader.addToPreloadQueue(preloadIcons);
-        }
-
-        // 导出便捷函数到全局
-        window.loadIconify = () => window.__iconifyLoader.load();
-        window.preloadIcons = (icons) => window.__iconifyLoader.addToPreloadQueue(icons);
-        window.onIconifyReady = (callback) => window.__iconifyLoader.onLoad(callback);
-
-        // 页面可见性变化时重新检查
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden && !window.__iconifyLoader.isLoaded) {
-                window.__iconifyLoader.load().catch(console.error);
+            async load() {
+                if (this.isLoaded) {
+                    return Promise.resolve();
+                }
+                try {
+                    await this.injectScript();
+                    await this.waitForReady();
+                    this.isLoaded = true;
+                    this.forceRefresh();
+                    this.setupObserver();
+                    document.documentElement.setAttribute('data-iconify-loaded', '');
+                    this.notifyObservers();
+                    this.processPreloadQueue();
+                } catch (error) {
+                    console.error('Iconify icon render failed:', error);
+                }
             }
-        });
+        }
 
+        const loader = new IconifyLoader();
+        window.__iconifyLoader = loader;
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => loader.load());
+        } else {
+            loader.load();
+        }
+
+        window.loadIconify = () => loader.load();
+        window.preloadIcons = (icons) => loader.addToPreloadQueue(icons);
+        window.onIconifyReady = (cb) => loader.onLoad(cb);
     })();
 </script>
 

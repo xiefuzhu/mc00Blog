@@ -222,32 +222,20 @@ const allIcons = skillsData.map((skill) => skill.icon).filter(Boolean);
 </GridLayout>
 
 <script>
-    // 确保图标库已加载，并处理页面导航
-    document.addEventListener('DOMContentLoaded', () => {
-        // 如果图标加载器存在，确保图标已加载
-        if (window.__iconifyLoader) {
-            window.__iconifyLoader.load().then(() => {
-                // 图标加载完成后，触发技能卡片的重新渲染
-                const skillCards = document.querySelectorAll('.skill-card');
-                skillCards.forEach(card => {
-                    card.dispatchEvent(new CustomEvent('iconify-ready'));
-                });
-            }).catch(error => {
-                console.error('Failed to load icons on skills page:', error);
+    // 确保图标库已加载，触发技能卡片的图标渲染
+    if (typeof window !== 'undefined' && window.__iconifyLoader) {
+        window.__iconifyLoader.onLoad(() => {
+            document.querySelectorAll('.skill-card').forEach(card => {
+                card.dispatchEvent(new CustomEvent('iconify-ready'));
             });
+        });
+        window.__iconifyLoader.load().catch(console.error);
+    }
+
+    // 处理页面从 bfcache 恢复（前进/后退导航）
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted && window.__iconifyLoader) {
+            setTimeout(() => window.__iconifyLoader.load().catch(console.error), 100);
         }
     });
-
-    // 处理页面导航时的图标重新加载
-    if (typeof window !== 'undefined') {
-        // 监听页面显示事件（包括前进/后退导航）
-        window.addEventListener('pageshow', (event) => {
-            if (event.persisted && window.__iconifyLoader) {
-                // 页面从缓存恢复，重新检查图标状态
-                setTimeout(() => {
-                    window.__iconifyLoader.load().catch(console.error);
-                }, 100);
-            }
-        });
-    }
 </script>

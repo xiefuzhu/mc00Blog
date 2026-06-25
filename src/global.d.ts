@@ -13,6 +13,7 @@ declare global {
         iconifyLoaded: boolean;
         __iconifyLoader: {
             load: () => Promise<void>;
+            onLoad: (callback: () => void) => void;
         };
         pagefind: {
             search: (query: string) => Promise<{

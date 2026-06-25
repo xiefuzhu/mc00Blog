@@ -5,7 +5,6 @@ import { Icon } from "astro-icon/components";
 import { siteConfig } from "@/config";
 import { pathsEqual, url } from "@utils/url";
 import { widgetManager } from "@utils/widget";
-import IconifyLoader from "@components/common/iconifyLoader.astro";
 import Navbar from "@components/navbar.astro";
 import FullscreenWallpaper from "@components/fullscreenWallpaper.astro";
 import Banner from "@components/banner.astro";
@@ -77,9 +76,6 @@ const {
     setOGTypeArticle={setOGTypeArticle}
     postSlug={postSlug}
 >
-    <!-- 全局图标加载器 -->
-    <IconifyLoader />
-
     <!-- Navbar -->
     <slot slot="head" name="head" />
     <div
