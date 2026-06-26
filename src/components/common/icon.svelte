@@ -1,6 +1,6 @@
 <script lang="ts">
 /**
- * Svelte 图标组件 - 构建时内联 SVG + CDN 回退
+ * Svelte 图标组件 - 构建时内联 SVG + API 回退
  */
 import { onMount } from "svelte";
 import { getIconSvg, hasIcon } from "@utils/icons";
@@ -41,9 +41,21 @@ const combinedClass = $derived(`${sizeClass} ${className}`.trim());
 const svgContent = $derived(getIconSvg(icon));
 const iconExists = $derived(hasIcon(icon));
 
+let remoteSvg = $state("");
+
 onMount(() => {
-    if (!iconExists && typeof window !== 'undefined' && window.__iconifyLoader) {
-        window.__iconifyLoader.load().catch(() => {});
+    if (!iconExists) {
+        const [collection, name] = icon.split(":");
+        if (collection && name) {
+            fetch(`https://api.iconify.design/${collection}/${name}.svg?height=1em`)
+                .then(r => r.ok ? r.text() : Promise.reject())
+                .then(svg => { remoteSvg = svg; })
+                .catch(() => {
+                    if (window.__iconifyLoader) {
+                        window.__iconifyLoader.load().catch(() => {});
+                    }
+                });
+        }
     }
 });
 </script>
@@ -55,6 +67,14 @@ onMount(() => {
         aria-hidden="true"
     >
         {@html svgContent}
+    </span>
+{:else if remoteSvg}
+    <span
+        class="inline-icon inline-flex items-center justify-center {combinedClass}"
+        style={combinedStyle}
+        aria-hidden="true"
+    >
+        {@html remoteSvg}
     </span>
 {:else}
     <span

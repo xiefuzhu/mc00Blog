@@ -8,7 +8,7 @@ export interface Props {
 const { preloadIcons = [] } = Astro.props;
 ---
 
-<!-- 内联加载逻辑: 按需动态注入 CDN 脚本，然后处理图标渲染 -->
+<!-- 内联加载逻辑: 从 Iconify API 直接获取 SVG，不依赖 CDN 自定义元素 -->
 <script define:vars={{ preloadIcons }}>
     (function() {
         'use strict';
@@ -23,6 +23,7 @@ const { preloadIcons = [] } = Astro.props;
                 this.isLoaded = false;
                 this.observers = new Set();
                 this.preloadQueue = new Set(preloadIcons);
+                this.svgCache = new Map();
             }
 
             onLoad(callback) {
@@ -33,63 +34,59 @@ const { preloadIcons = [] } = Astro.props;
                 }
             }
 
-            injectScript() {
-                return new Promise((resolve, reject) => {
-                    if (typeof customElements !== 'undefined' && customElements.get('iconify-icon')) {
-                        resolve();
-                        return;
-                    }
-                    const existing = document.querySelector('script[src*="iconify-icon"]');
-                    if (existing) {
-                        if (customElements.whenDefined) {
-                            customElements.whenDefined('iconify-icon').then(resolve).catch(reject);
-                        } else {
-                            const check = () => {
-                                if (customElements && customElements.get('iconify-icon')) {
-                                    resolve();
-                                } else {
-                                    requestAnimationFrame(check);
-                                }
-                            };
-                            check();
-                        }
-                        return;
-                    }
-                    const script = document.createElement('script');
-                    script.src = 'https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js';
-                    script.onload = resolve;
-                    script.onerror = () => { script.remove(); reject(new Error('CDN script load failed')); };
-                    document.head.appendChild(script);
-                });
+            replaceWithSvg(el, iconName) {
+                const svg = this.svgCache.get(iconName);
+                if (!svg) return;
+
+                const wrapper = document.createElement('span');
+                wrapper.innerHTML = svg;
+                const svgEl = wrapper.querySelector('svg');
+                if (svgEl) {
+                    svgEl.style.width = '1em';
+                    svgEl.style.height = '1em';
+                    svgEl.style.display = 'inline-block';
+                    svgEl.style.verticalAlign = 'middle';
+                }
+
+                if (el.parentNode) {
+                    el.parentNode.replaceChild(wrapper.firstElementChild || wrapper, el);
+                }
             }
 
-            waitForReady() {
-                if (typeof customElements !== 'undefined' && customElements.get('iconify-icon')) {
-                    return Promise.resolve();
-                }
-                if (typeof customElements !== 'undefined' && customElements.whenDefined) {
-                    return customElements.whenDefined('iconify-icon');
-                }
-                return new Promise((resolve) => {
-                    const check = () => {
-                        if (customElements && customElements.get('iconify-icon')) {
-                            resolve();
-                        } else {
-                            requestAnimationFrame(check);
-                        }
-                    };
-                    check();
-                });
+            async fetchSvg(iconName) {
+                const [collection, name] = iconName.split(':');
+                if (!collection || !name) throw new Error(`Invalid icon: ${iconName}`);
+
+                const url = `https://api.iconify.design/${collection}/${name}.svg?height=1em`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status} for ${iconName}`);
+
+                const text = await response.text();
+                return text;
             }
 
-            forceRefresh() {
-                document.querySelectorAll('iconify-icon').forEach(el => {
-                    const icon = el.getAttribute('icon');
-                    if (icon) {
-                        el.removeAttribute('icon');
-                        requestAnimationFrame(() => el.setAttribute('icon', icon));
-                    }
-                });
+            async renderIcon(el) {
+                const iconName = el.getAttribute('icon');
+                if (!iconName) return;
+
+                if (this.svgCache.has(iconName)) {
+                    this.replaceWithSvg(el, iconName);
+                    return;
+                }
+
+                try {
+                    const svg = await this.fetchSvg(iconName);
+                    this.svgCache.set(iconName, svg);
+                    this.replaceWithSvg(el, iconName);
+                } catch (e) {
+                    console.error(`Failed to load icon: ${iconName}`, e);
+                }
+            }
+
+            async renderAllIcons() {
+                const els = document.querySelectorAll('iconify-icon');
+                const promises = Array.from(els).map(el => this.renderIcon(el));
+                await Promise.allSettled(promises);
             }
 
             setupObserver() {
@@ -101,24 +98,15 @@ const { preloadIcons = [] } = Astro.props;
                         mutation.addedNodes.forEach(node => {
                             if (node.nodeType === 1) {
                                 if (node.tagName === 'ICONIFY-ICON') {
-                                    loader.refreshNode(node);
-                                }
-                                if (node.querySelectorAll) {
-                                    node.querySelectorAll('iconify-icon').forEach(el => loader.refreshNode(el));
+                                    loader.renderIcon(node);
+                                } else if (node.querySelectorAll) {
+                                    node.querySelectorAll('iconify-icon').forEach(el => loader.renderIcon(el));
                                 }
                             }
                         });
                     });
                 });
                 this._observer.observe(document.body, { childList: true, subtree: true });
-            }
-
-            refreshNode(el) {
-                const icon = el.getAttribute('icon');
-                if (icon) {
-                    el.removeAttribute('icon');
-                    requestAnimationFrame(() => el.setAttribute('icon', icon));
-                }
             }
 
             notifyObservers() {
@@ -142,43 +130,31 @@ const { preloadIcons = [] } = Astro.props;
                 const icons = Array.from(this.preloadQueue);
                 this.preloadQueue.clear();
                 icons.forEach(icon => {
-                    const el = document.createElement('iconify-icon');
-                    el.setAttribute('icon', icon);
-                    el.style.cssText = 'display:none';
-                    document.body.appendChild(el);
-                    requestAnimationFrame(() => {
-                        if (el.parentNode) el.parentNode.removeChild(el);
-                    });
+                    if (!this.svgCache.has(icon)) {
+                        this.fetchSvg(icon).then(svg => {
+                            this.svgCache.set(icon, svg);
+                        }).catch(() => {});
+                    }
                 });
             }
 
             async load() {
-                if (this.isLoaded) {
-                    return Promise.resolve();
-                }
-                try {
-                    await this.injectScript();
-                    await this.waitForReady();
-                    this.isLoaded = true;
-                    this.forceRefresh();
-                    this.setupObserver();
-                    document.documentElement.setAttribute('data-iconify-loaded', '');
-                    this.notifyObservers();
-                    this.processPreloadQueue();
-                } catch (error) {
-                    console.error('Iconify icon render failed:', error);
-                }
+                if (this.isLoaded) return;
+                this.isLoaded = true;
+
+                await this.renderAllIcons();
+                this.setupObserver();
+                this.processPreloadQueue();
+
+                document.documentElement.setAttribute('data-iconify-loaded', '');
+                this.notifyObservers();
             }
         }
 
         const loader = new IconifyLoader();
         window.__iconifyLoader = loader;
 
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => loader.load());
-        } else {
-            loader.load();
-        }
+        loader.load();
 
         window.loadIconify = () => loader.load();
         window.preloadIcons = (icons) => loader.addToPreloadQueue(icons);
@@ -186,14 +162,10 @@ const { preloadIcons = [] } = Astro.props;
     })();
 </script>
 
-<!-- 为不支持JavaScript的情况提供备用方案 -->
 <noscript>
     <style>
         iconify-icon {
             display: none;
-        }
-        .icon-fallback {
-            display: inline-block;
         }
     </style>
 </noscript>
