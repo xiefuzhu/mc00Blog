@@ -66,7 +66,7 @@ const defaultCoverGradient = "linear-gradient(135deg, color-mix(in oklch, oklch(
             {title}
         </a>
         <!-- metadata -->
-        <PostMetadata published={published} updated={updated} tags={tags} category={category || undefined} hideTagsForMobile={true} hideUpdateDate={true} postUrl={url} className="mb-4"></PostMetadata>
+        <PostMetadata published={published!} updated={updated} tags={tags} category={category || undefined} hideTagsForMobile={true} hideUpdateDate={true} postUrl={url} className="mb-4"></PostMetadata>
         <!-- description -->
         <div class:list={["transition text-75 mb-3.5 pr-4", {"line-clamp-2 @min-[768px]:line-clamp-1": !description}]}>
             { description || remarkPluginFrontmatter.excerpt }

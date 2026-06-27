@@ -1,4 +1,7 @@
 import { type CollectionEntry, getCollection } from "astro:content";
+import { execSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
 
 import { CATEGORY_SEPARATOR, type CategoryPath, getCategoryPathParts } from "@utils/category";
 import { parseTags, type Tag } from "@utils/tag";
@@ -7,11 +10,53 @@ import { i18n } from "@i18n/translation";
 import I18nKey from "@i18n/i18nKey";
 
 
+type ResolvedPost = CollectionEntry<"posts"> & {
+    data: CollectionEntry<"posts">["data"] & { published: Date };
+};
+
+function getFileBirthtime(filePath: string): Date {
+    try {
+        return fs.statSync(filePath).birthtime;
+    } catch {
+        return new Date();
+    }
+}
+
+function getGitFirstCommitDate(filePath: string): Date | null {
+    try {
+        const output = execSync(
+            `git log --diff-filter=A --follow --format="%aI" -- "${filePath}"`,
+            { encoding: "utf-8", stdio: ["pipe", "pipe", "ignore"], timeout: 5000 },
+        );
+        const dateStr = output.split("\n").find(Boolean);
+        return dateStr ? new Date(dateStr) : null;
+    } catch {
+        return null;
+    }
+}
+
+function resolvePublishDate(post: CollectionEntry<"posts">) {
+    if (post.data.published) return;
+    const filePath = post.filePath || path.join(process.cwd(), "src", "content", "posts", post.id);
+
+    const gitDate = getGitFirstCommitDate(filePath);
+    if (gitDate && !isNaN(gitDate.getTime())) {
+        (post.data as Record<string, unknown>).published = gitDate;
+        return;
+    }
+
+    (post.data as Record<string, unknown>).published = getFileBirthtime(filePath);
+}
+
 // // Retrieve posts and sort them by publication date
-async function getRawSortedPosts() {
+async function getRawSortedPosts(): Promise<ResolvedPost[]> {
     const allBlogPosts = await getCollection("posts", ({ data }) => {
         return import.meta.env.PROD ? data.draft !== true : true;
     });
+
+    for (const post of allBlogPosts) {
+        resolvePublishDate(post);
+    }
 
     const sorted = allBlogPosts.sort((a, b) => {
         // 首先按置顶状态排序，置顶文章在前
@@ -19,11 +64,12 @@ async function getRawSortedPosts() {
         if (!a.data.pinned && b.data.pinned) return 1;
 
         // 如果置顶状态相同，则按发布日期排序
-        const dateA = new Date(a.data.published);
-        const dateB = new Date(b.data.published);
+        const dateA = new Date(a.data.published!);
+        const dateB = new Date(b.data.published!);
         return dateA > dateB ? -1 : 1;
     });
-    return sorted;
+
+    return sorted as ResolvedPost[];
 }
 
 export async function getSortedPosts() {
@@ -42,7 +88,7 @@ export async function getSortedPosts() {
 }
 export type PostForList = {
     id: string;
-    data: CollectionEntry<"posts">["data"];
+    data: ResolvedPost["data"];
 };
 export async function getSortedPostsList(): Promise<PostForList[]> {
     const sortedFullPosts = await getRawSortedPosts();

@@ -58,9 +58,7 @@ export async function getStaticPaths() {
 
 
 const { entry } = Astro.props;
-const { Content, headings } = await render(entry);
-
-const { remarkPluginFrontmatter } = await render(entry);
+const { Content, headings, remarkPluginFrontmatter } = await render(entry);
 
 // 处理加密逻辑
 let isEncrypted = !!(entry.data.encrypted && entry.data.password);
@@ -101,7 +99,7 @@ const jsonLd = {
         name: profileConfig.name,
         url: Astro.site,
     },
-    datePublished: formatDateToYYYYMMDD(entry.data.published),
+    datePublished: formatDateToYYYYMMDD(entry.data.published!),
     inLanguage: entry.data.lang
         ? entry.data.lang.replace("_", "-")
         : siteConfig.lang.replace("_", "-"),
@@ -189,7 +187,7 @@ const jsonLd = {
             <div class="onload-animation-up">
                 <PostMetadata
                     className="mb-5"
-                    published={entry.data.published}
+                    published={entry.data.published!}
                     updated={entry.data.updated}
                     tags={entry.data.tags}
                     category={entry.data.category}
@@ -228,7 +226,7 @@ const jsonLd = {
                         <License
                             title={entry.data.title}
                             id={entry.id}
-                            pubDate={entry.data.published}
+                            pubDate={entry.data.published!}
                             author={entry.data.author}
                             sourceLink={entry.data.sourceLink}
                             licenseName={entry.data.licenseName}

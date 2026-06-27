@@ -7,10 +7,6 @@ import { parseTags } from "@utils/tag";
 
 
 // Helper for handling dates that might be empty strings from JSON
-const dateSchema = z.preprocess((arg) => {
-    if (typeof arg === "string" && arg.trim() === "") return undefined;
-    return arg;
-}, z.coerce.date());
 const optionalDateSchema = z.preprocess((arg) => {
     if (typeof arg === "string" && arg.trim() === "") return undefined;
     return arg;
@@ -29,7 +25,7 @@ const postsCollection = defineCollection({
     loader: glob({ pattern: '**/[^_]*.{md,mdx}', base: "./src/content/posts" }),
     schema: z.object({
         title: z.string(),
-        published: dateSchema,
+        published: optionalDateSchema,
         updated: optionalDateSchema,
         description: z.string().optional().default(""),
         cover: z.string().optional().default(""),
