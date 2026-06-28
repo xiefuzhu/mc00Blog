@@ -65,7 +65,7 @@ collections:
             - # 标题
                 { name: "title", label: "Title", widget: "string" }
             - # 发布日期
-                { name: "published", label: "Published Date", widget: "datetime" }
+                { name: "published", label: "Published Date", widget: "datetime", required: false }
             - # 更新日期
                 { name: "updated", label: "Updated Date", widget: "datetime", required: false }
             - # 描述

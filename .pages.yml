@@ -45,7 +45,7 @@ content:
     # 字段列表
     fields:
       - { name: title, label: Title, type: string }
-      - { name: published, label: Published Date, type: date }
+      - { name: published, label: Published Date, type: date, required: false }
       - { name: updated, label: Updated Date, type: date, required: false }
       - { name: description, label: Description, type: text, required: false }
       - { name: cover, label: Cover, type: image, options: {media: posts}, required: false }
