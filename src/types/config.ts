@@ -381,6 +381,8 @@ export type PostConfig = {
             width: string;
             // 封面上是否显示文字 (标题、标签、摘要)
             showContent: boolean;
+            // 无指定封面时是否显示默认封面
+            showDefaultCover: boolean;
         };
         // 标题大小 (Tailwind 文本大小类，例如 "text-3xl")
         titleSize: string;

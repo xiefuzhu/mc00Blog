@@ -42,6 +42,8 @@ const coverWidth = postConfig.card.cover.width;
 const coverMargin = "12px";
 const coverGap = "12px";
 const showContentOnCover = postConfig.card.cover.showContent;
+const showDefaultCover = postConfig.card.cover.showDefaultCover;
+const renderCoverArea = hasCover || showDefaultCover;
 const titleSize = postConfig.card.titleSize;
 
 const { remarkPluginFrontmatter } = await render(entry);
@@ -54,8 +56,8 @@ const defaultCoverGradient = "linear-gradient(135deg, color-mix(in oklch, oklch(
 
 <div class:list={["card-base flex flex-col-reverse @min-[768px]:flex-col w-full rounded-(--radius-large) overflow-hidden relative @container", className]} style={style}>
     <div class:list={["pl-6 @min-[768px]:pl-9 pr-6 @min-[768px]:pr-2 pt-6 @min-[768px]:pt-7 pb-6 relative", 
-        {"w-full @min-[768px]:w-[calc(100%-var(--coverWidth)-var(--coverGap))]": isCoverOnRight,
-         "ml-0 @min-[768px]:ml-[calc(var(--coverWidth)+var(--coverGap))]": !isCoverOnRight}
+        {"w-full @min-[768px]:w-[calc(100%-var(--coverWidth)-var(--coverGap))]": isCoverOnRight && renderCoverArea,
+         "ml-0 @min-[768px]:ml-[calc(var(--coverWidth)+var(--coverGap))]": !isCoverOnRight && renderCoverArea}
     ]}>
         <a href={url}
             class:list={["transition group w-full block font-bold mb-3 text-90 hover:text-(--primary) dark:hover:text-(--primary) active:text-(--title-active) dark:active:text-(--title-active) before:w-1 before:h-5 before:rounded-md before:bg-(--primary) before:absolute before:top-[35px] before:left-[18px] before:hidden @min-[768px]:before:block",
@@ -83,53 +85,55 @@ const defaultCoverGradient = "linear-gradient(135deg, color-mix(in oklch, oklch(
         </div>
     </div>
 
-    <a href={url} aria-label={title} class:list={["group",
-            "max-h-[20vh] h-[20vh] @min-[768px]:max-h-none @min-[768px]:h-auto mx-4 mt-4 -mb-2 @min-[768px]:mb-0 @min-[768px]:mx-0 @min-[768px]:mt-0",
-            "@min-[768px]:w-(--coverWidth) relative @min-[768px]:absolute @min-[768px]:top-(--coverMargin) @min-[768px]:bottom-(--coverMargin) rounded-xl overflow-hidden active:scale-95",
-            {"@min-[768px]:right-(--coverMargin)": isCoverOnRight, "@min-[768px]:left-(--coverMargin)": !isCoverOnRight}
-        ]}
-    >
-        <div class="absolute pointer-events-none z-10 w-full h-full group-hover:bg-black/30 group-active:bg-black/50 transition"></div>
-        <div class="absolute pointer-events-none z-20 w-full h-full flex items-center justify-center ">
-            <Icon name="material-symbols:chevron-right-rounded"
-                class="transition opacity-0 group-hover:opacity-100 scale-50 group-hover:scale-100 text-white text-5xl">
-            </Icon>
-        </div>
-        {hasCover ? (
-            <ImageWrapper src={cover} basePath={imageBaseDir} alt="Cover Image of the Post"
-                class="w-full h-full">
-            </ImageWrapper>
-        ) : (
-            <div class="w-full h-full flex items-center justify-center p-4 @min-[768px]:p-6"
-                style={`background: ${defaultCoverGradient}`}>
-                {entry.data.encrypted ? (
-                    <Icon name="mdi:lock" class="text-5xl text-white/81" />
-                ) : showContentOnCover ? (
-                    <div class="flex flex-col gap-1 w-full">
-                        <span class="text-white/81 text-xs font-medium tracking-wide uppercase">
-                            {title}
-                        </span>
-                        <div class="flex flex-wrap gap-1.5 mt-0.5">
-                            {tags && tags.length > 0 ? tags.map((tag) => (
-                                <span class="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-white/81 bg-white/9 rounded-md">
-                                    {tag}
-                                </span>
-                            )) : (
-                                <span class="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-white/63 bg-white/6 rounded-md">
-                                    No Tags
-                                </span>
+    {renderCoverArea && (
+        <a href={url} aria-label={title} class:list={["group",
+                "max-h-[20vh] h-[20vh] @min-[768px]:max-h-none @min-[768px]:h-auto mx-4 mt-4 -mb-2 @min-[768px]:mb-0 @min-[768px]:mx-0 @min-[768px]:mt-0",
+                "@min-[768px]:w-(--coverWidth) relative @min-[768px]:absolute @min-[768px]:top-(--coverMargin) @min-[768px]:bottom-(--coverMargin) rounded-xl overflow-hidden active:scale-95",
+                {"@min-[768px]:right-(--coverMargin)": isCoverOnRight, "@min-[768px]:left-(--coverMargin)": !isCoverOnRight}
+            ]}
+        >
+            <div class="absolute pointer-events-none z-10 w-full h-full group-hover:bg-black/30 group-active:bg-black/50 transition"></div>
+            <div class="absolute pointer-events-none z-20 w-full h-full flex items-center justify-center ">
+                <Icon name="material-symbols:chevron-right-rounded"
+                    class="transition opacity-0 group-hover:opacity-100 scale-50 group-hover:scale-100 text-white text-5xl">
+                </Icon>
+            </div>
+            {hasCover ? (
+                <ImageWrapper src={cover} basePath={imageBaseDir} alt="Cover Image of the Post"
+                    class="w-full h-full">
+                </ImageWrapper>
+            ) : (
+                <div class="w-full h-full flex items-center justify-center p-4 @min-[768px]:p-6"
+                    style={`background: ${defaultCoverGradient}`}>
+                    {entry.data.encrypted ? (
+                        <Icon name="mdi:lock" class="text-5xl text-white/81" />
+                    ) : showContentOnCover ? (
+                        <div class="flex flex-col gap-1 w-full">
+                            <span class="text-white/81 text-xs font-medium tracking-wide uppercase">
+                                {title}
+                            </span>
+                            <div class="flex flex-wrap gap-1.5 mt-0.5">
+                                {tags && tags.length > 0 ? tags.map((tag) => (
+                                    <span class="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-white/81 bg-white/9 rounded-md">
+                                        {tag}
+                                    </span>
+                                )) : (
+                                    <span class="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-white/63 bg-white/6 rounded-md">
+                                        No Tags
+                                    </span>
+                                )}
+                            </div>
+                            {remarkPluginFrontmatter.excerpt && (
+                                <p class="text-white/63 text-sm leading-relaxed line-clamp-3">
+                                    {remarkPluginFrontmatter.excerpt}
+                                </p>
                             )}
                         </div>
-                        {remarkPluginFrontmatter.excerpt && (
-                            <p class="text-white/63 text-sm leading-relaxed line-clamp-3">
-                                {remarkPluginFrontmatter.excerpt}
-                            </p>
-                        )}
-                    </div>
-                ) : null}
-            </div>
-        )}
-    </a>
+                    ) : null}
+                </div>
+            )}
+        </a>
+    )}
 </div>
 
 <style define:vars={{coverWidth, coverMargin, coverGap}}>
