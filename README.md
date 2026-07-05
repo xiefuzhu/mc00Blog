@@ -64,7 +64,7 @@ English | [**中文**](docs/README_ZH.md)
 - **Loading Overlay**: Configurable splash screen with spinner animation
 - **Sidebar Widget System**: Configurable profile, announcement, TOC, categories, tags, directory, statistics etc.
 - **Analytics Support**: Umami analytics integration for visitor insights
-- **Comment System**: Twikoo-powered comment functionality
+- **Comment System**: Waline and Twikoo comment systems integration
 - **Music Player**: Background music with meting API or local playlist support
 - **PIO Widget**: Interactive Live2D character with customizable dialog
 
