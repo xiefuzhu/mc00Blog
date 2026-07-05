@@ -1,5 +1,4 @@
 ---
-import { url } from "@utils/url";
 import { postConfig } from "@/config";
 
 
@@ -8,15 +7,16 @@ interface Props {
 }
 
 const config = {
-    ...postConfig.comment.twikoo,
+    ...postConfig.comment.waline,
+    dark: "html.dark",
     el: "#comment-container",
     path: Astro.props.path,
 };
 ---
 
 <div id="comment-container"></div>
-<script is:inline src={url("/assets/js/twikoo.all.min.js")}></script>
-<link rel="stylesheet" href={url("/assets/css/twikoo.css")} />
+<script is:inline src="https://unpkg.com/@waline/client@v3/dist/waline.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/@waline/client@v3/dist/waline.css" />
 <script is:inline define:vars={{ config }}>
     function getCurrentPath() {
         const pathname = window.location.pathname;
@@ -25,46 +25,33 @@ const config = {
             : pathname;
     }
 
-    function createTwikooConfig() {
-        return {
-            ...config,
-            path: getCurrentPath(),
-            el: "#comment-container",
-        };
-    }
-
-    function initTwikoo() {
-        if (typeof twikoo !== "undefined") {
+    function initWaline() {
+        if (typeof Waline !== "undefined") {
             const commentEl = document.getElementById("comment-container");
             if (commentEl) {
                 commentEl.innerHTML = "";
-                const dynamicConfig = createTwikooConfig();
-                console.log("[Twikoo] 初始化配置:", dynamicConfig);
-                twikoo
-                    .init(dynamicConfig)
-                    .then(() => {
-                        console.log("[Twikoo] 初始化完成");
-                    })
-                    .catch((error) => {
-                        console.error("[Twikoo] 初始化失败:", error);
-                    });
+                Waline.init({
+                    ...config,
+                    path: getCurrentPath(),
+                    el: "#comment-container",
+                });
             }
         } else {
-            setTimeout(initTwikoo, 500);
+            setTimeout(initWaline, 500);
         }
     }
 
-    document.addEventListener("DOMContentLoaded", initTwikoo);
+    document.addEventListener("DOMContentLoaded", initWaline);
 
     if (window.swup && window.swup.hooks) {
         window.swup.hooks.on("content:replace", function () {
-            setTimeout(initTwikoo, 200);
+            setTimeout(initWaline, 200);
         });
     } else {
         document.addEventListener("swup:enable", function () {
             if (window.swup && window.swup.hooks) {
                 window.swup.hooks.on("content:replace", function () {
-                    setTimeout(initTwikoo, 200);
+                    setTimeout(initWaline, 200);
                 });
             }
         });
@@ -73,8 +60,7 @@ const config = {
     document.addEventListener("twilight:page:loaded", function () {
         const commentEl = document.getElementById("comment-container");
         if (commentEl) {
-            console.log("[Twikoo] 通过自定义事件重新初始化");
-            initTwikoo();
+            initWaline();
         }
     });
 </script>
