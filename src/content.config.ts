@@ -24,8 +24,8 @@ const tagsSchema = z.preprocess((arg) => {
 const postsCollection = defineCollection({
     loader: glob({ pattern: '**/[^_]*.{md,mdx}', base: "./src/content/posts" }),
     schema: z.object({
-        title: z.string(),
-        directoryTitle: z.string().optional().default("").transform(s => s.trim()),
+        title: z.coerce.string(),
+        directoryTitle: z.coerce.string().optional().default("").transform(s => s.trim()),
         published: optionalDateSchema,
         updated: optionalDateSchema,
         description: z.string().optional().default(""),
@@ -60,7 +60,7 @@ const postsCollection = defineCollection({
 const specCollection = defineCollection({
     loader: glob({ pattern: '[^_]*.{md,mdx}', base: "./src/content" }),
     schema: z.object({
-        title: z.string().optional(),
+        title: z.coerce.string().optional(),
         description: z.string().optional(),
     }),
 });
