@@ -4,6 +4,7 @@ import { pluginLineNumbers } from "@expressive-code/plugin-line-numbers";
 import svelte, { vitePreprocess } from "@astrojs/svelte";
 import tailwindcss from "@tailwindcss/vite";
 import swup from "@swup/astro";
+import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
 import cloudflarePages from "@astrojs/cloudflare";
 import netlify from "@astrojs/netlify";
@@ -145,10 +146,11 @@ export default defineConfig({
                 showCopyToClipboardButton: false,
             },
         }),
+        mdx(),
+        sitemap(),
         svelte({
             preprocess: vitePreprocess(),
         }),
-        sitemap(),
     ],
     markdown: {
         remarkPlugins: [
