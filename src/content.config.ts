@@ -46,6 +46,19 @@ const postsCollection = defineCollection({
         encrypted: z.boolean().optional().default(false),
         password: z.string().optional().default(""),
 
+        /* Copy protection fields */
+        copyProtection: z.object({
+            blockSelection: z.boolean().optional().default(false),
+            blockClipboard: z.boolean().optional().default(false),
+            blockContextMenu: z.boolean().optional().default(false),
+            blockDevTools: z.boolean().optional().default(false),
+        }).optional().default({
+            blockSelection: false,
+            blockClipboard: false,
+            blockContextMenu: false,
+            blockDevTools: false,
+        }),
+
         /* Custom routeName */
         routeName: z.string().optional(),
 
