@@ -5,7 +5,7 @@ import {
     localTranslations,
 } from "@i18n/language";
 import type I18nKey from "./i18nKey";
-import type { Translation } from "@i18n/language";
+import type { Translation, SupportedLanguage } from "@i18n/language";
 
 const defaultTranslation = localTranslations.en!;
 
