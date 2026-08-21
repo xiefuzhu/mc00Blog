@@ -51,6 +51,13 @@ html:not(.is-loading):not(.show-initial-animation):not(.show-banner-animation) .
 html:not(.is-loading):not(.show-initial-animation):not(.show-banner-animation) .banner-subtitle {
     opacity: 1;
 }
+/* 页面切换时标题淡入淡出 */
+.banner-text-overlay {
+    transition: opacity 300ms ease;
+}
+.banner-text-overlay.fade-out {
+    opacity: 0;
+}
 
 /* 页面背景平滑过渡（Fullscreen 与 Banner 模式切换时） */
 body {

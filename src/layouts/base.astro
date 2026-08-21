@@ -362,9 +362,22 @@ const setup = () => {
         const bannerTextOverlay = document.querySelector('.banner-text-overlay')
         if (bannerTextOverlay) {
             if (isHomePage) {
-                bannerTextOverlay.classList.remove('hidden')
+                bannerTextOverlay.classList.remove('hidden', 'fade-out')
+                // Trigger banner text fade-in animation
+                document.documentElement.classList.remove('show-banner-animation')
+                void (bannerTextOverlay as HTMLElement).offsetHeight
+                document.documentElement.classList.add('show-banner-animation')
+                setTimeout(() => {
+                    document.documentElement.classList.remove('show-banner-animation')
+                }, 1200)
             } else {
-                bannerTextOverlay.classList.add('hidden')
+                bannerTextOverlay.classList.add('fade-out')
+                setTimeout(() => {
+                    if (!pathsEqual(window.location.pathname, url('/'))) {
+                        bannerTextOverlay.classList.remove('fade-out')
+                        bannerTextOverlay.classList.add('hidden')
+                    }
+                }, 300)
             }
         }
         // Increase the page height during page transition to prevent the scrolling animation from jumping
