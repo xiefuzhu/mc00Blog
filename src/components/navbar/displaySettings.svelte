@@ -61,7 +61,7 @@ $effect(() => {
         <Icon icon="material-symbols:palette-outline" class="text-[1.25rem]"></Icon>
     </button>
     <div id="display-setting-wrapper" class="fixed top-14.5 pt-5 right-4 w-[calc(100vw-2rem)] max-w-80 md:absolute md:top-11 md:right-0 md:w-80 md:pt-5 transition-all z-50" class:float-panel-closed={!isOpen}>
-        <div id="display-setting" class="card-base float-panel px-4 py-4 w-full">
+        <div id="display-setting" class="card-base float-panel liquid-glass px-4 py-4 w-full">
             <div class="flex flex-row gap-2 mb-3 items-center justify-between">
                 <div class="flex gap-2 font-bold text-lg text-neutral-900 dark:text-neutral-100 transition relative ml-3
                     before:w-1 before:h-4 before:rounded-md before:bg-(--primary)

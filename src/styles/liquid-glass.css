@@ -1,0 +1,106 @@
+/* Glass surfaces transplanted from the source blog. Refraction itself stays in LiquidGlass.astro. */
+
+.liquid-glass,
+.card-base,
+.float-panel,
+.album-card,
+.menu-card,
+.moment-item,
+.password-container,
+.project-card,
+.skill-card,
+.timeline-card,
+.site-footer,
+.pagination-bar,
+.back-to-top-btn,
+.toc-floating-btn-wrapper,
+.toc-floating-panel {
+  position: relative;
+  background-color: rgba(255, 255, 255, 0.22) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 22px;
+  box-shadow: 0 14px 36px -18px rgba(0, 0, 0, 0.45);
+}
+
+:root.dark .liquid-glass,
+:root.dark .card-base,
+:root.dark .float-panel,
+:root.dark .album-card,
+:root.dark .menu-card,
+:root.dark .moment-item,
+:root.dark .password-container,
+:root.dark .project-card,
+:root.dark .skill-card,
+:root.dark .timeline-card,
+:root.dark .site-footer,
+:root.dark .pagination-bar,
+:root.dark .back-to-top-btn,
+:root.dark .toc-floating-btn-wrapper,
+:root.dark .toc-floating-panel {
+  background-color: rgba(15, 23, 42, 0.28) !important;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+:is(body, body:has(#banner-wrapper), #banner-wrapper ~ *) #navbar > div.liquid-glass.liquid-glass-bar {
+  border-radius: 999px !important;
+  background-color: rgba(255, 255, 255, 0.22) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: 0 14px 36px -18px rgba(0, 0, 0, 0.45);
+}
+
+:root.dark :is(body, body:has(#banner-wrapper), #banner-wrapper ~ *) #navbar > div.liquid-glass.liquid-glass-bar {
+  background-color: rgba(15, 23, 42, 0.28) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+body .music-player .expanded-player.liquid-glass,
+body .music-player .playlist-panel.liquid-glass,
+body.wallpaper-transparent .music-player .expanded-player.liquid-glass,
+body.wallpaper-transparent .music-player .playlist-panel.liquid-glass {
+  background-color: rgba(255, 255, 255, 0.22) !important;
+  background-image: none !important;
+}
+
+:root.dark body .music-player .expanded-player.liquid-glass,
+:root.dark body .music-player .playlist-panel.liquid-glass,
+:root.dark body.wallpaper-transparent .music-player .expanded-player.liquid-glass,
+:root.dark body.wallpaper-transparent .music-player .playlist-panel.liquid-glass {
+  background-color: rgba(15, 23, 42, 0.28) !important;
+}
+
+.glass-bg-dock {
+  position: fixed;
+  z-index: 80;
+  left: 1rem;
+  bottom: 1rem;
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.glass-bg-upload,
+#glass-bg-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  color: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+}
+
+:root.dark .glass-bg-upload,
+:root.dark #glass-bg-clear {
+  background: rgba(15, 23, 42, 0.28);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.glass-bg-upload input {
+  display: none;
+}

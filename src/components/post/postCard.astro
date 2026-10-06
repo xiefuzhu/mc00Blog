@@ -54,7 +54,7 @@ const imageBaseDir = getFileDirFromPath(entry.filePath || "");
 const defaultCoverGradient = "linear-gradient(135deg, color-mix(in oklch, oklch(from var(--primary) l c calc(h - 30)) 51%, transparent) 0%, color-mix(in oklch, var(--primary) 51%, transparent) 50%, color-mix(in oklch, oklch(from var(--primary) l c calc(h + 30)) 51%, transparent) 100%)";
 ---
 
-<div class:list={["card-base flex flex-col-reverse @min-[768px]:flex-col w-full rounded-(--radius-large) overflow-hidden relative @container", className]} style={style}>
+<div class:list={["card-base liquid-glass flex flex-col-reverse @min-[768px]:flex-col w-full rounded-(--radius-large) overflow-hidden relative @container", className]} style={style}>
     <div class:list={["pl-6 @min-[768px]:pl-9 pr-6 @min-[768px]:pr-2 pt-6 @min-[768px]:pt-7 pb-6 relative", 
         {"w-full @min-[768px]:w-[calc(100%-var(--coverWidth)-var(--coverGap))]": isCoverOnRight && renderCoverArea,
          "ml-0 @min-[768px]:ml-[calc(var(--coverWidth)+var(--coverGap))]": !isCoverOnRight && renderCoverArea}

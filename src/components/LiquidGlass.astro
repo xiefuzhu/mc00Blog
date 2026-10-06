@@ -1,0 +1,309 @@
+---
+// Runtime liquid-glass lenses. Displacement maps follow the convex-squircle
+// refraction model: bezel height -> normal -> Snell -> SVG feDisplacementMap.
+---
+
+<svg id="liquid-glass-defs" width="0" height="0" aria-hidden="true" color-interpolation-filters="sRGB">
+  <defs id="liquid-glass-filters"></defs>
+</svg>
+
+<div class="glass-bg-dock">
+  <label class="glass-bg-upload">
+    自定义背景
+    <input id="glass-bg-file" type="file" accept="image/*" />
+  </label>
+  <button id="glass-bg-clear" type="button" hidden>恢复默认背景</button>
+</div>
+
+<script>
+  const TARGETS = '.liquid-glass';
+  const PANELS = [
+    '#navbar > div:not(.absolute)',
+    '.card-base',
+    '.float-panel',
+    '.playlist-panel',
+    '.expanded-player',
+    '.search-panel',
+    '.album-card',
+    '.menu-card',
+    '.moment-item',
+    '.password-container',
+    '.back-to-top-btn',
+    '.toc-floating-btn-wrapper',
+    '.toc-floating-panel',
+    '.project-card',
+    '.skill-card',
+    '.timeline-card',
+    '.site-footer',
+    '.pagination-bar',
+  ].join(', ');
+  const BG_KEY = 'glass-custom-bg';
+  const FROST = 2;
+
+  const convexSquircle = (x: number) =>
+    Math.pow(1 - Math.pow(Math.min(1, Math.max(0, 1 - x)), 4), 0.25);
+
+  function refract(nx: number, ny: number, eta: number) {
+    const k = 1 - eta * eta * (1 - ny * ny);
+    if (k < 0) return null;
+    const scale = eta * ny + Math.sqrt(k);
+    return [-scale * nx, eta - scale * ny];
+  }
+
+  function bezelProfile(glassThickness: number, bezelWidth: number) {
+    const eta = 1 / 1.5;
+    const samples = 128;
+    const out: number[] = [];
+    for (let i = 0; i < samples; i++) {
+      const x = i / samples;
+      const y = convexSquircle(x);
+      const dx = x < 1 ? 0.0001 : -0.0001;
+      const derivative = (convexSquircle(x + dx) - y) / dx;
+      const mag = Math.hypot(derivative, 1);
+      const bent = refract(-derivative / mag, -1 / mag, eta);
+      if (!bent) {
+        out.push(0);
+        continue;
+      }
+      out.push((bent[0] * (y * bezelWidth + glassThickness)) / bent[1]);
+    }
+    return out;
+  }
+
+  function paintMap(
+    width: number,
+    height: number,
+    radius: number,
+    bezelWidth: number,
+    profile: number[],
+    maxShift: number,
+    specular: boolean,
+  ) {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return '';
+    const image = ctx.createImageData(width, height);
+    const data = image.data;
+    if (!specular) {
+      for (let i = 0; i < data.length; i += 4) {
+        data[i] = 128;
+        data[i + 1] = 128;
+        data[i + 3] = 255;
+      }
+    }
+    const light = [Math.cos(Math.PI / 3), Math.sin(Math.PI / 3)];
+    const rOut2 = (radius + 1) ** 2;
+    const rIn2 = (radius - bezelWidth) ** 2;
+    const midW = width - radius * 2;
+    const midH = height - radius * 2;
+    for (let y1 = 0; y1 < height; y1++) {
+      for (let x1 = 0; x1 < width; x1++) {
+        const x = x1 < radius ? x1 - radius : x1 >= width - radius ? x1 - radius - midW : 0;
+        const y = y1 < radius ? y1 - radius : y1 >= height - radius ? y1 - radius - midH : 0;
+        const dist2 = x * x + y * y;
+        if (dist2 > rOut2 || dist2 < rIn2 || dist2 === 0) continue;
+        const dist = Math.sqrt(dist2);
+        const fromSide = radius - dist;
+        const opacity = dist2 < radius * radius ? 1 : 1 - (dist - radius);
+        const cos = x / dist;
+        const sin = y / dist;
+        const idx = (y1 * width + x1) * 4;
+        if (specular) {
+          const dot = Math.abs(cos * light[0] + -sin * light[1]);
+          const coefficient = dot * Math.sqrt(Math.max(0, 1 - (1 - fromSide) ** 2));
+          const color = 255 * coefficient;
+          data[idx] = data[idx + 1] = data[idx + 2] = color;
+          data[idx + 3] = color * coefficient * opacity;
+        } else {
+          const index = Math.min(profile.length - 1, Math.max(0, (fromSide / bezelWidth) * profile.length | 0));
+          const shift = profile[index] || 0;
+          data[idx] = 128 + ((-cos * shift) / maxShift) * 127 * opacity;
+          data[idx + 1] = 128 + ((-sin * shift) / maxShift) * 127 * opacity;
+        }
+      }
+    }
+    ctx.putImageData(image, 0, 0);
+    return canvas.toDataURL();
+  }
+
+  const maps = new Map<string, { disp: string; spec: string; scale: number }>();
+  let filterSerial = 0;
+
+  function mapsFor(width: number, height: number, radius: number) {
+    const key = `${width}x${height}x${radius}`;
+    const hit = maps.get(key);
+    if (hit) return hit;
+    const bezel = Math.max(10, Math.min(radius * 0.46, 26));
+    const profile = bezelProfile(64, bezel);
+    const scale = Math.max(...profile.map((v) => Math.abs(v)), 1);
+    const entry = {
+      disp: paintMap(width, height, radius, bezel, profile, scale, false),
+      spec: paintMap(width, height, radius, bezel, profile, scale, true),
+      scale,
+    };
+    maps.set(key, entry);
+    return entry;
+  }
+
+  function mountFilter(width: number, height: number, radius: number, frost: number) {
+    const map = mapsFor(width, height, radius);
+    const id = `lg-${filterSerial++}`;
+    const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+    filter.id = id;
+    filter.dataset.size = `${width}x${height}x${radius}`;
+    filter.setAttribute('x', '0%');
+    filter.setAttribute('y', '0%');
+    filter.setAttribute('width', '100%');
+    filter.setAttribute('height', '100%');
+    filter.setAttribute('color-interpolation-filters', 'sRGB');
+    filter.innerHTML = `
+      <feGaussianBlur in="SourceGraphic" stdDeviation="${frost}" result="blurred"></feGaussianBlur>
+      <feImage href="${map.disp}" x="0" y="0" width="${width}" height="${height}" result="dispmap"></feImage>
+      <feDisplacementMap in="blurred" in2="dispmap" scale="${map.scale.toFixed(2)}" xChannelSelector="R" yChannelSelector="G" result="displaced"></feDisplacementMap>
+      <feColorMatrix in="displaced" type="saturate" values="5" result="sat"></feColorMatrix>
+      <feImage href="${map.spec}" x="0" y="0" width="${width}" height="${height}" result="spec"></feImage>
+      <feComposite in="sat" in2="spec" operator="in" result="specSat"></feComposite>
+      <feComponentTransfer in="spec" result="specFade"><feFuncA type="linear" slope="0.42"></feFuncA></feComponentTransfer>
+      <feBlend in="specSat" in2="displaced" mode="normal" result="withSat"></feBlend>
+      <feBlend in="specFade" in2="withSat" mode="normal"></feBlend>
+    `;
+    document.getElementById('liquid-glass-filters')?.appendChild(filter);
+    return id;
+  }
+
+  function clearCustomBackground() {
+    if (document.body.dataset.glassBg !== '1') return;
+    document.body.style.backgroundImage = '';
+    document.body.style.backgroundSize = '';
+    document.body.style.backgroundPosition = '';
+    document.body.style.backgroundRepeat = '';
+    document.body.style.backgroundAttachment = '';
+    delete document.body.dataset.glassBg;
+  }
+
+  function applyBackground() {
+    const clear = document.getElementById('glass-bg-clear');
+    const image = localStorage.getItem(BG_KEY);
+    if (clear) clear.hidden = !image;
+    if (!image) {
+      clearCustomBackground();
+      return;
+    }
+    document.body.dataset.glassBg = '1';
+    document.body.style.backgroundImage = `url("${image}")`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundRepeat = 'no-repeat';
+    document.body.style.backgroundAttachment = 'fixed';
+  }
+
+  function tagPanels() {
+    document.querySelectorAll<HTMLElement>(PANELS).forEach((node) => {
+      node.classList.add('liquid-glass');
+      if (node.matches('#navbar > div')) node.classList.add('liquid-glass-bar');
+    });
+  }
+
+  function applyLenses() {
+    tagPanels();
+    applyBackground();
+    document.querySelectorAll('.glass-frost').forEach((node) => node.remove());
+    document.querySelectorAll<HTMLElement>(TARGETS).forEach((node) => {
+      const box = node.getBoundingClientRect();
+      const width = Math.round(box.width);
+      const height = Math.round(box.height);
+      if (width < 48 || height < 36) return;
+      const rawRadius = parseFloat(getComputedStyle(node).borderTopLeftRadius) || 0;
+      const radius = Math.round(Math.max(12, Math.min(rawRadius || Math.min(width, height) / 2, Math.min(width, height) / 2)));
+      const frost = node.matches('.liquid-glass-bar') ? 0 : FROST;
+      const size = `${width}x${height}x${radius}@${frost}`;
+      if (node.getAttribute('data-liquid-size') === size && node.getAttribute('data-liquid-lens')) return;
+      const previous = node.getAttribute('data-liquid-lens');
+      if (previous) document.getElementById(previous)?.remove();
+      const id = mountFilter(width, height, radius, frost);
+      node.setAttribute('data-liquid-lens', id);
+      node.setAttribute('data-liquid-size', size);
+      const value = `url(#${id})`;
+      node.style.setProperty('backdrop-filter', value, 'important');
+      node.style.setProperty('-webkit-backdrop-filter', value, 'important');
+    });
+  }
+
+  function fitBackground(file: File) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const source = String(reader.result || '');
+      const image = new Image();
+      image.onload = () => {
+        const maxEdge = 1600;
+        const scale = Math.min(1, maxEdge / Math.max(image.width, image.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        canvas.getContext('2d')?.drawImage(image, 0, 0, canvas.width, canvas.height);
+        try {
+          localStorage.setItem(BG_KEY, canvas.toDataURL('image/jpeg', 0.84));
+          applyBackground();
+        } catch {
+          window.alert('这张图压缩后仍然太大，换一张小一点的。');
+        }
+      };
+      image.src = source;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  const fileInput = document.getElementById('glass-bg-file');
+  if (fileInput instanceof HTMLInputElement && fileInput.dataset.bound !== '1') {
+    fileInput.dataset.bound = '1';
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files?.[0];
+      fileInput.value = '';
+      if (!file) return;
+      if (!file.type.startsWith('image/')) return;
+      if (file.size > 8 * 1024 * 1024) {
+        window.alert('请选择 8MB 以内的图片。');
+        return;
+      }
+      fitBackground(file);
+    });
+  }
+  const clearBg = document.getElementById('glass-bg-clear');
+  if (clearBg && clearBg.dataset.bound !== '1') {
+    clearBg.dataset.bound = '1';
+    clearBg.addEventListener('click', () => {
+      localStorage.removeItem(BG_KEY);
+      applyBackground();
+    });
+  }
+
+  let frame = 0;
+  function schedule() {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(applyLenses);
+  }
+
+  schedule();
+  document.addEventListener('astro:after-swap', schedule);
+  document.addEventListener('astro:page-load', schedule);
+  document.addEventListener('swup:content:replace', schedule);
+  document.addEventListener('swup:animation:in:end', schedule);
+  window.addEventListener('resize', schedule);
+  new MutationObserver(schedule).observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class'],
+  });
+</script>
+
+<style>
+  #liquid-glass-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+</style>

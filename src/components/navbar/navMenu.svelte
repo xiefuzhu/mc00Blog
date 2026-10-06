@@ -42,7 +42,7 @@ onMount(() => {
         <Icon icon="material-symbols:menu-rounded" class="text-[1.25rem]"></Icon>
     </button>
     <div id="nav-menu-panel" 
-        class="float-panel fixed transition-all right-4 px-2 py-2 max-h-[80vh] overflow-y-auto"
+        class="float-panel liquid-glass fixed transition-all right-4 px-2 py-2 max-h-[80vh] overflow-y-auto"
         class:float-panel-closed={!isOpen}
     >
         {#each links as link}

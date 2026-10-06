@@ -25,7 +25,7 @@ const provider = postConfig.comment?.enable ? postConfig.comment.provider : unde
 ---
 
 {provider && (
-    <div class="card-base p-6 mb-4 transition-swup-fade" data-comment-root>
+    <div class="card-base liquid-glass p-6 mb-4 transition-swup-fade" data-comment-root>
         {provider === 'waline' && <Waline path={path} />}
         {provider === 'twikoo' && <Twikoo path={path} />}
     </div>

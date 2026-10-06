@@ -46,6 +46,8 @@ import Pio from "@components/pio.svelte";
 import "@styles/navbar.css";
 import "@styles/banner.css";
 import "@styles/fancybox.css";
+import "@styles/liquid-glass.css";
+import LiquidGlass from "@components/LiquidGlass.astro";
 
 
 interface Props {
@@ -256,6 +258,7 @@ const { enabled: analyticsEnabled, code: analyticsCode } = getAnalyticsConfig();
         {musicPlayerConfig.enable && <MusicPlayer client:idle />}
         <!-- Pio 看板娘组件 - 如果启用了侧边栏，可能需要调整 z-index -->
         {pioConfig.enable && <Pio client:visible />}
+        <LiquidGlass />
         <!-- increase the page height during page transition to prevent the scrolling animation from jumping -->
         <div id="page-height-extend" class="hidden h-[300vh]"></div>
     </body>

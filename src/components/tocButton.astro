@@ -15,12 +15,12 @@ const { class: className, style } = Astro.props;
 
 <table-of-contents data-is-floating="true" data-navbar-height={NAVBAR_HEIGHT} class={className} style={style}>
     <div class="toc-floating-container">
-        <div class="toc-floating-btn-wrapper rounded-2xl overflow-hidden transition">
+        <div class="toc-floating-btn-wrapper liquid-glass rounded-2xl overflow-hidden transition">
             <button class="toc-floating-btn btn-card rounded-2xl p-0 flex items-center justify-center" aria-label="Table of Contents">
                 <Icon name="material-symbols:format-list-bulleted-rounded" size={24} />
             </button>
         </div>
-        <div class="toc-floating-panel hidden opacity-0 translate-y-4 pointer-events-none">
+        <div class="toc-floating-panel liquid-glass hidden opacity-0 translate-y-4 pointer-events-none">
             <div class="toc-panel-header">
                 <Icon name="material-symbols:format-list-bulleted-rounded" class="text-(--primary)" size={20} />
                 <span class="text-sm font-bold text-75">{i18n(I18nKey.tableOfContents)}</span>

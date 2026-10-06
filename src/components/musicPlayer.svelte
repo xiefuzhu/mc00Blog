@@ -665,7 +665,7 @@ onDestroy(() => {
      class:expanded={!isCollapsed}
      class:collapsed={isCollapsed}>
     {#if showPlaylist}
-        <div class="playlist-panel float-panel w-80 max-h-96 overflow-hidden z-50 mb-4 pointer-events-auto"
+        <div class="playlist-panel float-panel liquid-glass w-80 max-h-96 overflow-hidden z-50 mb-4 pointer-events-auto"
              transition:slide={{ duration: TRANSITION_DURATION_MEDIUM, axis: 'y' }}>
             <div class="playlist-header flex items-center justify-between p-4 border-b border-(--line-divider)">
                 <h3 class="text-lg font-semibold text-90">{i18n(Key.playlist)}</h3>
@@ -757,7 +757,7 @@ onDestroy(() => {
         {/if}
     </div>
     <!-- 展开状态的完整播放器（封面圆形） -->
-    <div class="expanded-player card-base bg-(--float-panel-bg) shadow-xl rounded-2xl p-4 transition-all duration-500 ease-in-out"
+    <div class="expanded-player card-base liquid-glass bg-(--float-panel-bg) shadow-xl rounded-2xl p-4 transition-all duration-500 ease-in-out"
          class:opacity-0={isCollapsed}
          class:scale-95={isCollapsed}
          class:pointer-events-auto={!isCollapsed}

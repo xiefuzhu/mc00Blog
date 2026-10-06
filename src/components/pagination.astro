@@ -61,7 +61,7 @@ const getPageUrl = (p: number) => {
     >
         <Icon name="material-symbols:chevron-left-rounded" class="text-[1.75rem]"></Icon>
     </a>
-    <div class="bg-(--card-bg) flex flex-row rounded-lg items-center text-neutral-700 dark:text-neutral-300 font-bold">
+    <div class="pagination-bar liquid-glass bg-(--card-bg) flex flex-row rounded-lg items-center text-neutral-700 dark:text-neutral-300 font-bold">
         {pages.map((p) => {
             if (p == HIDDEN)
                 return <Icon name="material-symbols:more-horiz" class="mx-1"/>;
