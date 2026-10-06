@@ -39,6 +39,7 @@
   ].join(', ');
   const BG_KEY = 'glass-custom-bg';
   const FROST = 2;
+  const MIX_MS = 200;
 
   const convexSquircle = (x: number) =>
     Math.pow(1 - Math.pow(Math.min(1, Math.max(0, 1 - x)), 4), 0.25);
@@ -167,7 +168,9 @@
       <feComposite in="sat" in2="spec" operator="in" result="specSat"></feComposite>
       <feComponentTransfer in="spec" result="specFade"><feFuncA type="linear" slope="0.42"></feFuncA></feComponentTransfer>
       <feBlend in="specSat" in2="displaced" mode="normal" result="withSat"></feBlend>
-      <feBlend in="specFade" in2="withSat" mode="normal"></feBlend>
+      <feBlend in="specFade" in2="withSat" mode="normal" result="glass"></feBlend>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="${frost}" result="plain"></feGaussianBlur>
+      <feComposite in="glass" in2="plain" operator="arithmetic" k1="0" k2="1" k3="0" k4="0" data-lg-mix="1"></feComposite>
     `;
     document.getElementById('liquid-glass-filters')?.appendChild(filter);
     return id;
@@ -199,18 +202,74 @@
     document.body.style.backgroundAttachment = 'fixed';
   }
 
+  const onScreen = new WeakMap<HTMLElement, boolean>();
+  const io = new IntersectionObserver((entries) => {
+    let dirty = false;
+    for (const entry of entries) {
+      const node = entry.target;
+      if (!(node instanceof HTMLElement)) continue;
+      const now = entry.isIntersecting;
+      if (onScreen.get(node) === now) continue;
+      onScreen.set(node, now);
+      dirty = true;
+    }
+    if (dirty) schedule();
+  }, { rootMargin: '160px 0px' });
+
   function tagPanels() {
     document.querySelectorAll<HTMLElement>(PANELS).forEach((node) => {
       node.classList.add('liquid-glass');
       if (node.matches('#navbar > div')) node.classList.add('liquid-glass-bar');
+      if (node.dataset.lgWatch !== '1') {
+        node.dataset.lgWatch = '1';
+        io.observe(node);
+      }
+    });
+  }
+
+  function cheapFilter(node: HTMLElement) {
+    const frost = node.matches('.liquid-glass-bar') ? 0 : FROST;
+    return `blur(${frost}px)`;
+  }
+
+  function paintFilter(node: HTMLElement, value: string) {
+    ignoreScrollUntil = performance.now() + 80;
+    node.style.setProperty('backdrop-filter', value, 'important');
+    node.style.setProperty('-webkit-backdrop-filter', value, 'important');
+  }
+
+  function setMix(filterId: string, mix: number) {
+    const filter = document.getElementById(filterId);
+    const node = filter?.querySelector('[data-lg-mix]');
+    if (!(node instanceof SVGElement)) return;
+    const clamped = Math.min(1, Math.max(0, mix));
+    node.setAttribute('k2', clamped.toFixed(3));
+    node.setAttribute('k3', (1 - clamped).toFixed(3));
+    node.setAttribute('data-lg-mix', clamped.toFixed(3));
+  }
+
+  function applyMixToLenses() {
+    document.querySelectorAll<HTMLElement>('[data-lg-mode="lens"]').forEach((node) => {
+      const id = node.getAttribute('data-liquid-lens');
+      if (id) setMix(id, mixValue);
     });
   }
 
   function applyLenses() {
+    if (moving) return;
+    lensObserver?.disconnect();
     tagPanels();
     applyBackground();
     document.querySelectorAll('.glass-frost').forEach((node) => node.remove());
     document.querySelectorAll<HTMLElement>(TARGETS).forEach((node) => {
+      const shown = node.matches('.liquid-glass-bar') || onScreen.get(node) !== false;
+      if (!shown) {
+        if (node.dataset.lgMode !== 'cheap') {
+          node.dataset.lgMode = 'cheap';
+          paintFilter(node, cheapFilter(node));
+        }
+        return;
+      }
       const box = node.getBoundingClientRect();
       const width = Math.round(box.width);
       const height = Math.round(box.height);
@@ -219,16 +278,25 @@
       const radius = Math.round(Math.max(12, Math.min(rawRadius || Math.min(width, height) / 2, Math.min(width, height) / 2)));
       const frost = node.matches('.liquid-glass-bar') ? 0 : FROST;
       const size = `${width}x${height}x${radius}@${frost}`;
-      if (node.getAttribute('data-liquid-size') === size && node.getAttribute('data-liquid-lens')) return;
+      const existing = node.getAttribute('data-liquid-lens');
+      if (existing && node.getAttribute('data-liquid-size') === size) {
+        if (node.dataset.lgMode !== 'lens') {
+          setMix(existing, mixValue);
+          node.dataset.lgMode = 'lens';
+          paintFilter(node, `url(#${existing})`);
+        }
+        return;
+      }
       const previous = node.getAttribute('data-liquid-lens');
       if (previous) document.getElementById(previous)?.remove();
       const id = mountFilter(width, height, radius, frost);
+      setMix(id, mixValue);
       node.setAttribute('data-liquid-lens', id);
       node.setAttribute('data-liquid-size', size);
-      const value = `url(#${id})`;
-      node.style.setProperty('backdrop-filter', value, 'important');
-      node.style.setProperty('-webkit-backdrop-filter', value, 'important');
+      node.dataset.lgMode = 'lens';
+      paintFilter(node, `url(#${id})`);
     });
+    lensObserver?.observe(document.body, { childList: true, subtree: true });
   }
 
   function fitBackground(file: File) {
@@ -280,23 +348,118 @@
   }
 
   let frame = 0;
+  let moving = false;
+  let paging = false;
+  let moveTimer = 0;
+  let mixFrame = 0;
+  let mixValue = 1;
+  let fadeToken = 0;
+  let ignoreScrollUntil = 0;
+  let lastScrollY = window.scrollY;
+  let lensObserver: MutationObserver | null = null;
+
   function schedule() {
+    if (moving) return;
     cancelAnimationFrame(frame);
     frame = requestAnimationFrame(applyLenses);
+  }
+
+  function animateMix(to: number, done?: () => void) {
+    const token = ++fadeToken;
+    cancelAnimationFrame(mixFrame);
+    const from = mixValue;
+    if (Math.abs(from - to) < 0.001) {
+      mixValue = to;
+      applyMixToLenses();
+      done?.();
+      return;
+    }
+    const start = performance.now();
+    const step = (now: number) => {
+      if (token !== fadeToken) return;
+      const t = Math.min(1, (now - start) / MIX_MS);
+      const eased = t * t * (3 - 2 * t);
+      mixValue = from + (to - from) * eased;
+      applyMixToLenses();
+      if (t < 1) {
+        mixFrame = requestAnimationFrame(step);
+        return;
+      }
+      mixValue = to;
+      done?.();
+    };
+    mixFrame = requestAnimationFrame(step);
+  }
+
+  function fadeToCheap() {
+    animateMix(0, () => {
+      if (!moving) return;
+      document.querySelectorAll<HTMLElement>('[data-lg-mode="lens"]').forEach((node) => {
+        node.dataset.lgMode = 'cheap';
+        paintFilter(node, cheapFilter(node));
+      });
+    });
+  }
+
+  function endMotion() {
+    const root = document.documentElement;
+    if (paging || root.classList.contains('is-animating') || root.classList.contains('is-changing')) return;
+    moving = false;
+    applyLenses();
+    animateMix(1);
+  }
+
+  function beginMotion() {
+    clearTimeout(moveTimer);
+    if (!moving) {
+      moving = true;
+      cancelAnimationFrame(frame);
+      fadeToCheap();
+    }
+    moveTimer = window.setTimeout(endMotion, 180);
+  }
+
+  function onDocumentScroll(event: Event) {
+    if (performance.now() < ignoreScrollUntil) return;
+    const target = event.target;
+    if (target !== document && target !== document.documentElement && target !== document.body) return;
+    const y = window.scrollY;
+    if (Math.abs(y - lastScrollY) < 1) return;
+    lastScrollY = y;
+    beginMotion();
   }
 
   schedule();
   document.addEventListener('astro:after-swap', schedule);
   document.addEventListener('astro:page-load', schedule);
-  document.addEventListener('swup:content:replace', schedule);
-  document.addEventListener('swup:animation:in:end', schedule);
+  document.addEventListener('swup:animation:out:start', beginMotion);
+  document.addEventListener('swup:animation:in:end', endMotion);
   window.addEventListener('resize', schedule);
-  new MutationObserver(schedule).observe(document.body, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['class'],
+  document.addEventListener('scroll', onDocumentScroll, { passive: true, capture: true });
+  lensObserver = new MutationObserver((records) => {
+    if (moving || paging) return;
+    for (const record of records) {
+      const target = record.target;
+      if (!(target instanceof Node)) continue;
+      if (target instanceof Element && target.closest('#liquid-glass-defs')) continue;
+      schedule();
+      return;
+    }
   });
+  lensObserver.observe(document.body, { childList: true, subtree: true });
+  new MutationObserver(() => {
+    const root = document.documentElement;
+    const animating = root.classList.contains('is-animating') || root.classList.contains('is-changing');
+    if (animating) {
+      paging = true;
+      beginMotion();
+      return;
+    }
+    if (!paging) return;
+    paging = false;
+    clearTimeout(moveTimer);
+    endMotion();
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 </script>
 
 <style>
