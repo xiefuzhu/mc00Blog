@@ -35,7 +35,7 @@ onMount(() => {
 </script>
 
 <div class="relative md:hidden">
-    <button aria-label="Menu" name="Nav Menu" class="btn-plain scale-animation rounded-lg w-11 h-11 active:scale-90" 
+    <button aria-label="Menu" name="Nav Menu" class="btn-plain scale-animation rounded-full w-11 h-11 active:scale-90 flex items-center justify-center" 
         id="nav-menu-switch"
         onclick={togglePanel}
     >
@@ -48,7 +48,7 @@ onMount(() => {
         {#each links as link}
             <div class="mobile-menu-item">
                 <a href={link.external ? link.url : url(link.url)} 
-                    class="group flex justify-between items-center py-2 pl-3 pr-1 rounded-lg gap-8 hover:bg-(--btn-plain-bg-hover) active:bg-(--btn-plain-bg-active) transition"
+                    class="group flex justify-between items-center py-2 px-3 rounded-full gap-8 hover:bg-(--btn-plain-bg-hover) active:bg-(--btn-plain-bg-active) transition"
                     target={link.external ? "_blank" : null}
                 >
                     <div class="flex items-center transition text-black/75 dark:text-white/75 font-bold group-hover:text-(--primary) group-active:text-(--primary)">

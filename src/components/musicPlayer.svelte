@@ -671,7 +671,7 @@ onDestroy(() => {
                 <h3 class="text-lg font-semibold text-90">{i18n(Key.playlist)}</h3>
                 <div class="flex items-center gap-1">
                     {#if mode === "meting"}
-                        <button class="btn-plain w-8 h-8 rounded-lg flex items-center justify-center"
+                        <button class="btn-plain w-8 h-8 rounded-full flex items-center justify-center"
                                 onclick={fetchMetingPlaylist}
                                 disabled={isLoading}
                                 title={i18n(Key.musicRefresh)}>
@@ -682,14 +682,14 @@ onDestroy(() => {
                             {/if}
                         </button>
                     {/if}
-                    <button class="btn-plain w-8 h-8 rounded-lg flex items-center justify-center" onclick={togglePlaylist}>
+                    <button class="btn-plain w-8 h-8 rounded-full flex items-center justify-center" onclick={togglePlaylist}>
                         <Icon icon="material-symbols:close" class="text-lg" />
                     </button>
                 </div>
             </div>
-            <div class="playlist-content overflow-y-auto max-h-80">
+            <div class="playlist-content overflow-y-auto max-h-80 p-1">
                 {#each playlist as song, index}
-                    <div class="playlist-item flex items-center gap-3 p-3 hover:bg-(--btn-plain-bg-hover) cursor-pointer transition-colors"
+                    <div class="playlist-item flex items-center gap-3 px-3 py-2 my-0.5 rounded-full hover:bg-(--btn-plain-bg-hover) cursor-pointer transition-colors"
                         class:bg-(--btn-plain-bg)={index === currentIndex}
                         class:text-(--primary)={index === currentIndex}
                         onclick={() => playSong(index)}
@@ -777,12 +777,12 @@ onDestroy(() => {
                 </div>
             </div>
             <div class="flex items-center gap-1">
-                <button class="btn-plain w-8 h-8 rounded-lg flex items-center justify-center"
+                <button class="btn-plain w-8 h-8 rounded-full flex items-center justify-center"
                         onclick={toggleMode}
                         title={mode === "meting" ? i18n(Key.musicSwitchToLocal) : i18n(Key.musicSwitchToMeting)}>
                     <Icon icon={mode === "meting" ? "material-symbols:cloud" : "material-symbols:folder"} class="text-lg" />
                 </button>
-                <button class="btn-plain w-8 h-8 rounded-lg flex items-center justify-center"
+                <button class="btn-plain w-8 h-8 rounded-full flex items-center justify-center"
                         class:text-(--primary)={showPlaylist}
                         onclick={togglePlaylist}
                         title={i18n(Key.playlist)}>
@@ -853,7 +853,7 @@ onDestroy(() => {
         </div>
         <div class="controls flex items-center justify-center gap-2 mb-4">
             <!-- 播放模式切换按钮 -->
-            <button class="w-10 h-10 rounded-lg btn-plain"
+            <button class="w-10 h-10 rounded-full btn-plain"
                     onclick={togglePlaybackMode}
                     title={isRepeating === 1 ? i18n(Key.musicRepeatOne) : (isShuffled ? i18n(Key.musicShuffle) : i18n(Key.musicRepeatAll))}>
                 {#if isRepeating === 1}
@@ -864,7 +864,7 @@ onDestroy(() => {
                     <Icon icon="material-symbols:repeat" class="text-lg" />
                 {/if}
             </button>
-            <button class="btn-plain w-10 h-10 rounded-lg" onclick={previousSong}
+            <button class="btn-plain w-10 h-10 rounded-full" onclick={previousSong}
                     disabled={playlist.length <= 1}>
                 <Icon icon="material-symbols:skip-previous" class="text-xl" />
             </button>
@@ -880,19 +880,19 @@ onDestroy(() => {
                     <Icon icon="material-symbols:play-arrow" class="text-xl" />
                 {/if}
             </button>
-            <button class="btn-plain w-10 h-10 rounded-lg" onclick={nextSong}
+            <button class="btn-plain w-10 h-10 rounded-full" onclick={nextSong}
                     disabled={playlist.length <= 1}>
                 <Icon icon="material-symbols:skip-next" class="text-xl" />
             </button>
             <!-- 歌词显示切换按钮 -->
-            <button class="w-10 h-10 rounded-lg btn-plain"
+            <button class="w-10 h-10 rounded-full btn-plain"
                     onclick={toggleLyrics}
                     title="切换歌词显示">
                 <Icon icon="material-symbols:lyrics" class="text-lg {showLyrics ? 'text-(--primary)' : 'opacity-90'}" />
             </button>
         </div>
         <div class="bottom-controls flex items-center gap-2">
-            <button class="btn-plain w-8 h-8 rounded-lg" onclick={toggleMute}>
+            <button class="btn-plain w-8 h-8 rounded-full" onclick={toggleMute}>
                 {#if isMuted || volume === 0}
                     <Icon icon="material-symbols:volume-off" class="text-lg" />
                 {:else if volume < 0.5}
@@ -922,7 +922,7 @@ onDestroy(() => {
                     style="width: {volume * 100}%">
                 </div>
             </div>
-            <button class="btn-plain w-8 h-8 rounded-lg flex items-center justify-center"
+            <button class="btn-plain w-8 h-8 rounded-full flex items-center justify-center"
                     onclick={toggleCollapse}
                     title={i18n(Key.musicCollapse)}>
                 <Icon icon="material-symbols:expand-more" class="text-lg" />

@@ -20,7 +20,9 @@
   const PANELS = [
     '#navbar > div:not(.absolute)',
     '.card-base',
+    '.btn-card',
     '.float-panel',
+    '#settings-menu-panel',
     '.playlist-panel',
     '.expanded-player',
     '.search-panel',
@@ -38,7 +40,9 @@
     '.pagination-bar',
   ].join(', ');
   const BG_KEY = 'glass-custom-bg';
-  const FROST = 2;
+  const GLASS_MODE_KEY = 'glass-mode';
+  const FROST = 10;
+  const FROSTED_BLUR = 20;
   const MIX_MS = 200;
 
   const convexSquircle = (x: number) =>
@@ -88,11 +92,7 @@
     const image = ctx.createImageData(width, height);
     const data = image.data;
     if (!specular) {
-      for (let i = 0; i < data.length; i += 4) {
-        data[i] = 128;
-        data[i + 1] = 128;
-        data[i + 3] = 255;
-      }
+      new Uint32Array(image.data.buffer).fill(0xFF008080);
     }
     const light = [Math.cos(Math.PI / 3), Math.sin(Math.PI / 3)];
     const rOut2 = (radius + 1) ** 2;
@@ -100,7 +100,20 @@
     const midW = width - radius * 2;
     const midH = height - radius * 2;
     for (let y1 = 0; y1 < height; y1++) {
+      const inBezelY = y1 < bezelWidth || y1 >= height - bezelWidth;
+      const inCornerY = y1 < radius || y1 >= height - radius;
       for (let x1 = 0; x1 < width; x1++) {
+        // Fast-path: skip interior flat zone where refraction is 0
+        if (!inBezelY) {
+          if (!inCornerY && x1 >= bezelWidth && x1 < width - bezelWidth) {
+            x1 = width - bezelWidth - 1;
+            continue;
+          }
+          if (inCornerY && midW > 0 && x1 >= radius && x1 < width - radius) {
+            x1 = width - radius - 1;
+            continue;
+          }
+        }
         const x = x1 < radius ? x1 - radius : x1 >= width - radius ? x1 - radius - midW : 0;
         const y = y1 < radius ? y1 - radius : y1 >= height - radius ? y1 - radius - midH : 0;
         const dist2 = x * x + y * y;
@@ -227,13 +240,11 @@
     });
   }
 
-  function cheapFilter(node: HTMLElement) {
-    const frost = node.matches('.liquid-glass-bar') ? 0 : FROST;
-    return `blur(${frost}px)`;
+  function cheapFilter(_node?: HTMLElement) {
+    return `blur(${FROST}px)`;
   }
 
   function paintFilter(node: HTMLElement, value: string) {
-    ignoreScrollUntil = performance.now() + 80;
     node.style.setProperty('backdrop-filter', value, 'important');
     node.style.setProperty('-webkit-backdrop-filter', value, 'important');
   }
@@ -255,12 +266,30 @@
     });
   }
 
+  function isFrostedMode() {
+    return document.documentElement.getAttribute('data-glass-mode') === 'frosted';
+  }
+
   function applyLenses() {
     if (moving) return;
     lensObserver?.disconnect();
     tagPanels();
     applyBackground();
     document.querySelectorAll('.glass-frost').forEach((node) => node.remove());
+
+    if (isFrostedMode()) {
+      document.querySelectorAll<HTMLElement>(TARGETS).forEach((node) => {
+        const previous = node.getAttribute('data-liquid-lens');
+        if (previous) document.getElementById(previous)?.remove();
+        node.removeAttribute('data-liquid-lens');
+        node.removeAttribute('data-liquid-size');
+        delete node.dataset.lgMode;
+        paintFilter(node, `blur(${FROSTED_BLUR}px)`);
+      });
+      lensObserver?.observe(document.body, { childList: true, subtree: true });
+      return;
+    }
+
     document.querySelectorAll<HTMLElement>(TARGETS).forEach((node) => {
       const shown = node.matches('.liquid-glass-bar') || onScreen.get(node) !== false;
       if (!shown) {
@@ -270,15 +299,29 @@
         }
         return;
       }
+      const existing = node.getAttribute('data-liquid-lens');
       const box = node.getBoundingClientRect();
       const width = Math.round(box.width);
       const height = Math.round(box.height);
       if (width < 48 || height < 36) return;
+
+      const prevW = node.dataset.lgW ? Number(node.dataset.lgW) : 0;
+      const prevH = node.dataset.lgH ? Number(node.dataset.lgH) : 0;
+      if (existing && prevW === width && prevH === height) {
+        if (node.dataset.lgMode !== 'lens') {
+          setMix(existing, mixValue);
+          node.dataset.lgMode = 'lens';
+          paintFilter(node, `url(#${existing})`);
+        }
+        return;
+      }
+
+      node.dataset.lgW = String(width);
+      node.dataset.lgH = String(height);
       const rawRadius = parseFloat(getComputedStyle(node).borderTopLeftRadius) || 0;
       const radius = Math.round(Math.max(12, Math.min(rawRadius || Math.min(width, height) / 2, Math.min(width, height) / 2)));
-      const frost = node.matches('.liquid-glass-bar') ? 0 : FROST;
+      const frost = FROST;
       const size = `${width}x${height}x${radius}@${frost}`;
-      const existing = node.getAttribute('data-liquid-lens');
       if (existing && node.getAttribute('data-liquid-size') === size) {
         if (node.dataset.lgMode !== 'lens') {
           setMix(existing, mixValue);
@@ -354,8 +397,6 @@
   let mixFrame = 0;
   let mixValue = 1;
   let fadeToken = 0;
-  let ignoreScrollUntil = 0;
-  let lastScrollY = window.scrollY;
   let lensObserver: MutationObserver | null = null;
 
   function schedule() {
@@ -391,16 +432,6 @@
     mixFrame = requestAnimationFrame(step);
   }
 
-  function fadeToCheap() {
-    animateMix(0, () => {
-      if (!moving) return;
-      document.querySelectorAll<HTMLElement>('[data-lg-mode="lens"]').forEach((node) => {
-        node.dataset.lgMode = 'cheap';
-        paintFilter(node, cheapFilter(node));
-      });
-    });
-  }
-
   function endMotion() {
     const root = document.documentElement;
     if (paging || root.classList.contains('is-animating') || root.classList.contains('is-changing')) return;
@@ -414,20 +445,35 @@
     if (!moving) {
       moving = true;
       cancelAnimationFrame(frame);
-      fadeToCheap();
     }
     moveTimer = window.setTimeout(endMotion, 180);
   }
 
-  function onDocumentScroll(event: Event) {
-    if (performance.now() < ignoreScrollUntil) return;
-    const target = event.target;
-    if (target !== document && target !== document.documentElement && target !== document.body) return;
-    const y = window.scrollY;
-    if (Math.abs(y - lastScrollY) < 1) return;
-    lastScrollY = y;
-    beginMotion();
-  }
+  window.setGlassMode = function(mode: 'liquid' | 'frosted') {
+    localStorage.setItem(GLASS_MODE_KEY, mode);
+    document.documentElement.setAttribute('data-glass-mode', mode);
+    if (mode === 'frosted') {
+      document.querySelectorAll<HTMLElement>(TARGETS).forEach((node) => {
+        const previous = node.getAttribute('data-liquid-lens');
+        if (previous) document.getElementById(previous)?.remove();
+        node.removeAttribute('data-liquid-lens');
+        node.removeAttribute('data-liquid-size');
+        delete node.dataset.lgMode;
+        paintFilter(node, `blur(${FROSTED_BLUR}px)`);
+      });
+      document.getElementById('liquid-glass-filters')?.replaceChildren();
+    } else {
+      schedule();
+    }
+    window.dispatchEvent(new CustomEvent('glass-mode-changed', { detail: { mode } }));
+  };
+
+  window.getGlassMode = function(): 'liquid' | 'frosted' {
+    return (localStorage.getItem(GLASS_MODE_KEY) as 'liquid' | 'frosted') || 'liquid';
+  };
+
+  const initialMode = window.getGlassMode();
+  document.documentElement.setAttribute('data-glass-mode', initialMode);
 
   schedule();
   document.addEventListener('astro:after-swap', schedule);
@@ -435,7 +481,6 @@
   document.addEventListener('swup:animation:out:start', beginMotion);
   document.addEventListener('swup:animation:in:end', endMotion);
   window.addEventListener('resize', schedule);
-  document.addEventListener('scroll', onDocumentScroll, { passive: true, capture: true });
   lensObserver = new MutationObserver((records) => {
     if (moving || paging) return;
     for (const record of records) {

@@ -108,6 +108,7 @@ const getDefaultBanner = (): string => {
 banner = getDefaultBanner();
 
 const enableBanner = siteConfig.wallpaper.mode === "banner";
+const enableWallpaperTransparent = siteConfig.wallpaper.mode === "banner" || siteConfig.wallpaper.mode === "fullscreen";
 
 let pageTitle: string;
 if (title) {
@@ -144,7 +145,7 @@ const { enabled: analyticsEnabled, code: analyticsCode } = getAnalyticsConfig();
 ---
 
 <!DOCTYPE html>
-<html lang={siteLang} class="bg-(--page-bg) text-[14px] md:text-[16px] is-loading"
+<html lang={siteLang} class:list={["text-[14px] md:text-[16px] is-loading", { "bg-(--page-bg)": !enableWallpaperTransparent, "wallpaper-transparent": enableWallpaperTransparent }]}
 >
     <head>
         <meta charset="UTF-8" />
@@ -224,6 +225,16 @@ const { enabled: analyticsEnabled, code: analyticsCode } = getAnalyticsConfig();
             const hue = localStorage.getItem('hue') || configHue;
             // Apply the hue to the document
             document.documentElement.style.setProperty('--hue', hue);
+            // Load glass mode from local storage
+            const glassMode = localStorage.getItem('glass-mode') || 'liquid';
+            document.documentElement.setAttribute('data-glass-mode', glassMode);
+            // Load wallpaper mode from local storage
+            const storedWallpaper = localStorage.getItem('wallpaperMode') || 'fullscreen';
+            const finalWallpaper = storedWallpaper === 'banner' ? 'fullscreen' : storedWallpaper;
+            document.documentElement.setAttribute('data-wallpaper-mode', finalWallpaper);
+            if (finalWallpaper === 'fullscreen' || finalWallpaper === 'banner') {
+                document.documentElement.classList.add('wallpaper-transparent');
+            }
             // calculate the --banner-height-extend, which needs to be a multiple of 4 to avoid blurry text
             let offset = Math.floor(window.innerHeight * (BANNER_HEIGHT_EXTEND / 100));
             offset = offset - offset % 4;
@@ -242,14 +253,12 @@ const { enabled: analyticsEnabled, code: analyticsCode } = getAnalyticsConfig();
         <link rel="alternate" type="application/rss+xml" title={profileConfig.name} href={`${Astro.site}rss.xml`}/>
     </head>
 
-    <body class=" min-h-screen " class:list={[{"is-home": isHomePage, "enable-banner": enableBanner}]}
+    <body class=" min-h-screen " class:list={[{"is-home": isHomePage, "enable-banner": enableBanner, "wallpaper-transparent": enableWallpaperTransparent}]}
     >
         <!-- 页面加载动画 -->
         <LoadingOverlay />
         <!-- 全局配置载体 -->
         <ConfigCarrier />
-        <!-- 页面顶部渐变高光效果 - 只在full和semifull模式下显示 -->
-        {shouldShowTopHighlight && <div class="top-gradient-highlight"></div>}
         <!-- 页面内容 -->
         <slot />
         <!-- Analytics -->

@@ -172,17 +172,17 @@
 }
 
 @utility wallpaper-transparent {
-    .is-theme-transitioning &body #navbar > div {
+    .is-theme-transitioning body& #navbar > div {
     transition: none !important;
     backdrop-filter: none !important;
     }
 
-    .is-theme-transitioning &body #navbar[data-transparent-mode] > div {
+    .is-theme-transitioning body& #navbar[data-transparent-mode] > div {
     transition: none !important;
     backdrop-filter: none !important;
     }
 
-    .is-theme-transitioning &body #navbar[data-transparent-mode].scrolled > div {
+    .is-theme-transitioning body& #navbar[data-transparent-mode].scrolled > div {
     transition: none !important;
     backdrop-filter: none !important;
     }
@@ -354,15 +354,15 @@
 
 @utility expand-animation {
     @apply relative before:ease-out before:transition active:bg-none hover:before:bg-(--btn-plain-bg-hover) active:before:bg-(--btn-plain-bg-active) z-0
-        before:absolute before:rounded-[inherit] before:inset-0 before:scale-[0.85] hover:before:scale-100 before:-z-10;
+        before:absolute before:rounded-full before:inset-0 before:scale-[0.85] hover:before:scale-100 before:-z-10;
 }
 
 @utility link {
-    @apply transition-colors duration-150 rounded-md p-1 -m-1 expand-animation;
+    @apply transition-colors duration-150 rounded-full p-1 -m-1 expand-animation;
 }
 
 @utility link-lg {
-    @apply transition-colors duration-150 rounded-md p-1.5 -m-1.5 expand-animation;
+    @apply transition-colors duration-150 rounded-full p-1.5 -m-1.5 expand-animation;
 }
 
 @utility float-panel-closed {
@@ -382,10 +382,10 @@
 }
 
 @utility btn-plain {
-    @apply transition-colors duration-150 relative flex items-center justify-center bg-none
+    @apply transition-colors duration-150 relative rounded-full flex items-center justify-center bg-none
         text-black/75 hover:text-(--primary) dark:text-white/75 dark:hover:text-(--primary);
     &:not(.scale-animation) {
-    @apply hover:bg-(--btn-plain-bg-hover) active:bg-(--btn-plain-bg-active);
+    @apply hover:bg-(--btn-plain-bg-hover) active:bg-(--btn-plain-bg-active) rounded-full;
     }
     &.scale-animation {
     @apply expand-animation;
@@ -411,12 +411,12 @@
 }
 
 @utility btn-regular {
-    @apply transition-colors duration-150 flex items-center justify-center bg-(--btn-regular-bg) hover:bg-(--btn-regular-bg-hover) active:bg-(--btn-regular-bg-active)
+    @apply transition-colors duration-150 rounded-full flex items-center justify-center bg-(--btn-regular-bg) hover:bg-(--btn-regular-bg-hover) active:bg-(--btn-regular-bg-active)
         text-(--btn-content) dark:text-white/75;
 }
 
 @utility current-theme-btn {
-    @apply text-(--primary)! bg-(--btn-plain-bg-hover)! hover:bg-(--btn-plain-bg-hover)! active:bg-(--btn-plain-bg-hover)!;
+    @apply text-(--primary)! bg-(--btn-plain-bg-hover)! hover:bg-(--btn-plain-bg-hover)! active:bg-(--btn-plain-bg-hover)! rounded-full;
     & .iconify {
     @apply text-(--primary)!;
     }
@@ -616,36 +616,17 @@
     display: none; /* Chrome, Safari and Opera */
     }
 
-    /* 页面顶部渐变高光效果 */
-    .top-gradient-highlight {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 180px;
-    background: linear-gradient(
-        to bottom,
-        rgba(255, 255, 255, 0.5) 0%,
-        rgba(255, 255, 255, 0.3) 30%,
-        rgba(255, 255, 255, 0.15) 60%,
-        rgba(255, 255, 255, 0.05) 80%,
-        transparent 100%
-    );
-    pointer-events: none;
-    z-index: 20;
-    transition: all var(--transition-duration-medium) var(--transition-ease-default);
+    /* 全屏壁纸模式下背景全透明 */
+    html:has(body.wallpaper-transparent),
+    html.wallpaper-transparent,
+    body.wallpaper-transparent {
+        background-color: transparent !important;
+        background-image: none !important;
     }
 
-    /* 暗色主题下的渐变高光效果 */
-    :root.dark .top-gradient-highlight {
-    background: linear-gradient(
-        to bottom,
-        rgba(0, 0, 0, 0.5) 0%,
-        rgba(0, 0, 0, 0.3) 30%,
-        rgba(0, 0, 0, 0.15) 60%,
-        rgba(0, 0, 0, 0.05) 80%,
-        transparent 100%
-    );
+    /* 页面顶部渐变高光效果已禁用，防止产生多余暗部阴影 */
+    .top-gradient-highlight {
+        display: none !important;
     }
 }
 

@@ -48,28 +48,25 @@ site:
     # 壁纸配置
     wallpaper:
         # 模式 ("banner" 横幅 | "fullscreen" 全屏 | "none" 纯色)
-        mode: "banner"
+        mode: "fullscreen"
         # 图片源配置 (fullscreen 和 banner 模式共享)
         src:
             # 桌面壁纸图片 (相对于 /public 目录; 支持单张图片或图片数组，当数组长度 > 1 时自动启用轮播)
             desktop:
-                - "/assets/images/desktopWallpaper_1.jpg"
-                - "/assets/images/desktopWallpaper_2.jpg"
-                - "/assets/images/desktopWallpaper_3.jpg"
+                - "/assets/images/defaultWallpaper.jpg"
             # 移动壁纸图片 (相对于 /public 目录; 支持单张图片或图片数组，当数组长度 > 1 时自动启用轮播)
             mobile:
-                - "/assets/images/mobileWallpaper_1.jpg"
-                - "/assets/images/mobileWallpaper_2.jpg"
+                - "/assets/images/defaultWallpaper.jpg"
         # 壁纸位置 ('top' | 'center' | 'bottom')
         position: "center"
         # 轮播配置 (fullscreen 和 banner 模式共享)
         carousel:
             # 为多张图片启用轮播，否则随机显示一张图片
-            enable: true
+            enable: false
             # 轮播间隔时间 (秒)
             interval: 3.6
             # 启用 Ken Burns 效果
-            kenBurns: true
+            kenBurns: false
         # Banner 模式专属配置
         banner:
             # 横幅文本配置
@@ -114,9 +111,9 @@ site:
             # 层级
             zIndex: -1
             # 壁纸透明度，0-1之间
-            opacity: 0.9
+            opacity: 1.0
             # 背景模糊程度 (像素值)
-            blur: 1
+            blur: 0
             # 导航栏透明模式
             navbar:
                 transparentMode: "semi"

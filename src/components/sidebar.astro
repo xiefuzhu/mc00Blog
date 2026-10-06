@@ -100,7 +100,7 @@ function renderComponent(component: any, index: number) {
 
     <!-- 粘性组件区域 -->
     {stickyComponents.length > 0 && (
-        <div id="sidebar-sticky" class="flex flex-col w-full gap-(--sidebar-spacing) sticky top-[calc(var(--sidebar-top)-var(--main-content-top))]">
+        <div id="sidebar-sticky" class="flex flex-col w-full gap-(--sidebar-spacing) sticky top-[calc(var(--navbar-height)+var(--sidebar-top))]">
             {stickyComponents.map((component, index) => {
                 const renderData = renderComponent(component, index);
                 if (!renderData) return null;

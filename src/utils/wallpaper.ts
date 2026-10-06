@@ -58,7 +58,7 @@ const getElements = () => {
         bannerWrapper: document.getElementById('banner-wrapper'),
         banner: document.getElementById('banner'),
         fullscreenContainer: document.querySelector('[data-fullscreen-wallpaper]') as HTMLElement,
-        mainContent: document.querySelector('.absolute.w-full.z-30') as HTMLElement,
+        mainContent: document.getElementById('main-content') || (document.querySelector('.w-full.z-30') as HTMLElement),
     };
 };
 
@@ -336,10 +336,12 @@ export function setWallpaperMode(mode: WALLPAPER_MODE): void {
 
 // Function to get default wallpaper mode from config-carrier
 export function getDefaultWallpaperMode(): WALLPAPER_MODE {
-    const fallback = siteConfig.wallpaper.mode;
+    const rawFallback = siteConfig.wallpaper.mode;
+    const fallback = rawFallback === WALLPAPER_BANNER ? WALLPAPER_FULLSCREEN : rawFallback;
     if (typeof document !== 'undefined') {
         const configCarrier = document.getElementById('config-carrier');
-        return (configCarrier?.dataset.wallpaperMode as WALLPAPER_MODE) || fallback;
+        const mode = (configCarrier?.dataset.wallpaperMode as WALLPAPER_MODE) || fallback;
+        return mode === WALLPAPER_BANNER ? WALLPAPER_FULLSCREEN : mode;
     }
     return fallback;
 }
@@ -347,7 +349,12 @@ export function getDefaultWallpaperMode(): WALLPAPER_MODE {
 // Function to get stored wallpaper mode from local storage
 export function getStoredWallpaperMode(): WALLPAPER_MODE {
     if (typeof localStorage !== 'undefined') {
-        return (localStorage.getItem('wallpaperMode') as WALLPAPER_MODE) || getDefaultWallpaperMode();
+        const stored = localStorage.getItem('wallpaperMode') as WALLPAPER_MODE;
+        if (stored === WALLPAPER_BANNER) {
+            localStorage.setItem('wallpaperMode', WALLPAPER_FULLSCREEN);
+            return WALLPAPER_FULLSCREEN;
+        }
+        return stored || getDefaultWallpaperMode();
     }
     return getDefaultWallpaperMode();
 }

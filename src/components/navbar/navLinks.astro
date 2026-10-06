@@ -18,7 +18,7 @@ const { link, class: className } = Astro.props;
         aria-label={link.name}
         href={link.external ? link.url : url(link.url)}
         target={link.external ? "_blank" : null}
-        class="btn-plain scale-animation rounded-lg h-11 font-bold px-3 active:scale-95 nav-link-item"
+        class="btn-plain scale-animation rounded-full h-11 font-bold px-4 active:scale-95 nav-link-item"
         data-link-name={link.name}
     >
         <div class="flex items-center">

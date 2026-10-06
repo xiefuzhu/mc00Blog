@@ -2,6 +2,7 @@
 
 .liquid-glass,
 .card-base,
+.btn-card,
 .float-panel,
 .album-card,
 .menu-card,
@@ -21,10 +22,15 @@
   border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: 22px;
   box-shadow: 0 14px 36px -18px rgba(0, 0, 0, 0.45);
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
 }
 
 :root.dark .liquid-glass,
 :root.dark .card-base,
+:root.dark .btn-card,
 :root.dark .float-panel,
 :root.dark .album-card,
 :root.dark .menu-card,
@@ -40,6 +46,16 @@
 :root.dark .toc-floating-panel {
   background-color: rgba(15, 23, 42, 0.28) !important;
   border-color: rgba(255, 255, 255, 0.16);
+}
+
+.btn-card:hover {
+  background-color: rgba(255, 255, 255, 0.32) !important;
+  border-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+:root.dark .btn-card:hover {
+  background-color: rgba(30, 41, 59, 0.42) !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
 }
 
 :is(body, body:has(#banner-wrapper), #banner-wrapper ~ *) #navbar > div.liquid-glass.liquid-glass-bar {
@@ -68,6 +84,76 @@ body.wallpaper-transparent .music-player .playlist-panel.liquid-glass {
 :root.dark body.wallpaper-transparent .music-player .expanded-player.liquid-glass,
 :root.dark body.wallpaper-transparent .music-player .playlist-panel.liquid-glass {
   background-color: rgba(15, 23, 42, 0.28) !important;
+}
+
+/* Settings dropdown menu glass */
+#settings-menu-panel.liquid-glass {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.65) !important;
+  box-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.5) !important;
+}
+
+:root.dark #settings-menu-panel.liquid-glass {
+  background-color: rgba(18, 20, 29, 0.86) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Frosted Glass Mode (纯高斯模糊 + 边缘高光微描边) */
+:root[data-glass-mode="frosted"] .liquid-glass,
+:root[data-glass-mode="frosted"] .card-base,
+:root[data-glass-mode="frosted"] .btn-card,
+:root[data-glass-mode="frosted"] .float-panel,
+:root[data-glass-mode="frosted"] .album-card,
+:root[data-glass-mode="frosted"] .menu-card,
+:root[data-glass-mode="frosted"] .moment-item,
+:root[data-glass-mode="frosted"] .password-container,
+:root[data-glass-mode="frosted"] .project-card,
+:root[data-glass-mode="frosted"] .skill-card,
+:root[data-glass-mode="frosted"] .timeline-card,
+:root[data-glass-mode="frosted"] .site-footer,
+:root[data-glass-mode="frosted"] .pagination-bar,
+:root[data-glass-mode="frosted"] .back-to-top-btn,
+:root[data-glass-mode="frosted"] .toc-floating-btn-wrapper,
+:root[data-glass-mode="frosted"] .toc-floating-panel,
+:root[data-glass-mode="frosted"] #navbar > div.liquid-glass {
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  background-color: rgba(255, 255, 255, 0.28) !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.25), inset 0 1px 1px 0 rgba(255, 255, 255, 0.5) !important;
+}
+
+:root.dark[data-glass-mode="frosted"] .liquid-glass,
+:root.dark[data-glass-mode="frosted"] .card-base,
+:root.dark[data-glass-mode="frosted"] .btn-card,
+:root.dark[data-glass-mode="frosted"] .float-panel,
+:root.dark[data-glass-mode="frosted"] .album-card,
+:root.dark[data-glass-mode="frosted"] .menu-card,
+:root.dark[data-glass-mode="frosted"] .moment-item,
+:root.dark[data-glass-mode="frosted"] .password-container,
+:root.dark[data-glass-mode="frosted"] .project-card,
+:root.dark[data-glass-mode="frosted"] .skill-card,
+:root.dark[data-glass-mode="frosted"] .timeline-card,
+:root.dark[data-glass-mode="frosted"] .site-footer,
+:root.dark[data-glass-mode="frosted"] .pagination-bar,
+:root.dark[data-glass-mode="frosted"] .back-to-top-btn,
+:root.dark[data-glass-mode="frosted"] .toc-floating-btn-wrapper,
+:root.dark[data-glass-mode="frosted"] .toc-floating-panel,
+:root.dark[data-glass-mode="frosted"] #navbar > div.liquid-glass {
+  background-color: rgba(15, 23, 42, 0.38) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.5), inset 0 1px 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+
+:root[data-glass-mode="frosted"] #settings-menu-panel.liquid-glass {
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  background-color: rgba(255, 255, 255, 0.82) !important;
+}
+
+:root.dark[data-glass-mode="frosted"] #settings-menu-panel.liquid-glass {
+  background-color: rgba(18, 20, 29, 0.88) !important;
 }
 
 .glass-bg-dock {
