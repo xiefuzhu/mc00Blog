@@ -30,19 +30,19 @@ let links: NavbarLink[] = navbarConfig.links.map(
 <div id="navbar" class="z-50 onload-animation-down px-3 sm:px-6 md:px-0" data-transparent-mode={navbarTransparentMode}>
     <div class:list={[
         className,
-        "liquid-glass liquid-glass-bar pointer-events-auto overflow-visible! max-w-(--page-width) h-14.5 mx-auto flex items-center justify-between px-3 md:px-4"]}>
-        <a href={url('/')} class="btn-plain scale-animation rounded-full h-11 px-4 font-bold active:scale-95">
+        "liquid-glass liquid-glass-bar pointer-events-auto overflow-visible! max-w-(--page-width) h-14.5 mx-auto flex items-center justify-between px-[7px]"]}>
+        <a href={url('/')} class="btn-plain scale-animation rounded-full h-11 px-4 font-bold active:scale-95 flex items-center">
             <div class="flex flex-row text-(--primary) items-center text-md">
-                <Icon name="material-symbols:home-pin-outline" class="text-[1.5rem] mb-0.5 mr-2" />
+                <Icon name="material-symbols:home-pin-outline" class="text-[1.5rem] mr-2" />
                 {siteConfig.title}
             </div>
         </a>
-        <div class="hidden md:flex items-center navbar-nav-links">
+        <div class="hidden md:flex items-center h-full navbar-nav-links">
             {links.map((l) => {
                 return <NavLinks link={l} />;
             })}
         </div>
-        <div class="flex items-center navbar-buttons gap-1" id="navbar-buttons">
+        <div class="flex items-center h-full navbar-buttons gap-1" id="navbar-buttons">
             <Search client:idle></Search>
             <SettingsMenu client:idle></SettingsMenu>
             <NavMenu client:idle links={links}></NavMenu>

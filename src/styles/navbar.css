@@ -15,6 +15,16 @@
 /* 导航链接样式 */
 .nav-link-container {
     position: relative;
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.nav-link-item {
+    height: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* 小屏幕时只显示图标 */
@@ -61,6 +71,8 @@
     background: var(--card-bg);
     border-radius: var(--radius-large);
     transition: all var(--transition-duration-medium) var(--transition-ease-default);
+    padding-left: 7px;
+    padding-right: 7px;
 }
 
 
@@ -158,10 +170,13 @@
         grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
         justify-content: space-between;
         align-items: center;
+        padding-left: 7px !important;
+        padding-right: 7px !important;
     }
     /* 确保左侧 Home 按钮不拉伸并靠左 */
     #navbar > div > a:first-child {
         justify-self: start;
+        align-self: center;
     }
 
     #navbar .navbar-nav-links {
@@ -169,11 +184,13 @@
         left: unset;
         translate: none;
         justify-self: center;
+        align-self: center;
         gap: clamp(0.12rem, 1vw, 0.36rem);
     }
 
     #navbar .navbar-buttons {
         justify-self: end;
+        align-self: center;
         gap: clamp(0.12rem, 1vw, 0.36rem);
     }
 }
@@ -204,6 +221,8 @@
         width: 100% !important;
         margin-left: 0 !important;
         margin-right: 0 !important;
+        padding-left: 7px !important;
+        padding-right: 7px !important;
     }
 }
 /* 手机端导航栏 - 小屏 */
@@ -211,8 +230,8 @@
     #navbar > div {
         border-radius: 0.3rem !important;
         margin: 0 !important;
-        padding-left: 0.6rem !important;
-        padding-right: 0.6rem !important;
+        padding-left: 7px !important;
+        padding-right: 7px !important;
         max-width: none !important;
         width: 100% !important;
     }

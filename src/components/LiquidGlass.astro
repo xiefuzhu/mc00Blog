@@ -8,11 +8,11 @@
 </svg>
 
 <div class="glass-bg-dock">
-  <label class="glass-bg-upload">
+  <label class="glass-bg-upload liquid-glass">
     自定义背景
     <input id="glass-bg-file" type="file" accept="image/*" />
   </label>
-  <button id="glass-bg-clear" type="button" hidden>恢复默认背景</button>
+  <button id="glass-bg-clear" class="liquid-glass" type="button" hidden>恢复默认背景</button>
 </div>
 
 <script>
@@ -38,10 +38,12 @@
     '.timeline-card',
     '.site-footer',
     '.pagination-bar',
+    '.glass-bg-upload',
+    '#glass-bg-clear',
   ].join(', ');
   const BG_KEY = 'glass-custom-bg';
   const GLASS_MODE_KEY = 'glass-mode';
-  const FROST = 10;
+  const FROST = 3;
   const FROSTED_BLUR = 20;
   const MIX_MS = 200;
 
@@ -240,8 +242,9 @@
     });
   }
 
-  function cheapFilter(_node?: HTMLElement) {
-    return `blur(${FROST}px)`;
+  function cheapFilter(node?: HTMLElement) {
+    const frost = node?.matches('.liquid-glass-bar') ? 0 : FROST;
+    return `blur(${frost}px)`;
   }
 
   function paintFilter(node: HTMLElement, value: string) {
@@ -320,7 +323,7 @@
       node.dataset.lgH = String(height);
       const rawRadius = parseFloat(getComputedStyle(node).borderTopLeftRadius) || 0;
       const radius = Math.round(Math.max(12, Math.min(rawRadius || Math.min(width, height) / 2, Math.min(width, height) / 2)));
-      const frost = FROST;
+      const frost = node.matches('.liquid-glass-bar') ? 0 : FROST;
       const size = `${width}x${height}x${radius}@${frost}`;
       if (existing && node.getAttribute('data-liquid-size') === size) {
         if (node.dataset.lgMode !== 'lens') {

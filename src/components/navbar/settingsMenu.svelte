@@ -41,6 +41,10 @@ function togglePanel() {
     isOpen = !isOpen;
     if (!isOpen) {
         expandedSection = null;
+    } else {
+        setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+        }, 50);
     }
 }
 
@@ -166,7 +170,7 @@ const currentWallpaperLabel = $derived.by(() => {
 });
 </script>
 
-<div class="relative z-50">
+<div class="relative z-50 h-full flex items-center">
     <!-- 设置按钮 -->
     <button
         aria-label="Settings"
@@ -179,10 +183,10 @@ const currentWallpaperLabel = $derived.by(() => {
         </div>
     </button>
 
-    <!-- 下拉设置面板：紧贴齿轮按钮下方，平滑展开动画与玻璃质感 -->
+    <!-- 下拉设置面板：紧贴顶栏下方4px，平滑展开动画与玻璃质感 -->
     <div
         id="settings-menu-wrapper"
-        class="absolute top-[calc(100%+0.35rem)] right-0 w-80 max-w-[calc(100vw-1.5rem)] transition-all duration-200 origin-top-right z-50 {isOpen ? 'scale-100 opacity-100 pointer-events-auto' : 'scale-95 opacity-0 pointer-events-none'}"
+        class="absolute top-[calc(100%+4px)] right-0 w-80 max-w-[calc(100vw-1.5rem)] transition-all duration-200 origin-top-right z-50 {isOpen ? 'scale-100 opacity-100 pointer-events-auto' : 'scale-95 opacity-0 pointer-events-none'}"
     >
         <div id="settings-menu-panel" class="card-base float-panel liquid-glass p-3 w-full max-h-[calc(100vh-5rem)] overflow-y-auto overflow-x-hidden rounded-2xl shadow-xl">
             <!-- 材质模式切换 -->

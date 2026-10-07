@@ -34,7 +34,7 @@ onMount(() => {
 });
 </script>
 
-<div class="relative md:hidden">
+<div class="relative md:hidden h-full flex items-center">
     <button aria-label="Menu" name="Nav Menu" class="btn-plain scale-animation rounded-full w-11 h-11 active:scale-90 flex items-center justify-center" 
         id="nav-menu-switch"
         onclick={togglePanel}

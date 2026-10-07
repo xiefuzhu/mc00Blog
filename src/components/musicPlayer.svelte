@@ -288,11 +288,20 @@ function toggleCollapse() {
     isCollapsed = !isCollapsed;
     if (isCollapsed) {
         showPlaylist = false;
+    } else {
+        setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+        }, 50);
     }
 }
 
 function togglePlaylist() {
     showPlaylist = !showPlaylist;
+    if (showPlaylist) {
+        setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+        }, 50);
+    }
 }
 
 let showLyrics = $state(true);
@@ -757,7 +766,7 @@ onDestroy(() => {
         {/if}
     </div>
     <!-- 展开状态的完整播放器（封面圆形） -->
-    <div class="expanded-player card-base bg-(--float-panel-bg) shadow-xl rounded-2xl p-4 transition-all duration-500 ease-in-out"
+    <div class="expanded-player card-base float-panel liquid-glass shadow-xl rounded-2xl p-4 transition-all duration-500 ease-in-out"
          class:opacity-0={isCollapsed}
          class:scale-95={isCollapsed}
          class:pointer-events-auto={!isCollapsed}
