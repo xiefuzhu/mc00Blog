@@ -1,5 +1,5 @@
 {
-    "title": "Twilight Blog Template",
+    "title": "mc00 Blog Template",
     "description": "A CMS integrated blog theme built with Astro framework.",
     "image": "./Twilight_Cover.jpg",
     "category": "website",
@@ -10,7 +10,7 @@
     ],
     "status": "in-progress",
     "liveDemo": "https://twilight.spr-aachen.com",
-    "sourceCode": "https://github.com/Spr-Aachen/Twilight",
+    "sourceCode": "https://github.com/xiefuzhu/mc00Blog",
     "startDate": "2025-10-01",
     "endDate": "",
     "featured": true,

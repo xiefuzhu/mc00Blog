@@ -1,5 +1,5 @@
 {
-    "title": "Twilight",
+    "title": "mc00",
     "description": "My first open source template project, a CMS integrated blog template built with Astro framework.",
     "type": "project",
     "startDate": "2025-10-01",
@@ -18,7 +18,7 @@
         },
         {
             "name": "GitHub Repository",
-            "url": "https://github.com/Spr-Aachen/Twilight",
+            "url": "https://github.com/xiefuzhu/mc00Blog",
             "type": "project"
         }
     ],

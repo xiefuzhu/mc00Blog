@@ -54,6 +54,8 @@ let isPlaying = $state(false);
 let shouldPlay = $state(false);
 // 是否折叠播放器
 let isCollapsed = $state(true);
+// 播放器容器引用
+let musicPlayerContainer = $state<HTMLElement | null>(null);
 // 是否显示播放列表
 let showPlaylist = $state(false);
 // 当前播放时间
@@ -301,6 +303,16 @@ function togglePlaylist() {
         setTimeout(() => {
             window.dispatchEvent(new Event('resize'));
         }, 50);
+    }
+}
+
+function handleDocumentClick(event: MouseEvent) {
+    if (isCollapsed) return;
+    const target = event.target as Node | null;
+    if (!target) return;
+    if (musicPlayerContainer && !musicPlayerContainer.contains(target)) {
+        isCollapsed = true;
+        showPlaylist = false;
     }
 }
 
@@ -617,6 +629,7 @@ onMount(() => {
     interactionEvents.forEach(event => {
         document.addEventListener(event, handleUserInteraction, { capture: true });
     });
+    document.addEventListener("click", handleDocumentClick);
     if (!musicPlayerConfig.enable) {
         return;
     }
@@ -644,6 +657,7 @@ onDestroy(() => {
         interactionEvents.forEach(event => {
             document.removeEventListener(event, handleUserInteraction, { capture: true });
         });
+        document.removeEventListener("click", handleDocumentClick);
     }
     if (audio) {
         audio.pause();
@@ -670,7 +684,8 @@ onDestroy(() => {
 </div>
 {/if}
 
-<div class="music-player fixed bottom-4 right-4 z-101 transition-all duration-300 ease-in-out onload-animation-up flex flex-col items-end pointer-events-none"
+<div bind:this={musicPlayerContainer}
+     class="music-player fixed bottom-4 right-4 z-101 transition-all duration-300 ease-in-out onload-animation-up flex flex-col items-end pointer-events-none"
      class:expanded={!isCollapsed}
      class:collapsed={isCollapsed}>
     {#if showPlaylist}

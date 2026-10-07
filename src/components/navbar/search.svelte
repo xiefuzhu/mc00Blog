@@ -218,7 +218,7 @@ onDestroy(() => {
 <!-- search bar for desktop view (collapsed by default) -->
 <div
     id="search-bar"
-    class="hidden lg:flex transition-all items-center h-11 rounded-full
+    class="hidden lg:flex relative transition-all items-center h-11 rounded-full
         {isDesktopSearchExpanded ? 'bg-black/4 hover:bg-black/6 focus-within:bg-black/6 dark:bg-white/5 dark:hover:bg-white/10 dark:focus-within:bg-white/10' : 'btn-plain scale-animation active:scale-90'}
         {isDesktopSearchExpanded ? 'w-48' : 'w-11'}"
     role="button"

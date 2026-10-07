@@ -44,7 +44,7 @@
   const BG_KEY = 'glass-custom-bg';
   const GLASS_MODE_KEY = 'glass-mode';
   const FROST = 3;
-  const FROSTED_BLUR = 20;
+  const FROSTED_BLUR = 2;
   const MIX_MS = 200;
 
   const convexSquircle = (x: number) =>
@@ -192,16 +192,25 @@
   }
 
   function clearCustomBackground() {
-    if (document.body.dataset.glassBg !== '1') return;
     document.body.style.backgroundImage = '';
     document.body.style.backgroundSize = '';
     document.body.style.backgroundPosition = '';
     document.body.style.backgroundRepeat = '';
     document.body.style.backgroundAttachment = '';
     delete document.body.dataset.glassBg;
+
+    const fsWrapper = document.getElementById('fullscreen-wallpaper-wrapper');
+    if (fsWrapper) {
+      fsWrapper.style.display = '';
+      const desktopImg = document.getElementById('fullscreen-wallpaper') as HTMLImageElement | null;
+      if (desktopImg) {
+        desktopImg.src = '/assets/images/defaultWallpaper.jpg';
+      }
+    }
   }
 
   function applyBackground() {
+    bindBgControls();
     const clear = document.getElementById('glass-bg-clear');
     const image = localStorage.getItem(BG_KEY);
     if (clear) clear.hidden = !image;
@@ -215,6 +224,11 @@
     document.body.style.backgroundPosition = 'center';
     document.body.style.backgroundRepeat = 'no-repeat';
     document.body.style.backgroundAttachment = 'fixed';
+
+    const fsWrapper = document.getElementById('fullscreen-wallpaper-wrapper');
+    if (fsWrapper) {
+      fsWrapper.style.display = 'none';
+    }
   }
 
   const onScreen = new WeakMap<HTMLElement, boolean>();
@@ -369,28 +383,30 @@
     reader.readAsDataURL(file);
   }
 
-  const fileInput = document.getElementById('glass-bg-file');
-  if (fileInput instanceof HTMLInputElement && fileInput.dataset.bound !== '1') {
-    fileInput.dataset.bound = '1';
-    fileInput.addEventListener('change', () => {
-      const file = fileInput.files?.[0];
-      fileInput.value = '';
-      if (!file) return;
-      if (!file.type.startsWith('image/')) return;
-      if (file.size > 8 * 1024 * 1024) {
-        window.alert('请选择 8MB 以内的图片。');
-        return;
-      }
-      fitBackground(file);
-    });
-  }
-  const clearBg = document.getElementById('glass-bg-clear');
-  if (clearBg && clearBg.dataset.bound !== '1') {
-    clearBg.dataset.bound = '1';
-    clearBg.addEventListener('click', () => {
-      localStorage.removeItem(BG_KEY);
-      applyBackground();
-    });
+  function bindBgControls() {
+    const fileInput = document.getElementById('glass-bg-file');
+    if (fileInput instanceof HTMLInputElement && fileInput.dataset.bound !== '1') {
+      fileInput.dataset.bound = '1';
+      fileInput.addEventListener('change', () => {
+        const file = fileInput.files?.[0];
+        fileInput.value = '';
+        if (!file) return;
+        if (!file.type.startsWith('image/')) return;
+        if (file.size > 8 * 1024 * 1024) {
+          window.alert('请选择 8MB 以内的图片。');
+          return;
+        }
+        fitBackground(file);
+      });
+    }
+    const clearBg = document.getElementById('glass-bg-clear');
+    if (clearBg && clearBg.dataset.bound !== '1') {
+      clearBg.dataset.bound = '1';
+      clearBg.addEventListener('click', () => {
+        localStorage.removeItem(BG_KEY);
+        applyBackground();
+      });
+    }
   }
 
   let frame = 0;
@@ -479,8 +495,18 @@
   document.documentElement.setAttribute('data-glass-mode', initialMode);
 
   schedule();
-  document.addEventListener('astro:after-swap', schedule);
-  document.addEventListener('astro:page-load', schedule);
+  bindBgControls();
+  applyBackground();
+  document.addEventListener('astro:after-swap', () => {
+    bindBgControls();
+    applyBackground();
+    schedule();
+  });
+  document.addEventListener('astro:page-load', () => {
+    bindBgControls();
+    applyBackground();
+    schedule();
+  });
   document.addEventListener('swup:animation:out:start', beginMotion);
   document.addEventListener('swup:animation:in:end', endMotion);
   window.addEventListener('resize', schedule);

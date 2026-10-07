@@ -23,7 +23,7 @@ const { link, class: className } = Astro.props;
     >
         <div class="flex items-center">
             {link.icon && <Icon name={link.icon} class="text-[1.1rem] nav-link-icon" />}
-            <span class="nav-link-text ml-2 hidden lg:inline">{link.name}</span>
+            <span class="nav-link-text ml-2 hidden xl:inline">{link.name}</span>
             {link.external && <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.875rem] transition -translate-y-px ml-1 text-black/20 dark:text-white/20" />}
         </div>
     </a>

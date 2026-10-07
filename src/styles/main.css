@@ -616,10 +616,10 @@
     display: none; /* Chrome, Safari and Opera */
     }
 
-    /* 全屏壁纸模式下背景全透明 */
+    /* 全屏壁纸模式下背景全透明 (自定义背景时不禁用 background-image) */
     html:has(body.wallpaper-transparent),
     html.wallpaper-transparent,
-    body.wallpaper-transparent {
+    body.wallpaper-transparent:not([data-glass-bg="1"]) {
         background-color: transparent !important;
         background-image: none !important;
     }

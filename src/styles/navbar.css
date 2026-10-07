@@ -143,7 +143,8 @@
 :is(#banner-wrapper ~ *, body:has(#banner-wrapper)) #display-setting,
 :is(#banner-wrapper ~ *, body:has(#banner-wrapper)) #nav-menu-panel,
 :is(#banner-wrapper ~ *, body:has(#banner-wrapper)) #translate-panel,
-:is(#banner-wrapper ~ *, body:has(#banner-wrapper)) #search-panel {
+:is(#banner-wrapper ~ *, body:has(#banner-wrapper)) #search-panel,
+:is(#banner-wrapper ~ *, body:has(#banner-wrapper)) #settings-menu-panel {
     backdrop-filter: blur(20px) !important;
     background: rgba(255, 255, 255, 0.55) !important;
     border: 1px solid rgba(255, 255, 255, 0.55) !important;
@@ -154,7 +155,8 @@
 :root.dark :is(#banner-wrapper ~ *, body:has(#banner-wrapper)) #display-setting,
 :root.dark :is(#banner-wrapper ~ *, body:has(#banner-wrapper)) #nav-menu-panel,
 :root.dark :is(#banner-wrapper ~ *, body:has(#banner-wrapper)) #translate-panel,
-:root.dark :is(#banner-wrapper ~ *, body:has(#banner-wrapper)) #search-panel {
+:root.dark :is(#banner-wrapper ~ *, body:has(#banner-wrapper)) #search-panel,
+:root.dark :is(#banner-wrapper ~ *, body:has(#banner-wrapper)) #settings-menu-panel {
     background: rgba(0, 0, 0, 0.55) !important;
     border: 1px solid rgba(0, 0, 0, 0.55) !important;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;

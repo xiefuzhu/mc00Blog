@@ -12,7 +12,7 @@ category: Examples
 
 # Password Protected Post
 
-This is an example of a password-protected post in the Twilight theme. The content below is encrypted using AES and can only be viewed by entering the correct password.
+This is an example of a password-protected post in the mc00 theme. The content below is encrypted using AES and can only be viewed by entering the correct password.
 
 
 ## Frontmatter Example

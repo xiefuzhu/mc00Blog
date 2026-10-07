@@ -1,7 +1,7 @@
 ---
 title: Guide for Template - Advanced Customization
 published: 2024-02-10
-description: "Master the advanced features and customization options of the Twilight template."
+description: "Master the advanced features and customization options of the mc00 template."
 cover: "./Cover - Advanced Customization.jpg"
 coverInContent: false
 pinned: false
@@ -13,7 +13,7 @@ draft: false
 ---
 
 
-This guide covers advanced customization options and features available in the Twilight template, from global configurations to specialized Markdown extensions.
+This guide covers advanced customization options and features available in the mc00 template, from global configurations to specialized Markdown extensions.
 
 
 ## Global Configuration
@@ -49,12 +49,12 @@ The `twilight.config.yaml` file is the heart of your blog's configuration. Here 
 
 You can add dynamic cards that link to GitHub repositories, on page load, the repository information is pulled from the GitHub API. 
 
-::github{repo="Spr-Aachen/Twilight"}
+::github{repo="xiefuzhu/mc00Blog"}
 
-Create a GitHub repository card with the code `::github{repo="Spr-Aachen/Twilight"}`.
+Create a GitHub repository card with the code `::github{repo="xiefuzhu/mc00Blog"}`.
 
 ```markdown
-::github{repo="Spr-Aachen/Twilight"}
+::github{repo="xiefuzhu/mc00Blog"}
 ```
 
 ### Music Cards
