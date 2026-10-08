@@ -15,7 +15,9 @@ let content = $state(blogStore.currentEditingPost?.content || "");
 let summary = $state(blogStore.currentEditingPost?.summary || "");
 let cover = $state(blogStore.currentEditingPost?.cover || "");
 let selectedCategories = $state<string[]>([...(blogStore.currentEditingPost?.categories || [])]);
-let tagsInput = $state(blogStore.currentEditingPost?.tags?.join(", ") || "");
+let selectedTags = $state<string[]>([...(blogStore.currentEditingPost?.tags || [])]);
+let customTagInput = $state("");
+let customCategoryInput = $state("");
 let pinned = $state(blogStore.currentEditingPost?.pinned || false);
 let allowComment = $state(blogStore.currentEditingPost?.allowComment ?? true);
 let visibility = $state<"public" | "private">(blogStore.currentEditingPost?.visibility || "public");
@@ -56,12 +58,57 @@ function handlePublish() {
     showToast("文章已发布上线");
 }
 
-function savePost(status: "published" | "draft") {
-    const tags = tagsInput
-        .split(",")
-        .map((t) => t.trim())
-        .filter((t) => t.length > 0);
+function toggleCategory(catId: string) {
+    if (selectedCategories.includes(catId)) {
+        selectedCategories = selectedCategories.filter((id) => id !== catId);
+    } else {
+        selectedCategories = [...selectedCategories, catId];
+    }
+}
 
+function addCustomCategory() {
+    const val = customCategoryInput.trim();
+    if (!val) return;
+    const existing = blogStore.categories.find(c => c.name === val || c.slug === val);
+    if (existing) {
+        if (!selectedCategories.includes(existing.id)) {
+            selectedCategories = [...selectedCategories, existing.id];
+        }
+    } else {
+        const newCat = blogStore.createCategory({
+            name: val,
+            slug: `cat-${Date.now()}`,
+            color: "#3b82f6",
+        });
+        selectedCategories = [...selectedCategories, newCat.id];
+    }
+    customCategoryInput = "";
+}
+
+function toggleTag(tagIdentifier: string) {
+    if (selectedTags.includes(tagIdentifier)) {
+        selectedTags = selectedTags.filter((t) => t !== tagIdentifier);
+    } else {
+        selectedTags = [...selectedTags, tagIdentifier];
+    }
+}
+
+function addCustomTag() {
+    const val = customTagInput.trim();
+    if (!val) return;
+    const existing = blogStore.tags.find(t => t.name === val || t.slug === val);
+    const tagToAdd = existing ? existing.id : val;
+    if (!selectedTags.includes(tagToAdd)) {
+        selectedTags = [...selectedTags, tagToAdd];
+    }
+    customTagInput = "";
+}
+
+function removeTag(tagIdentifier: string) {
+    selectedTags = selectedTags.filter((t) => t !== tagIdentifier);
+}
+
+function savePost(status: "published" | "draft") {
     const postPayload = {
         title: title.trim() || "未命名文章",
         slug: slug.trim() || `post-${Date.now()}`,
@@ -69,7 +116,7 @@ function savePost(status: "published" | "draft") {
         summary: summary.trim() || content.slice(0, 100),
         cover: cover.trim(),
         categories: selectedCategories,
-        tags,
+        tags: selectedTags,
         pinned,
         allowComment,
         visibility,
@@ -103,7 +150,7 @@ function handleExportAstro() {
         pinned,
         allowComment,
         categories: selectedCategories,
-        tags: tagsInput.split(",").map(t => t.trim()).filter(Boolean),
+        tags: selectedTags,
         authorId: authStore.currentUser?.id || "u-admin",
         authorName: authStore.currentUser?.name || "Halo 管理员",
         views: 0,
@@ -114,29 +161,21 @@ function handleExportAstro() {
     };
 
     const mdString = exportAstroMarkdown(currentPost, blogStore.categoriesMap, blogStore.tagsMap);
-    downloadTextFile(`${slug || 'article'}.md`, mdString);
-    showToast(`已导出 ${slug || 'article'}.md`);
-}
-
-function toggleCategory(catId: string) {
-    if (selectedCategories.includes(catId)) {
-        selectedCategories = selectedCategories.filter((id) => id !== catId);
-    } else {
-        selectedCategories = [...selectedCategories, catId];
-    }
+    downloadTextFile(`${slug || "article"}.md`, mdString);
+    showToast(`已导出 ${slug || "article"}.md`);
 }
 </script>
 
 {#if toastMessage}
-    <div class="fixed top-6 right-8 z-50 px-4 py-2 rounded-2xl bg-white/95 dark:bg-[#121620]/95 text-neutral-900 dark:text-white border border-emerald-500/40 shadow-2xl backdrop-blur-xl text-xs font-mono flex items-center gap-2 animate-in fade-in zoom-in-95 pointer-events-none">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+    <div class="fixed top-6 right-8 z-50 px-4 py-2 rounded-2xl bg-white/95 dark:bg-neutral-900/95 text-neutral-900 dark:text-white border border-(--primary)/40 shadow-2xl backdrop-blur-xl text-xs font-mono flex items-center gap-2 animate-in fade-in zoom-in-95 pointer-events-none">
+        <span class="w-2 h-2 rounded-full bg-(--primary) animate-pulse"></span>
         <span>{toastMessage}</span>
     </div>
 {/if}
 
 <div class="space-y-4 select-none text-neutral-900 dark:text-neutral-100">
-    <!-- 顶栏操作区 (CPAMC 经典模块化胶囊卡) -->
-    <div class="console-glass-card p-3.5 sm:p-4 rounded-3xl border border-black/8 dark:border-white/5 flex items-center justify-between gap-3 shadow-xl bg-white/75 dark:bg-[#121316] backdrop-blur-xl">
+    <!-- 顶栏操作区 -->
+    <div class="card-base liquid-glass p-3.5 sm:p-4 rounded-3xl border border-black/5 dark:border-white/8 flex items-center justify-between gap-3 shadow-xl">
         <div class="flex items-center gap-3 flex-1 min-w-0">
             <button
                 type="button"
@@ -157,25 +196,25 @@ function toggleCategory(catId: string) {
 
         <div class="flex items-center gap-2 shrink-0">
             <!-- 视图模式切换胶囊 (分屏 / 仅编辑 / 仅预览) -->
-            <div class="hidden md:flex console-glass-pill p-1 rounded-xl bg-black/5 dark:bg-[#181a22] border border-black/5 dark:border-white/5">
+            <div class="hidden md:flex p-1 rounded-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
                 <button
                     type="button"
                     class="px-2.5 py-1 rounded-lg text-xs font-medium transition-all {editorMode === 'edit' ? 'bg-white dark:bg-white/15 text-neutral-900 dark:text-white shadow-xs' : 'text-neutral-500 dark:text-neutral-400'}"
-                    onclick={() => editorMode = 'edit'}
+                    onclick={() => editorMode = "edit"}
                 >
                     编辑
                 </button>
                 <button
                     type="button"
                     class="px-2.5 py-1 rounded-lg text-xs font-medium transition-all {editorMode === 'split' ? 'bg-white dark:bg-white/15 text-neutral-900 dark:text-white shadow-xs' : 'text-neutral-500 dark:text-neutral-400'}"
-                    onclick={() => editorMode = 'split'}
+                    onclick={() => editorMode = "split"}
                 >
                     分屏
                 </button>
                 <button
                     type="button"
                     class="px-2.5 py-1 rounded-lg text-xs font-medium transition-all {editorMode === 'preview' ? 'bg-white dark:bg-white/15 text-neutral-900 dark:text-white shadow-xs' : 'text-neutral-500 dark:text-neutral-400'}"
-                    onclick={() => editorMode = 'preview'}
+                    onclick={() => editorMode = "preview"}
                 >
                     预览
                 </button>
@@ -187,8 +226,11 @@ function toggleCategory(catId: string) {
                 onclick={() => showDrawer = !showDrawer}
                 title="文章属性与分类标签配置"
             >
-                <Icon icon="material-symbols:tune" class="text-base text-emerald-500" />
+                <Icon icon="material-symbols:tune" class="text-base text-(--primary)" />
                 <span class="hidden sm:inline">属性配置</span>
+                {#if selectedCategories.length > 0 || selectedTags.length > 0}
+                    <span class="w-2 h-2 rounded-full bg-(--primary)"></span>
+                {/if}
             </button>
 
             <button
@@ -201,7 +243,7 @@ function toggleCategory(catId: string) {
 
             <button
                 type="button"
-                class="px-4 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-neutral-950 text-xs font-bold shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                class="px-4 py-1.5 rounded-xl bg-(--primary) hover:brightness-110 text-white text-xs font-bold shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
                 onclick={handlePublish}
             >
                 发布博文
@@ -209,37 +251,89 @@ function toggleCategory(catId: string) {
         </div>
     </div>
 
+    <!-- 快捷分类与标签直选条 (作者无需打开抽屉即可直观选择) -->
+    <div class="card-base liquid-glass p-3 rounded-2xl border border-black/5 dark:border-white/8 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="text-neutral-400 text-[11px] font-semibold flex items-center gap-1">
+                <Icon icon="material-symbols:folder-outline" class="text-sm text-orange-500" />
+                分类:
+            </span>
+            <div class="flex flex-wrap items-center gap-1.5">
+                {#each blogStore.categories as cat}
+                    {@const isSelected = selectedCategories.includes(cat.id)}
+                    <button
+                        type="button"
+                        class="px-2 py-0.5 rounded-lg text-xs transition-all cursor-pointer flex items-center gap-1 {isSelected ? 'bg-orange-500/20 text-orange-600 dark:text-orange-400 font-bold border border-orange-500/30' : 'bg-black/4 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white border border-transparent'}"
+                        onclick={() => toggleCategory(cat.id)}
+                    >
+                        {#if isSelected}
+                            <Icon icon="material-symbols:check" class="text-xs" />
+                        {/if}
+                        <span>{cat.name}</span>
+                    </button>
+                {/each}
+            </div>
+
+            <div class="w-px h-3.5 bg-black/10 dark:bg-white/10 mx-1"></div>
+
+            <span class="text-neutral-400 text-[11px] font-semibold flex items-center gap-1">
+                <Icon icon="material-symbols:label-outline" class="text-sm text-(--primary)" />
+                标签:
+            </span>
+            <div class="flex flex-wrap items-center gap-1.5">
+                {#each blogStore.tags as tag}
+                    {@const isSelected = selectedTags.includes(tag.id) || selectedTags.includes(tag.name)}
+                    <button
+                        type="button"
+                        class="px-2 py-0.5 rounded-lg text-xs transition-all cursor-pointer flex items-center gap-1 {isSelected ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/30' : 'bg-black/4 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white border border-transparent'}"
+                        onclick={() => toggleTag(tag.id)}
+                    >
+                        {#if isSelected}
+                            <Icon icon="material-symbols:check" class="text-xs" />
+                        {/if}
+                        <span>#{tag.name}</span>
+                    </button>
+                {/each}
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 text-[11px] font-mono text-neutral-500 dark:text-neutral-400">
+            <span>{currentWordCount} 字</span>
+            <span>约 {currentReadingTime} 分钟阅读</span>
+        </div>
+    </div>
+
     <!-- Markdown 快捷格式化工具栏 -->
-    <div class="console-glass-card px-3 py-2 rounded-2xl border border-black/8 dark:border-white/5 flex items-center justify-between gap-2 overflow-x-auto text-xs shadow-sm bg-white/75 dark:bg-[#121316] backdrop-blur-xl">
+    <div class="card-base liquid-glass px-3 py-2 rounded-2xl border border-black/5 dark:border-white/8 flex items-center justify-between gap-2 overflow-x-auto text-xs shadow-sm">
         <div class="flex items-center gap-1 overflow-x-auto">
-            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 font-bold cursor-pointer" onclick={() => handleFormat('## ', '', '二级标题')}>
+            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 font-bold cursor-pointer" onclick={() => handleFormat("## ", "", "二级标题")}>
                 H2
             </button>
-            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 font-bold cursor-pointer" onclick={() => handleFormat('### ', '', '三级标题')}>
+            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 font-bold cursor-pointer" onclick={() => handleFormat("### ", "", "三级标题")}>
                 H3
             </button>
-            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 font-bold cursor-pointer" onclick={() => handleFormat('**', '**', '粗体文字')}>
+            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 font-bold cursor-pointer" onclick={() => handleFormat("**", "**", "粗体文字")}>
                 B
             </button>
-            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 italic cursor-pointer" onclick={() => handleFormat('*', '*', '斜体文字')}>
+            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 italic cursor-pointer" onclick={() => handleFormat("*", "*", "斜体文字")}>
                 I
             </button>
-            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 cursor-pointer" onclick={() => handleFormat('> ', '', '引用文案')}>
+            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 cursor-pointer" onclick={() => handleFormat("> ", "", "引用文案")}>
                 Quote
             </button>
-            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-emerald-600 dark:text-emerald-400 font-mono cursor-pointer" onclick={() => handleFormat('```typescript\n', '\n```', '// 示例代码')}>
+            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-(--primary) font-mono cursor-pointer" onclick={() => handleFormat("```typescript\n", "\n```", "// 示例代码")}>
                 Code
             </button>
-            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 cursor-pointer" onclick={() => handleFormat('- ', '', '无序列表项')}>
+            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 cursor-pointer" onclick={() => handleFormat("- ", "", "无序列表项")}>
                 List
             </button>
-            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 cursor-pointer" onclick={() => handleFormat('[链接描述](', ')', 'https://')}>
+            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 cursor-pointer" onclick={() => handleFormat("[链接描述](", ")", "https://")}>
                 Link
             </button>
-            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 cursor-pointer" onclick={() => handleFormat('![图片描述](', ')', 'https://')}>
+            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 cursor-pointer" onclick={() => handleFormat("![图片描述](", ")", "https://")}>
                 Image
             </button>
-            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-amber-500 cursor-pointer" onclick={() => handleFormat(':::tip\n', '\n:::', '提示内容')}>
+            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-amber-500 cursor-pointer" onclick={() => handleFormat(":::tip\n", "\n:::", "提示内容")}>
                 Tip
             </button>
             <div class="w-px h-3.5 bg-black/10 dark:bg-white/10 mx-1"></div>
@@ -247,29 +341,23 @@ function toggleCategory(catId: string) {
                 导出 .md
             </button>
         </div>
-
-        <!-- 实时字数与阅读时间计数 -->
-        <div class="flex items-center gap-3 text-[11px] font-mono text-neutral-500 dark:text-neutral-400 shrink-0">
-            <span>{currentWordCount} 字</span>
-            <span>约 {currentReadingTime} 分钟阅读</span>
-        </div>
     </div>
 
     <!-- 编辑与排版对比区 -->
     <div class="grid {editorMode === 'split' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'} gap-4 min-h-[620px]">
         <!-- 源码编辑 -->
-        {#if editorMode !== 'preview'}
-            <div class="console-glass-card rounded-3xl p-5 border border-black/8 dark:border-white/5 shadow-xl flex flex-col bg-white/75 dark:bg-[#121316] backdrop-blur-xl">
+        {#if editorMode !== "preview"}
+            <div class="card-base liquid-glass rounded-3xl p-5 border border-black/5 dark:border-white/8 shadow-xl flex flex-col">
                 <div class="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400 mb-2 px-1 pb-2 border-b border-black/5 dark:border-white/5">
                     <span class="font-bold text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5">
-                        <Icon icon="material-symbols:code" class="text-emerald-500" />
+                        <Icon icon="material-symbols:code" class="text-(--primary)" />
                         <span>Markdown 源码</span>
                     </span>
                     <span class="font-mono text-[11px] text-neutral-400">{content.length} 字符</span>
                 </div>
                 <textarea
                     bind:this={textareaRef}
-                    class="w-full flex-1 min-h-[540px] bg-transparent text-xs sm:text-sm font-mono leading-relaxed text-neutral-900 dark:text-neutral-100 focus:outline-none resize-none p-2 border-none selection:bg-emerald-500/30"
+                    class="w-full flex-1 min-h-[540px] bg-transparent text-xs sm:text-sm font-mono leading-relaxed text-neutral-900 dark:text-neutral-100 focus:outline-none resize-none p-2 border-none selection:bg-(--primary)/30"
                     placeholder="在此编写 Markdown 文章正文..."
                     bind:value={content}
                 ></textarea>
@@ -277,14 +365,14 @@ function toggleCategory(catId: string) {
         {/if}
 
         <!-- 实时排版预览 -->
-        {#if editorMode !== 'edit'}
-            <div class="console-glass-card rounded-3xl p-5 border border-black/8 dark:border-white/5 shadow-xl flex flex-col bg-white/75 dark:bg-[#121316] backdrop-blur-xl">
+        {#if editorMode !== "edit"}
+            <div class="card-base liquid-glass rounded-3xl p-5 border border-black/5 dark:border-white/8 shadow-xl flex flex-col">
                 <div class="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400 mb-2 px-1 pb-2 border-b border-black/5 dark:border-white/5">
                     <span class="font-bold text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5">
-                        <Icon icon="material-symbols:preview" class="text-emerald-500" />
-                        <span>实时渲染排版</span>
+                        <Icon icon="material-symbols:preview" class="text-(--primary)" />
+                        <span>实时排版预览</span>
                     </span>
-                    <span class="text-emerald-600 dark:text-emerald-400 font-mono text-[11px] font-bold">同步渲染</span>
+                    <span class="text-(--primary) font-mono text-[11px] font-bold">同步预览</span>
                 </div>
                 <div class="w-full flex-1 min-h-[540px] overflow-y-auto p-4 text-xs sm:text-sm leading-relaxed text-neutral-900 dark:text-neutral-100 border border-black/5 dark:border-white/5 rounded-2xl bg-black/2 dark:bg-black/20 prose dark:prose-invert prose-emerald max-w-none">
                     {#if content.trim()}
@@ -301,14 +389,15 @@ function toggleCategory(catId: string) {
 
     <!-- 文章属性设置侧边抽屉 -->
     {#if showDrawer}
-        <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex justify-end">
-            <div class="w-full max-w-md h-full console-glass p-6 overflow-y-auto shadow-2xl border-l border-black/10 dark:border-white/10 bg-white/95 dark:bg-[#10121a]/95 text-neutral-800 dark:text-neutral-200 flex flex-col justify-between">
+        <div class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex justify-end">
+            <div class="w-full max-w-md h-full card-base liquid-glass p-6 overflow-y-auto shadow-2xl border-l border-black/10 dark:border-white/10 text-neutral-800 dark:text-neutral-200 flex flex-col justify-between">
                 <div class="space-y-5">
-                    <div class="flex items-center justify-between pb-3 border-b border-black/8 dark:border-white/10">
-                        <h3 class="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-2">
-                            <Icon icon="material-symbols:tune" class="text-emerald-500 text-lg" />
-                            <span>文章元数据与高级配置</span>
-                        </h3>
+                    <div class="flex items-center justify-between pb-3 border-b border-black/5 dark:border-white/10">
+                        <div class="relative pl-3 before:w-1 before:h-4 before:rounded-md before:bg-(--primary) before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2">
+                            <h3 class="text-sm font-bold text-neutral-900 dark:text-white">
+                                文章属性与高级配置
+                            </h3>
+                        </div>
                         <button
                             type="button"
                             class="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white cursor-pointer"
@@ -324,7 +413,7 @@ function toggleCategory(catId: string) {
                         <input
                             type="text"
                             placeholder="my-awesome-post"
-                            class="console-glass-input w-full px-3.5 py-2 text-xs font-mono bg-white/70 dark:bg-[#181a22] border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white"
+                            class="w-full px-3.5 py-2 text-xs font-mono card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white focus:outline-none focus:border-(--primary)/50"
                             bind:value={slug}
                         />
                         <p class="text-[10px] text-neutral-400 mt-1">用于文章 URL 路由后缀 (/posts/{slug})</p>
@@ -336,7 +425,7 @@ function toggleCategory(catId: string) {
                         <input
                             type="text"
                             placeholder="https://... 或本地素材路径"
-                            class="console-glass-input w-full px-3.5 py-2 text-xs font-mono bg-white/70 dark:bg-[#181a22] border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white"
+                            class="w-full px-3.5 py-2 text-xs font-mono card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white focus:outline-none focus:border-(--primary)/50"
                             bind:value={cover}
                         />
                         {#if cover.trim()}
@@ -351,51 +440,119 @@ function toggleCategory(catId: string) {
                         <label class="block font-semibold text-neutral-700 dark:text-neutral-300 text-xs mb-1.5">自定义文章摘要</label>
                         <textarea
                             placeholder="若留空则自动截取文章前 100 字..."
-                            class="console-glass-input w-full px-3.5 py-2 text-xs h-20 resize-none leading-relaxed bg-white/70 dark:bg-[#181a22] border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white"
+                            class="w-full px-3.5 py-2 text-xs h-20 resize-none leading-relaxed card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white focus:outline-none focus:border-(--primary)/50"
                             bind:value={summary}
                         ></textarea>
                     </div>
 
-                    <!-- 分类归档 -->
+                    <!-- 分类选择区 (可视化胶囊与新建输入) -->
                     <div>
                         <label class="block font-semibold text-neutral-700 dark:text-neutral-300 text-xs mb-1.5">所属分类</label>
-                        <div class="flex flex-wrap gap-1.5">
+                        <div class="flex flex-wrap gap-1.5 mb-2">
                             {#each blogStore.categories as cat}
+                                {@const isSelected = selectedCategories.includes(cat.id)}
                                 <button
                                     type="button"
-                                    class="px-2.5 py-1 rounded-lg text-xs font-medium border transition-all cursor-pointer {selectedCategories.includes(cat.id) ? 'bg-emerald-500 text-neutral-950 font-bold border-emerald-400' : 'bg-black/5 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 border-black/5 dark:border-white/10 hover:text-neutral-900 dark:hover:text-white'}"
+                                    class="px-2.5 py-1 rounded-lg text-xs font-medium border transition-all cursor-pointer flex items-center gap-1 {isSelected ? 'bg-orange-500/20 text-orange-600 dark:text-orange-400 font-bold border-orange-500/40 shadow-xs' : 'bg-black/5 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 border-black/5 dark:border-white/10 hover:text-neutral-900 dark:hover:text-white'}"
                                     onclick={() => toggleCategory(cat.id)}
                                 >
-                                    {cat.name}
+                                    {#if isSelected}
+                                        <Icon icon="material-symbols:check" class="text-xs text-orange-500" />
+                                    {/if}
+                                    <span>{cat.name}</span>
                                 </button>
                             {/each}
                         </div>
+                        <div class="flex items-center gap-2">
+                            <input
+                                type="text"
+                                placeholder="输入新分类名称..."
+                                class="flex-1 px-3 py-1.5 text-xs card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white focus:outline-none focus:border-(--primary)/50"
+                                bind:value={customCategoryInput}
+                                onkeydown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomCategory(); } }}
+                            />
+                            <button
+                                type="button"
+                                class="px-3 py-1.5 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 text-xs font-bold hover:bg-orange-500/20 cursor-pointer"
+                                onclick={addCustomCategory}
+                            >
+                                添加
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- 标签设置 -->
+                    <!-- 标签选择区 (预设多选胶囊 + 自定义追加) -->
                     <div>
-                        <label class="block font-semibold text-neutral-700 dark:text-neutral-300 text-xs mb-1.5">文章标签 (逗号分隔)</label>
-                        <input
-                            type="text"
-                            placeholder="Astro, Svelte, 架构设计"
-                            class="console-glass-input w-full px-3.5 py-2 text-xs bg-white/70 dark:bg-[#181a22] border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white"
-                            bind:value={tagsInput}
-                        />
+                        <label class="block font-semibold text-neutral-700 dark:text-neutral-300 text-xs mb-1.5">文章标签</label>
+                        <!-- 预设标签列表 -->
+                        <div class="flex flex-wrap gap-1.5 mb-2.5">
+                            {#each blogStore.tags as tag}
+                                {@const isSelected = selectedTags.includes(tag.id) || selectedTags.includes(tag.name)}
+                                <button
+                                    type="button"
+                                    class="px-2.5 py-1 rounded-lg text-xs font-medium border transition-all cursor-pointer flex items-center gap-1 {isSelected ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold border-emerald-500/40 shadow-xs' : 'bg-black/5 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 border-black/5 dark:border-white/10 hover:text-neutral-900 dark:hover:text-white'}"
+                                    onclick={() => toggleTag(tag.id)}
+                                >
+                                    {#if isSelected}
+                                        <Icon icon="material-symbols:check" class="text-xs text-emerald-500" />
+                                    {/if}
+                                    <span>#{tag.name}</span>
+                                </button>
+                            {/each}
+                        </div>
+
+                        <!-- 当前选中的自定义或所有标签可删除预览 -->
+                        {#if selectedTags.length > 0}
+                            <div class="p-2.5 rounded-xl bg-black/2 dark:bg-white/3 border border-black/5 dark:border-white/5 mb-2.5 flex flex-wrap gap-1.5 items-center">
+                                <span class="text-[10px] text-neutral-400">已选中:</span>
+                                {#each selectedTags as tagId}
+                                    {@const tagName = blogStore.tagsMap.get(tagId) || tagId}
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[11px] font-mono">
+                                        <span>#{tagName}</span>
+                                        <button
+                                            type="button"
+                                            class="hover:text-rose-500 cursor-pointer text-xs"
+                                            onclick={() => removeTag(tagId)}
+                                            title="移除标签"
+                                        >
+                                            ×
+                                        </button>
+                                    </span>
+                                {/each}
+                            </div>
+                        {/if}
+
+                        <div class="flex items-center gap-2">
+                            <input
+                                type="text"
+                                placeholder="输入新标签并回车..."
+                                class="flex-1 px-3 py-1.5 text-xs card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white focus:outline-none focus:border-(--primary)/50"
+                                bind:value={customTagInput}
+                                onkeydown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomTag(); } }}
+                            />
+                            <button
+                                type="button"
+                                class="px-3 py-1.5 rounded-xl bg-(--primary)/10 text-(--primary) border border-(--primary)/20 text-xs font-bold hover:bg-(--primary)/20 cursor-pointer"
+                                onclick={addCustomTag}
+                            >
+                                添加
+                            </button>
+                        </div>
                     </div>
 
                     <!-- 开关控制组 -->
-                    <div class="space-y-2.5 pt-2 border-t border-black/8 dark:border-white/10">
+                    <div class="space-y-2.5 pt-2 border-t border-black/5 dark:border-white/10">
                         <label class="flex items-center justify-between text-xs text-neutral-700 dark:text-neutral-300 cursor-pointer">
                             <span>置顶此文章</span>
-                            <input type="checkbox" class="accent-emerald-500 w-4 h-4 cursor-pointer" bind:checked={pinned} />
+                            <input type="checkbox" class="accent-(--primary) w-4 h-4 cursor-pointer" bind:checked={pinned} />
                         </label>
                         <label class="flex items-center justify-between text-xs text-neutral-700 dark:text-neutral-300 cursor-pointer">
                             <span>允许读者评论</span>
-                            <input type="checkbox" class="accent-emerald-500 w-4 h-4 cursor-pointer" bind:checked={allowComment} />
+                            <input type="checkbox" class="accent-(--primary) w-4 h-4 cursor-pointer" bind:checked={allowComment} />
                         </label>
                         <div class="flex items-center justify-between text-xs text-neutral-700 dark:text-neutral-300">
                             <span>可见性范围</span>
-                            <select class="bg-white dark:bg-[#181a22] border border-black/10 dark:border-white/10 rounded-lg px-2 py-1 text-xs text-neutral-800 dark:text-neutral-200" bind:value={visibility}>
+                            <select class="card-base liquid-glass border border-black/10 dark:border-white/10 rounded-lg px-2 py-1 text-xs text-neutral-800 dark:text-neutral-200" bind:value={visibility}>
                                 <option value="public">公开可见</option>
                                 <option value="private">仅自己可见</option>
                             </select>
@@ -403,10 +560,10 @@ function toggleCategory(catId: string) {
                     </div>
                 </div>
 
-                <div class="pt-6 border-t border-black/8 dark:border-white/10 flex items-center gap-3">
+                <div class="pt-6 border-t border-black/5 dark:border-white/10 flex items-center gap-3">
                     <button
                         type="button"
-                        class="flex-1 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-neutral-950 text-xs font-bold transition-colors cursor-pointer shadow-md"
+                        class="flex-1 py-2 rounded-xl bg-(--primary) hover:brightness-110 text-white text-xs font-bold transition-all cursor-pointer shadow-md"
                         onclick={() => showDrawer = false}
                     >
                         完成设置

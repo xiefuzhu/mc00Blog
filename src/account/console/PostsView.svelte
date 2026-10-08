@@ -64,35 +64,35 @@ function handleEmptyRecycle() {
 </script>
 
 {#if actionToast}
-    <div class="fixed top-6 right-8 z-50 px-4 py-2 rounded-2xl bg-white/95 dark:bg-[#121620]/95 text-neutral-900 dark:text-white border border-emerald-500/40 shadow-2xl backdrop-blur-xl text-xs font-mono flex items-center gap-2 animate-in fade-in zoom-in-95 pointer-events-none">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+    <div class="fixed top-6 right-8 z-50 px-4 py-2 rounded-2xl card-base liquid-glass text-neutral-900 dark:text-white border border-(--primary)/40 shadow-2xl backdrop-blur-xl text-xs font-mono flex items-center gap-2 animate-in fade-in zoom-in-95 pointer-events-none">
+        <span class="w-2 h-2 rounded-full bg-(--primary) animate-pulse"></span>
         <span>{actionToast}</span>
     </div>
 {/if}
 
 <div class="space-y-6 select-none text-neutral-900 dark:text-neutral-100">
     <!-- 顶部状态栏与筛选器 (统一现代毛玻璃规范) -->
-    <div class="console-glass-card rounded-3xl p-5 sm:p-6 border border-black/8 dark:border-white/5 shadow-xl space-y-4 bg-white/70 dark:bg-[#121316] backdrop-blur-xl">
+    <div class="card-base liquid-glass rounded-3xl p-5 sm:p-6 border border-black/5 dark:border-white/8 shadow-xl space-y-4">
         <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
             <!-- 状态 Tabs 胶囊组 -->
-            <div class="console-glass-pill p-1 flex items-center gap-1 overflow-x-auto shadow-xs bg-black/5 dark:bg-[#181a22] rounded-full border border-black/8 dark:border-white/5 shrink-0">
+            <div class="card-base liquid-glass p-1 flex items-center gap-1 overflow-x-auto shadow-xs rounded-full border border-black/5 dark:border-white/8 shrink-0">
                 <button
                     type="button"
-                    class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap {blogStore.postStatusFilter === 'all' ? 'bg-emerald-500 text-white shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'}"
+                    class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap {blogStore.postStatusFilter === 'all' ? 'bg-(--primary) text-white shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'}"
                     onclick={() => blogStore.postStatusFilter = 'all'}
                 >
                     全部 ({blogStore.stats.totalPosts})
                 </button>
                 <button
                     type="button"
-                    class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap {blogStore.postStatusFilter === 'published' ? 'bg-emerald-500 text-white shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'}"
+                    class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap {blogStore.postStatusFilter === 'published' ? 'bg-(--primary) text-white shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'}"
                     onclick={() => blogStore.postStatusFilter = 'published'}
                 >
                     已发布 ({blogStore.stats.publishedCount})
                 </button>
                 <button
                     type="button"
-                    class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap {blogStore.postStatusFilter === 'draft' ? 'bg-emerald-500 text-white shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'}"
+                    class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap {blogStore.postStatusFilter === 'draft' ? 'bg-(--primary) text-white shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'}"
                     onclick={() => blogStore.postStatusFilter = 'draft'}
                 >
                     草稿箱 ({blogStore.stats.draftCount})
@@ -110,7 +110,7 @@ function handleEmptyRecycle() {
             <div class="flex items-center gap-3 flex-wrap">
                 <!-- 分类选择 -->
                 <select
-                    class="console-glass-input px-3.5 py-1.5 text-xs text-neutral-800 dark:text-neutral-200 bg-white/70 dark:bg-[#181a22] border border-black/8 dark:border-white/10 rounded-xl cursor-pointer"
+                    class="px-3.5 py-1.5 text-xs text-neutral-800 dark:text-neutral-200 card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl cursor-pointer"
                     value={blogStore.postCategoryFilter}
                     onchange={(e) => blogStore.postCategoryFilter = (e.target as HTMLSelectElement).value}
                 >
@@ -125,7 +125,7 @@ function handleEmptyRecycle() {
                     <input
                         type="text"
                         placeholder="搜索标题 / Slug..."
-                        class="console-glass-input pl-8 pr-3 py-1.5 text-xs text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 bg-white/70 dark:bg-[#181a22] border border-black/8 dark:border-white/10 rounded-xl w-full sm:w-56"
+                        class="pl-8 pr-3 py-1.5 text-xs text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl w-full sm:w-56 focus:outline-none focus:border-(--primary)/50"
                         bind:value={blogStore.postSearchKeyword}
                     />
                     <Icon icon="material-symbols:search" class="absolute left-2.5 top-2 text-neutral-400 text-sm pointer-events-none" />
@@ -151,16 +151,16 @@ function handleEmptyRecycle() {
                         onclick={handleExportAll}
                         title="批量导出当前筛选文章为 Markdown"
                     >
-                        <Icon icon="material-symbols:file-download-outline" class="text-sm text-emerald-500" />
+                        <Icon icon="material-symbols:download" class="text-sm text-(--primary)" />
                         <span class="hidden sm:inline">导出</span>
                     </button>
                 {/if}
 
-                <!-- 撰写文章按钮 (绿色高光胶囊按钮) -->
+                <!-- 撰写文章按钮 (高光胶囊按钮) -->
                 {#if authStore.can("posts:create")}
                     <button
                         type="button"
-                        class="px-4 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-bold text-xs flex items-center gap-1.5 shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
+                        class="px-4 py-1.5 rounded-xl bg-(--primary) hover:brightness-110 text-white font-bold text-xs flex items-center gap-1.5 shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
                         onclick={handleCreateNew}
                     >
                         <Icon icon="material-symbols:edit-note" class="text-base" />
@@ -173,14 +173,14 @@ function handleEmptyRecycle() {
 
     <!-- 文章列表主体 -->
     {#if blogStore.filteredPosts.length === 0}
-        <div class="console-glass-card rounded-3xl p-16 text-center text-neutral-400 text-xs border border-black/8 dark:border-white/5 shadow-xl bg-white/70 dark:bg-[#121316] backdrop-blur-xl">
-            <Icon icon="material-symbols:inbox-outline" class="text-4xl mx-auto mb-3 opacity-40 text-emerald-500" />
+        <div class="card-base liquid-glass rounded-3xl p-16 text-center text-neutral-400 text-xs border border-black/5 dark:border-white/8 shadow-xl">
+            <Icon icon="material-symbols:inbox-outline" class="text-4xl mx-auto mb-3 opacity-40 text-(--primary)" />
             <p class="font-medium text-sm text-neutral-700 dark:text-neutral-300">暂无符合筛选条件的文章</p>
             <p class="text-neutral-400 text-[11px] mt-1">尝试切换状态过滤条件或搜索其他关键词</p>
             {#if authStore.can("posts:create")}
                 <button
                     type="button"
-                    class="mt-4 px-5 py-2.5 rounded-xl bg-emerald-500 text-neutral-950 font-bold text-xs transition-transform hover:scale-105 active:scale-95 cursor-pointer shadow-md inline-flex items-center gap-1.5"
+                    class="mt-4 px-5 py-2.5 rounded-xl bg-(--primary) text-white font-bold text-xs transition-transform hover:scale-105 active:scale-95 cursor-pointer shadow-md inline-flex items-center gap-1.5"
                     onclick={handleCreateNew}
                 >
                     <Icon icon="material-symbols:add" class="text-base" />
@@ -191,7 +191,7 @@ function handleEmptyRecycle() {
     {:else}
         <div class="space-y-3.5">
             {#each blogStore.filteredPosts as post}
-                <div class="console-glass-card rounded-2xl p-4 sm:p-5 border border-black/8 dark:border-white/5 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4 group bg-white/70 dark:bg-[#121316] backdrop-blur-xl hover:border-emerald-500/30 transition-all">
+                <div class="card-base liquid-glass rounded-2xl p-4 sm:p-5 border border-black/5 dark:border-white/8 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4 group hover:border-(--primary)/40 transition-all">
                     <!-- 文章封面与主要信息 -->
                     <div class="flex items-start gap-4 min-w-0 flex-1">
                         {#if post.cover}

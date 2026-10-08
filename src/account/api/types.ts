@@ -46,6 +46,7 @@ export interface CategoryItem {
     description: string;
     color?: string;
     count: number;
+    parentId?: string | null;
 }
 
 export interface TagItem {

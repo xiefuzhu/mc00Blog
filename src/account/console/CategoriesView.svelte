@@ -28,59 +28,60 @@ function handleDelete(id: string) {
 }
 </script>
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 select-none">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 select-none text-neutral-900 dark:text-neutral-100">
     <!-- 左侧：新建分类表单 -->
     {#if authStore.can("categories:*")}
-        <div class="console-glass liquid-glass p-5 sm:p-6 rounded-3xl border border-white/10 shadow-xl space-y-4 text-xs bg-[#0f121a]/90 backdrop-blur-2xl">
-            <h3 class="text-sm font-bold text-white flex items-center gap-2 pb-2 border-b border-white/10">
-                <Icon icon="material-symbols:add-circle-outline" class="text-lg text-emerald-400" />
-                <span>新建文章分类</span>
-            </h3>
+        <div class="card-base liquid-glass p-5 sm:p-6 rounded-3xl border border-black/5 dark:border-white/8 shadow-xl space-y-4 text-xs">
+            <div class="relative pl-3 before:w-1 before:h-4 before:rounded-md before:bg-orange-500 before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 pb-2 border-b border-black/5 dark:border-white/5">
+                <h3 class="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-1.5">
+                    <span>新建文章分类</span>
+                </h3>
+            </div>
 
             <div>
-                <label class="block font-semibold text-neutral-300 mb-1.5">分类名称 *</label>
+                <label class="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">分类名称 *</label>
                 <input
                     type="text"
                     placeholder="例如: 技术架构"
-                    class="console-glass-input w-full px-3.5 py-2 text-xs bg-[#141720] border border-white/10 rounded-xl text-white placeholder-neutral-500"
+                    class="w-full px-3.5 py-2 text-xs card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-(--primary)/50"
                     bind:value={newCatName}
                 />
             </div>
 
             <div>
-                <label class="block font-semibold text-neutral-300 mb-1.5">访问别名 (Slug)</label>
+                <label class="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">访问别名 (Slug)</label>
                 <input
                     type="text"
                     placeholder="例如: architecture"
-                    class="console-glass-input w-full px-3.5 py-2 text-xs font-mono bg-[#141720] border border-white/10 rounded-xl text-white placeholder-neutral-500"
+                    class="w-full px-3.5 py-2 text-xs font-mono card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-(--primary)/50"
                     bind:value={newCatSlug}
                 />
             </div>
 
             <div>
-                <label class="block font-semibold text-neutral-300 mb-1.5">分类描述</label>
+                <label class="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">分类描述</label>
                 <textarea
                     placeholder="简述该分类收纳的内容方向..."
-                    class="console-glass-input w-full px-3.5 py-2 text-xs h-20 resize-none leading-relaxed bg-[#141720] border border-white/10 rounded-xl text-white placeholder-neutral-500"
+                    class="w-full px-3.5 py-2 text-xs h-20 resize-none leading-relaxed card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-(--primary)/50"
                     bind:value={newCatDesc}
                 ></textarea>
             </div>
 
             <div>
-                <label class="block font-semibold text-neutral-300 mb-1.5">主题色彩标记</label>
+                <label class="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">主题色彩标记</label>
                 <div class="flex items-center gap-3">
                     <input
                         type="color"
                         class="w-10 h-10 rounded-xl cursor-pointer bg-transparent border-0 p-0"
                         bind:value={newCatColor}
                     />
-                    <span class="font-mono text-xs text-emerald-400 font-bold">{newCatColor}</span>
+                    <span class="font-mono text-xs text-(--primary) font-bold">{newCatColor}</span>
                 </div>
             </div>
 
             <button
                 type="button"
-                class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-bold text-xs shadow-md transition-all hover:scale-102 active:scale-98 cursor-pointer"
+                class="w-full py-2.5 rounded-xl bg-(--primary) hover:brightness-110 text-white font-bold text-xs shadow-md transition-all active:scale-98 cursor-pointer"
                 onclick={handleCreate}
             >
                 保存并创建分类
@@ -89,12 +90,13 @@ function handleDelete(id: string) {
     {/if}
 
     <!-- 右侧：分类列表 -->
-    <div class={`${authStore.can("categories:*") ? "lg:col-span-2" : "lg:col-span-3"} console-glass liquid-glass p-5 sm:p-6 rounded-3xl border border-white/10 shadow-xl space-y-4 bg-[#0f121a]/90 backdrop-blur-2xl`}>
-        <div class="flex items-center justify-between pb-3 border-b border-white/10">
-            <h3 class="text-xs font-bold text-neutral-300 uppercase tracking-wider flex items-center gap-2">
-                <span class="w-1.5 h-3.5 bg-emerald-500 rounded-full inline-block"></span>
-                <span>全站分类目录 ({blogStore.categories.length})</span>
-            </h3>
+    <div class={`${authStore.can("categories:*") ? "lg:col-span-2" : "lg:col-span-3"} card-base liquid-glass p-5 sm:p-6 rounded-3xl border border-black/5 dark:border-white/8 shadow-xl space-y-4`}>
+        <div class="flex items-center justify-between pb-3 border-b border-black/5 dark:border-white/5">
+            <div class="relative pl-3 before:w-1 before:h-4 before:rounded-md before:bg-(--primary) before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2">
+                <h3 class="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+                    <span>全站分类目录 ({blogStore.categories.length})</span>
+                </h3>
+            </div>
         </div>
 
         {#if blogStore.categories.length === 0}
@@ -102,7 +104,7 @@ function handleDelete(id: string) {
         {:else}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {#each blogStore.categories as cat}
-                    <div class="console-glass-card p-4 rounded-2xl border border-white/10 bg-[#12151f]/80 backdrop-blur-xl flex flex-col justify-between gap-3 group hover:border-emerald-500/30 transition-all">
+                    <div class="p-4 rounded-2xl bg-black/2 dark:bg-white/4 border border-black/5 dark:border-white/5 flex flex-col justify-between gap-3 group hover:border-(--primary)/40 transition-all">
                         <div class="space-y-1.5">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-2">
@@ -110,29 +112,29 @@ function handleDelete(id: string) {
                                         class="w-3 h-3 rounded-full shrink-0 shadow-xs"
                                         style="background-color: {cat.color || '#10b981'};"
                                     ></span>
-                                    <h4 class="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors">
+                                    <h4 class="text-sm font-bold text-neutral-900 dark:text-white group-hover:text-(--primary) transition-colors">
                                         {cat.name}
                                     </h4>
                                 </div>
-                                <span class="text-[10px] px-2 py-0.5 rounded-full font-mono font-bold bg-white/5 text-neutral-400 border border-white/8">
+                                <span class="text-[10px] px-2 py-0.5 rounded-full font-mono font-bold bg-black/5 dark:bg-white/5 text-neutral-500 dark:text-neutral-400 border border-black/5 dark:border-white/8">
                                     {cat.postCount || 0} 篇文章
                                 </span>
                             </div>
 
-                            <p class="text-xs text-neutral-400 line-clamp-2">
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2">
                                 {cat.description || "暂无分类描述"}
                             </p>
 
-                            <div class="text-[10.5px] font-mono text-neutral-500">
-                                Slug: <span class="text-neutral-300">{cat.slug}</span>
+                            <div class="text-[10.5px] font-mono text-neutral-400">
+                                Slug: <span class="text-neutral-700 dark:text-neutral-300">{cat.slug}</span>
                             </div>
                         </div>
 
                         {#if authStore.can("categories:*")}
-                            <div class="flex items-center justify-end pt-2 border-t border-white/5">
+                            <div class="flex items-center justify-end pt-2 border-t border-black/5 dark:border-white/5">
                                 <button
                                     type="button"
-                                    class="p-1.5 rounded-lg text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors text-xs flex items-center gap-1 cursor-pointer"
+                                    class="p-1.5 rounded-lg text-neutral-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors text-xs flex items-center gap-1 cursor-pointer"
                                     onclick={() => handleDelete(cat.id)}
                                     title="删除此分类"
                                 >

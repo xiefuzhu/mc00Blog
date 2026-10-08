@@ -1,447 +1,565 @@
 <script lang="ts">
+import { onMount } from "svelte";
+import dayjs from "dayjs";
 import { blogStore } from "../store.svelte";
 import { authStore } from "../auth.svelte";
 import Icon from "@components/common/icon.svelte";
-import type { ConsoleTab, ThroughputBucket } from "../types";
+import type { ConsoleTab } from "../types";
 
 let { onSelectTab } = $props<{
     onSelectTab: (tab: ConsoleTab) => void;
 }>();
 
-// 活跃悬停的吞吐桶状态
-let hoveredBucket = $state<ThroughputBucket | null>(null);
-let hoveredIndex = $state<number | null>(null);
+// 图表 DOM 引用
+let activityContainer = $state<HTMLDivElement>();
+let categoriesContainer = $state<HTMLDivElement>();
+let tagsContainer = $state<HTMLDivElement>();
 
-// 提取当前吞吐数据（支持后端动态与前端平滑计算）
-const throughputData = $derived.by(() => {
-    if (blogStore.throughput && blogStore.throughput.buckets?.length > 0) {
-        return blogStore.throughput;
+// ECharts 实例引用
+let echarts: any = $state();
+let activityChart: any = $state();
+let categoriesChart: any = $state();
+let tagsChart: any = $state();
+
+let isActivityLoading = $state(true);
+let isCategoriesLoading = $state(true);
+let isTagsLoading = $state(true);
+
+let timeScale: "year" | "month" | "day" = $state("year");
+
+const getThemeColors = () => {
+    const isDarkNow = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
+    return {
+        text: isDarkNow ? "#e5e7eb" : "#374151",
+        primary: isDarkNow ? "#60a5fa" : "#3b82f6",
+        grid: isDarkNow ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+        areaStart: isDarkNow ? "rgba(96, 165, 250, 0.45)" : "rgba(59, 130, 246, 0.45)",
+        areaEnd: isDarkNow ? "rgba(96, 165, 250, 0.02)" : "rgba(59, 130, 246, 0.02)",
+    };
+};
+
+const getChartsFontFamily = () => {
+    const fallback = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    if (typeof window === "undefined") return fallback;
+    const fontFamily = window.getComputedStyle(document.body).fontFamily;
+    return fontFamily && fontFamily !== "inherit" ? fontFamily : fallback;
+};
+
+const loadECharts = async () => {
+    if (typeof window === "undefined") return;
+    const echartsCore = await import("echarts/core");
+    const { LineChart, RadarChart } = await import("echarts/charts");
+    const { TitleComponent, TooltipComponent, GridComponent, LegendComponent } = await import("echarts/components");
+    const { SVGRenderer } = await import("echarts/renderers");
+
+    echartsCore.use([
+        LineChart,
+        RadarChart,
+        TitleComponent,
+        TooltipComponent,
+        GridComponent,
+        LegendComponent,
+        SVGRenderer
+    ]);
+
+    echarts = echartsCore;
+};
+
+// 1. 初始化发布活动走势折线图
+const renderActivityChart = () => {
+    if (!activityContainer || !echarts) return;
+
+    let existing = echarts.getInstanceByDom(activityContainer);
+    if (existing) {
+        activityChart = existing;
+    } else {
+        activityChart = echarts.init(activityContainer, null, { renderer: "svg" });
     }
 
-    // 默认 20 桶（每桶 10 分钟，总计 200 分钟 / 3小时20分，与截图精确对齐）
-    const sampleCounts = [
-        { s: 84, f: 1, lat: "22ms" },
-        { s: 96, f: 2, lat: "18ms" },
-        { s: 72, f: 0, lat: "25ms" },
-        { s: 110, f: 3, lat: "32ms" },
-        { s: 65, f: 1, lat: "21ms" },
-        { s: 128, f: 0, lat: "19ms" },
-        { s: 92, f: 1, lat: "26ms" },
-        { s: 54, f: 0, lat: "17ms" },
-        { s: 88, f: 2, lat: "29ms" },
-        { s: 76, f: 1, lat: "24ms" },
-        { s: 102, f: 2, lat: "31ms" },
-        { s: 64, f: 0, lat: "20ms" },
-        { s: 85, f: 1, lat: "23ms" },
-        { s: 118, f: 3, lat: "35ms" },
-        { s: 90, f: 1, lat: "27ms" },
-        { s: 70, f: 0, lat: "19ms" },
-        { s: 62, f: 1, lat: "22ms" },
-        { s: 45, f: 0, lat: "18ms" },
-        { s: 58, f: 1, lat: "21ms" },
-        { s: 36, f: 0, lat: "16ms" },
-    ];
+    const colors = getThemeColors();
+    const fontFamily = getChartsFontFamily();
+    const now = dayjs();
+    const publishedPosts = blogStore.posts.filter(p => p.status === "published");
 
-    const now = Date.now();
-    const buckets: ThroughputBucket[] = sampleCounts.map((item, idx) => {
-        const slotOffset = (19 - idx) * 10 * 60 * 1000;
-        const d = new Date(now - slotOffset);
-        const timeStr = `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
-        const total = item.s + item.f;
-        const rate = total > 0 ? Math.round((item.s / total) * 1000) / 10 : 100;
-        return {
-            index: idx,
-            time: timeStr,
-            timestamp: now - slotOffset,
-            success: item.s,
-            fail: item.f,
-            total,
-            rate,
-            latency: item.lat,
-        };
+    let data: number[] = [];
+    let xAxisData: string[] = [];
+
+    if (timeScale === "year") {
+        const oldestYear = publishedPosts.length > 0
+            ? Math.min(...publishedPosts.map(p => dayjs(p.createdAt || p.updatedAt).year()))
+            : now.year() - 4;
+        const currentYear = now.year();
+        const startYear = Math.min(oldestYear, currentYear - 4);
+
+        for (let year = startYear; year <= currentYear; year++) {
+            xAxisData.push(year.toString());
+            const count = publishedPosts.filter(p => dayjs(p.createdAt || p.updatedAt).year() === year).length;
+            data.push(count);
+        }
+    } else if (timeScale === "month") {
+        for (let i = 11; i >= 0; i--) {
+            const month = now.subtract(i, "month");
+            const monthStr = month.format("YYYY-MM");
+            xAxisData.push(month.format("MMM"));
+            const count = publishedPosts.filter(p => dayjs(p.createdAt || p.updatedAt).format("YYYY-MM") === monthStr).length;
+            data.push(count);
+        }
+    } else {
+        for (let i = 29; i >= 0; i--) {
+            const day = now.subtract(i, "day");
+            const dayStr = day.format("YYYY-MM-DD");
+            xAxisData.push(day.format("DD"));
+            const count = publishedPosts.filter(p => dayjs(p.createdAt || p.updatedAt).format("YYYY-MM-DD") === dayStr).length;
+            data.push(count);
+        }
+    }
+
+    activityChart.setOption({
+        backgroundColor: "transparent",
+        textStyle: { fontFamily },
+        animationDuration: 1000,
+        animationEasing: "cubicOut",
+        tooltip: {
+            trigger: "axis",
+            confine: true,
+            formatter: (params: any) => `${params[0].name}: <strong>${params[0].value}</strong> 篇文章`
+        },
+        grid: { left: "4%", right: "4%", bottom: "10%", top: "15%", containLabel: true },
+        xAxis: {
+            type: "category",
+            data: xAxisData,
+            axisLine: { lineStyle: { color: colors.grid } },
+            axisLabel: { fontFamily, color: colors.text, fontSize: 11 }
+        },
+        yAxis: {
+            type: "value",
+            minInterval: 1,
+            axisLine: { show: false },
+            axisLabel: { fontFamily, color: colors.text, fontSize: 11 },
+            splitLine: { lineStyle: { color: colors.grid, type: "dashed" } }
+        },
+        series: [{
+            name: "发布篇数",
+            data,
+            type: "line",
+            smooth: true,
+            symbol: "circle",
+            symbolSize: 6,
+            itemStyle: { color: colors.primary },
+            lineStyle: { width: 3, color: colors.primary },
+            areaStyle: {
+                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                    { offset: 0, color: colors.areaStart },
+                    { offset: 1, color: colors.areaEnd }
+                ])
+            }
+        }]
+    }, true);
+
+    isActivityLoading = false;
+};
+
+// 2. 初始化分类雷达图
+const renderCategoriesChart = () => {
+    if (!categoriesContainer || !echarts) return;
+
+    let existing = echarts.getInstanceByDom(categoriesContainer);
+    if (existing) {
+        categoriesChart = existing;
+    } else {
+        categoriesChart = echarts.init(categoriesContainer, null, { renderer: "svg" });
+    }
+
+    const colors = getThemeColors();
+    const fontFamily = getChartsFontFamily();
+    const cats = blogStore.categories;
+
+    if (!cats || cats.length === 0) return;
+
+    const counts = cats.map(c => {
+        const count = blogStore.posts.filter(p => p.status !== "recycle" && p.categories?.includes(c.id)).length;
+        return count || c.postCount || 0;
+    });
+    const maxVal = Math.max(...counts, 5);
+    const indicator = cats.map(c => ({ name: c.name, max: maxVal }));
+
+    categoriesChart.setOption({
+        backgroundColor: "transparent",
+        textStyle: { fontFamily },
+        animationDuration: 1200,
+        animationEasing: "exponentialOut",
+        tooltip: {
+            trigger: "item",
+            confine: true
+        },
+        radar: {
+            indicator,
+            radius: "60%",
+            center: ["50%", "58%"],
+            axisName: { fontFamily, color: colors.text, fontSize: 11, fontWeight: "bold" },
+            splitLine: { lineStyle: { color: colors.grid } },
+            splitArea: { show: false }
+        },
+        series: [{
+            type: "radar",
+            data: [{ value: counts, name: "分类覆盖" }],
+            areaStyle: { color: "rgba(255, 123, 0, 0.6)" },
+            lineStyle: { color: "rgba(255, 123, 0, 0.9)", width: 2 },
+            itemStyle: { color: "rgba(255, 123, 0, 0.9)" },
+            emphasis: {
+                areaStyle: { color: "rgba(255, 123, 0, 0.9)" }
+            }
+        }]
+    }, true);
+
+    isCategoriesLoading = false;
+};
+
+// 3. 初始化标签雷达图
+const renderTagsChart = () => {
+    if (!tagsContainer || !echarts) return;
+
+    let existing = echarts.getInstanceByDom(tagsContainer);
+    if (existing) {
+        tagsChart = existing;
+    } else {
+        tagsChart = echarts.init(tagsContainer, null, { renderer: "svg" });
+    }
+
+    const colors = getThemeColors();
+    const fontFamily = getChartsFontFamily();
+    const tags = blogStore.tags;
+
+    if (!tags || tags.length === 0) return;
+
+    const sortedTags = [...tags].sort((a, b) => {
+        const countA = blogStore.posts.filter(p => p.status !== "recycle" && p.tags?.includes(a.id)).length || a.postCount || 0;
+        const countB = blogStore.posts.filter(p => p.status !== "recycle" && p.tags?.includes(b.id)).length || b.postCount || 0;
+        return countB - countA;
+    }).slice(0, 8);
+
+    const counts = sortedTags.map(t => {
+        const count = blogStore.posts.filter(p => p.status !== "recycle" && p.tags?.includes(t.id)).length;
+        return count || t.postCount || 0;
+    });
+    const maxVal = Math.max(...counts, 5);
+    const indicator = sortedTags.map(t => ({ name: t.name, max: maxVal }));
+
+    tagsChart.setOption({
+        backgroundColor: "transparent",
+        textStyle: { fontFamily },
+        animationDuration: 1200,
+        animationEasing: "exponentialOut",
+        tooltip: {
+            trigger: "item",
+            confine: true
+        },
+        radar: {
+            indicator,
+            radius: "60%",
+            center: ["50%", "58%"],
+            axisName: { fontFamily, color: colors.text, fontSize: 11, fontWeight: "bold" },
+            splitLine: { lineStyle: { color: colors.grid } },
+            splitArea: { show: false }
+        },
+        series: [{
+            type: "radar",
+            data: [{ value: counts, name: "标签分布" }],
+            areaStyle: { color: "rgba(16, 185, 129, 0.6)" },
+            lineStyle: { color: "rgba(16, 185, 129, 0.9)", width: 2 },
+            itemStyle: { color: "rgba(16, 185, 129, 0.9)" },
+            emphasis: {
+                areaStyle: { color: "rgba(16, 185, 129, 0.9)" }
+            }
+        }]
+    }, true);
+
+    isTagsLoading = false;
+};
+
+const updateAllCharts = () => {
+    renderActivityChart();
+    renderCategoriesChart();
+    renderTagsChart();
+};
+
+onMount(() => {
+    let resizeTimer: any;
+    const handleResize = () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            activityChart?.resize();
+            categoriesChart?.resize();
+            tagsChart?.resize();
+        }, 150);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    // 观察深色模式切换并重新着色
+    const observer = new MutationObserver(() => {
+        updateAllCharts();
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+
+    loadECharts().then(() => {
+        updateAllCharts();
     });
 
-    let totalRequests = 0;
-    let successRequests = 0;
-    let failedRequests = 0;
-    for (const b of buckets) {
-        totalRequests += b.total;
-        successRequests += b.success;
-        failedRequests += b.fail;
-    }
-
-    return {
-        windowLabel: "滚动窗口 3 小时 20 分 · 每桶 10 分钟",
-        granularity: "10 分钟",
-        totalRequests: totalRequests || 1595,
-        successRequests: successRequests || 1575,
-        failedRequests: failedRequests || 20,
-        successRate: 98.7,
-        credentialsCount: blogStore.categories.length || 4,
-        credentialsDesc: `${blogStore.categories.length || 4} 个分类 · ${blogStore.tags.length || 8} 个标签索引`,
-        providerKeyCount: blogStore.attachments.length || 18,
-        providerKeyDesc: "媒体素材与图床已就绪资源",
-        modelCount: authStore.users.length || 3,
-        modelDesc: "系统注册创作者与读者",
-        buckets,
+    return () => {
+        window.removeEventListener("resize", handleResize);
+        observer.disconnect();
+        activityChart?.dispose();
+        categoriesChart?.dispose();
+        tagsChart?.dispose();
     };
 });
 
-// 计算直方图最大值用于高度归一化
-const maxBucketTotal = $derived.by(() => {
-    let maxVal = 10;
-    for (const b of throughputData.buckets) {
-        if (b.total > maxVal) maxVal = b.total;
+// 响应数据及时间跨度变化更新图表
+$effect(() => {
+    const _p = blogStore.posts.length;
+    const _c = blogStore.categories.length;
+    const _t = blogStore.tags.length;
+    const _scale = timeScale;
+    if (echarts) {
+        updateAllCharts();
     }
-    return maxVal;
 });
 
 const recentPosts = $derived(blogStore.posts.slice(0, 5));
-const totalPosts = $derived(blogStore.stats.totalPosts);
 </script>
 
-<div class="space-y-8 sm:space-y-10 select-none text-neutral-900 dark:text-neutral-100">
+<div class="space-y-6 sm:space-y-8 select-none text-neutral-900 dark:text-neutral-100">
     <!-- ========================================================================
-         1. 顶部 Hero 巨幅状态排版与大卡片 (与截图 1:1 精确排布与质感统一)
+         1. 顶部 Hero 状态栏与概览
          ======================================================================== -->
-    <section class="relative min-h-[260px] sm:min-h-[290px] pt-4 sm:pt-6">
-        <!-- 横贯 Hero 区域后方的流体霓虹绿色正弦波曲线 (完全还原截图中的绿色波峰浪线与发光点) -->
-        <div class="absolute inset-0 pointer-events-none overflow-hidden select-none" aria-hidden="true">
-            <svg
-                class="absolute left-0 bottom-4 w-full h-[140px] sm:h-[180px] pointer-events-none opacity-60 dark:opacity-85"
-                viewBox="0 0 1000 160"
-                preserveAspectRatio="none"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-            >
-                <defs>
-                    <linearGradient id="cpamc-hero-wave-stroke" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stop-color="#10b981" stop-opacity="0.2" />
-                        <stop offset="30%" stop-color="#10b981" stop-opacity="0.85" />
-                        <stop offset="60%" stop-color="#34d399" stop-opacity="0.95" />
-                        <stop offset="100%" stop-color="#10b981" stop-opacity="0.3" />
-                    </linearGradient>
-                </defs>
-
-                <!-- 主高亮绿色波峰线 -->
-                <path
-                    d="M 0,110 C 120,40 240,140 400,90 C 560,40 680,130 840,75 C 920,45 970,105 1000,80"
-                    stroke="url(#cpamc-hero-wave-stroke)"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                />
-
-                <!-- 波峰处发光小圆点 (对应截图波峰位置右下方的绿色高亮圆点) -->
-                <circle cx="840" cy="75" r="3.5" fill="#34d399" class="animate-pulse" />
-                <circle cx="915" cy="115" r="3.5" fill="#10b981" />
-            </svg>
-        </div>
-
-        <!-- Hero 主体内容网格 -->
-        <div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start justify-between">
-            <!-- 左侧：超大粗体字 "运行平稳。" + 版本状态 + 白色全圆角胶囊按钮 -->
-            <div class="lg:col-span-7 flex flex-col justify-between space-y-7 pt-2">
-                <div class="space-y-3">
-                    <!-- 运行平稳。 (圆句号为绿色发光圆圈，完全还原截图) -->
-                    <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight text-neutral-900 dark:text-white flex items-baseline">
-                        <span>运行平稳</span>
-                        <span class="inline-block w-4 h-4 sm:w-5 sm:h-5 rounded-full border-[3.5px] border-emerald-500 dark:border-emerald-400 ml-1.5 mb-1 sm:mb-2 shadow-[0_0_12px_rgba(52,211,153,0.9)] shrink-0"></span>
-                    </h1>
-
-                    <!-- 版本号与运行状态副标题 -->
-                    <p class="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 font-mono tracking-wider flex items-center gap-2">
+    <section class="card-base liquid-glass rounded-3xl p-6 sm:p-8 relative overflow-hidden border border-black/5 dark:border-white/8 shadow-xl">
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="space-y-3">
+                <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span>v1.0.0 · 控制台就绪</span>
-                    </p>
+                        运行平稳 · 站点同步正常
+                    </span>
+                    <span class="text-xs text-neutral-400 font-mono">v1.2.0</span>
                 </div>
-
-                <!-- 两个核心动作按钮 (高反差纯白全圆角胶囊按钮 + 幽灵箭头文字链接，对应截图) -->
-                <div class="flex items-center gap-5 pt-1">
-                    <button
-                        type="button"
-                        class="px-7 py-2.5 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-bold text-xs sm:text-sm shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-2"
-                        onclick={() => onSelectTab("posts")}
-                    >
-                        <Icon icon="material-symbols:article-outline" class="text-base" />
-                        <span>管理文章</span>
-                    </button>
-
-                    <button
-                        type="button"
-                        class="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
-                        onclick={() => onSelectTab("logs")}
-                    >
-                        <span>查看日志</span>
-                        <span class="font-bold text-sm">→</span>
-                    </button>
-                </div>
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-neutral-900 dark:text-white flex items-baseline gap-2">
+                    <span>博客工作台</span>
+                    <span class="inline-block w-3 h-3 rounded-full bg-(--primary) shadow-[0_0_10px_var(--primary)]"></span>
+                </h1>
+                <p class="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 max-w-xl">
+                    与前台博客数据实时保持一致。当前共收录 {blogStore.stats.publishedCount} 篇发布博文、{blogStore.categories.length} 个分类目录及 {blogStore.tags.length} 个标签索引。
+                </p>
             </div>
 
-            <!-- 右侧：已处理请求大卡片 (CPAMC 截图右上大卡，深色毛玻璃) -->
-            <div class="lg:col-span-5 flex justify-end">
-                <div class="w-full max-w-md console-glass-card rounded-3xl p-6 sm:p-7 border border-black/8 dark:border-white/5 shadow-2xl relative flex flex-col justify-between space-y-4 bg-white/80 dark:bg-[#121316] backdrop-blur-xl">
-                    <!-- 顶部标题与实时绿点徽章 -->
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-neutral-500 dark:text-neutral-400">
-                            已处理请求
-                        </span>
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse"></span>
-                            实时
-                        </span>
-                    </div>
-
-                    <!-- 巨幅大数字 1,595 -->
-                    <div>
-                        <div class="text-5xl sm:text-6xl font-black text-neutral-900 dark:text-white font-mono tracking-tight">
-                            {throughputData.totalRequests.toLocaleString()}
-                        </div>
-                        <p class="text-[11px] text-neutral-500 dark:text-neutral-400 font-medium mt-1 font-mono">
-                            {throughputData.windowLabel}
-                        </p>
-                    </div>
-
-                    <!-- 细条绿/红进度条与成功/失败数据图例 -->
-                    <div class="space-y-2.5 pt-2 border-t border-black/8 dark:border-white/5">
-                        <!-- 水平指示条：绝大部分绿色，末尾细红条 -->
-                        <div class="h-1.5 w-full rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden flex">
-                            <div
-                                class="h-full bg-emerald-500 transition-all duration-500"
-                                style="width: {throughputData.successRate}%;"
-                            ></div>
-                            <div
-                                class="h-full bg-rose-500 transition-all duration-500"
-                                style="width: {100 - throughputData.successRate}%;"
-                            ></div>
-                        </div>
-
-                        <!-- 图例：● 成功 1,575   ■ 失败 20 -->
-                        <div class="flex items-center gap-5 text-[11px] text-neutral-500 dark:text-neutral-400 font-mono">
-                            <div class="flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
-                                <span class="text-neutral-700 dark:text-neutral-300">成功 {throughputData.successRequests.toLocaleString()}</span>
-                            </div>
-                            <div class="flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-xs bg-rose-500 shrink-0"></span>
-                                <span class="text-neutral-700 dark:text-neutral-300">失败 {throughputData.failedRequests.toLocaleString()}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <button
+                    type="button"
+                    class="px-5 py-2.5 rounded-full bg-(--primary) text-white font-bold text-xs sm:text-sm shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer flex items-center gap-2"
+                    onclick={() => { blogStore.startEditing(null); onSelectTab("editor"); }}
+                >
+                    <Icon icon="material-symbols:edit-document-outline" class="text-lg" />
+                    <span>撰写新文章</span>
+                </button>
+                <button
+                    type="button"
+                    class="px-5 py-2.5 rounded-full card-base liquid-glass border border-black/5 dark:border-white/10 font-bold text-xs sm:text-sm hover:border-(--primary)/50 transition-all cursor-pointer flex items-center gap-2 text-neutral-700 dark:text-neutral-200"
+                    onclick={() => onSelectTab("posts")}
+                >
+                    <Icon icon="material-symbols:article-outline" class="text-lg text-(--primary)" />
+                    <span>文章列表</span>
+                </button>
             </div>
         </div>
     </section>
 
     <!-- ========================================================================
-         2. 中部 4 列核心指标卡片矩阵 (成功率、分类/凭证、媒体素材、系统用户)
+         2. 核心统计指标卡片 (4 列)
          ======================================================================== -->
     <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-        <!-- 卡片 1: 成功率 98.7% -->
-        <div class="console-glass-card rounded-2xl p-5 sm:p-6 border border-black/8 dark:border-white/5 shadow-lg relative overflow-hidden flex flex-col justify-between bg-white/70 dark:bg-[#121316] backdrop-blur-xl">
-            <div>
-                <span class="text-xs font-semibold text-neutral-500 dark:text-neutral-400 block mb-1">
-                    成功率
-                </span>
-                <span class="text-3xl sm:text-4xl font-black text-neutral-900 dark:text-white font-mono block my-1">
-                    {throughputData.successRate}%
-                </span>
-            </div>
-            <div class="mt-4">
-                <div class="h-1.5 w-full bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden mb-2">
-                    <div
-                        class="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                        style="width: {throughputData.successRate}%;"
-                    ></div>
+        <!-- 卡片 1: 公开发布博文 -->
+        <div class="card-base liquid-glass rounded-2xl p-5 border border-black/5 dark:border-white/8 shadow-md flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-neutral-500 dark:text-neutral-400">公开博文</span>
+                <div class="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                    <Icon icon="material-symbols:article-outline" class="text-lg" />
                 </div>
-                <span class="text-[11px] text-neutral-500 dark:text-neutral-400 font-medium block">
-                    窗口内共 {throughputData.totalRequests.toLocaleString()} 次请求
+            </div>
+            <div class="my-3">
+                <span class="text-3xl sm:text-4xl font-black font-mono text-neutral-900 dark:text-white">
+                    {blogStore.stats.publishedCount}
                 </span>
+                <span class="text-xs text-neutral-400 font-mono ml-1">/ {blogStore.posts.length} 篇</span>
+            </div>
+            <div class="text-[11px] text-neutral-500 dark:text-neutral-400 flex items-center justify-between border-t border-black/5 dark:border-white/5 pt-2">
+                <span>草稿数量</span>
+                <span class="font-mono font-bold text-amber-500">{blogStore.stats.draftCount} 篇</span>
             </div>
         </div>
 
         <!-- 卡片 2: 分类目录 -->
-        <div class="console-glass-card rounded-2xl p-5 sm:p-6 border border-black/8 dark:border-white/5 shadow-lg relative overflow-hidden flex flex-col justify-between bg-white/70 dark:bg-[#121316] backdrop-blur-xl">
-            <div>
-                <span class="text-xs font-semibold text-neutral-500 dark:text-neutral-400 block mb-1">
-                    分类目录
-                </span>
-                <span class="text-3xl sm:text-4xl font-black text-neutral-900 dark:text-white font-mono block my-1">
+        <div class="card-base liquid-glass rounded-2xl p-5 border border-black/5 dark:border-white/8 shadow-md flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-neutral-500 dark:text-neutral-400">分类目录</span>
+                <div class="w-8 h-8 rounded-xl bg-orange-500/10 text-orange-500 flex items-center justify-center">
+                    <Icon icon="material-symbols:folder-outline" class="text-lg" />
+                </div>
+            </div>
+            <div class="my-3">
+                <span class="text-3xl sm:text-4xl font-black font-mono text-neutral-900 dark:text-white">
                     {blogStore.categories.length}
                 </span>
+                <span class="text-xs text-neutral-400 font-mono ml-1">个专栏</span>
             </div>
-            <div class="mt-4">
-                <div class="h-1.5 w-full bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden mb-2">
-                    <div class="h-full bg-emerald-500 rounded-full w-full"></div>
-                </div>
-                <span class="text-[11px] text-neutral-500 dark:text-neutral-400 font-medium block">
-                    {blogStore.categories.length} 个可用 · {blogStore.tags.length} 个标签索引
-                </span>
+            <div class="text-[11px] text-neutral-500 dark:text-neutral-400 flex items-center justify-between border-t border-black/5 dark:border-white/5 pt-2">
+                <span>最高覆盖</span>
+                <span class="font-bold text-neutral-700 dark:text-neutral-300">示例 (5篇)</span>
             </div>
         </div>
 
-        <!-- 卡片 3: 媒体素材 -->
-        <div class="console-glass-card rounded-2xl p-5 sm:p-6 border border-black/8 dark:border-white/5 shadow-lg relative overflow-hidden flex flex-col justify-between bg-white/70 dark:bg-[#121316] backdrop-blur-xl">
-            <div>
-                <span class="text-xs font-semibold text-neutral-500 dark:text-neutral-400 block mb-1">
-                    媒体素材
+        <!-- 卡片 3: 文章标签 -->
+        <div class="card-base liquid-glass rounded-2xl p-5 border border-black/5 dark:border-white/8 shadow-md flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-neutral-500 dark:text-neutral-400">文章标签</span>
+                <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                    <Icon icon="material-symbols:label-outline" class="text-lg" />
+                </div>
+            </div>
+            <div class="my-3">
+                <span class="text-3xl sm:text-4xl font-black font-mono text-neutral-900 dark:text-white">
+                    {blogStore.tags.length}
                 </span>
-                <span class="text-3xl sm:text-4xl font-black text-neutral-900 dark:text-white font-mono block my-1">
+                <span class="text-xs text-neutral-400 font-mono ml-1">个标签</span>
+            </div>
+            <div class="text-[11px] text-neutral-500 dark:text-neutral-400 flex items-center justify-between border-t border-black/5 dark:border-white/5 pt-2">
+                <span>涵盖范畴</span>
+                <span class="font-bold text-neutral-700 dark:text-neutral-300">防拷 / 加密 / 折扣</span>
+            </div>
+        </div>
+
+        <!-- 卡片 4: 媒体素材 -->
+        <div class="card-base liquid-glass rounded-2xl p-5 border border-black/5 dark:border-white/8 shadow-md flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-neutral-500 dark:text-neutral-400">媒体素材</span>
+                <div class="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
+                    <Icon icon="material-symbols:photo-library-outline" class="text-lg" />
+                </div>
+            </div>
+            <div class="my-3">
+                <span class="text-3xl sm:text-4xl font-black font-mono text-neutral-900 dark:text-white">
                     {blogStore.attachments.length}
                 </span>
+                <span class="text-xs text-neutral-400 font-mono ml-1">份资源</span>
             </div>
-            <div class="mt-4">
-                <div class="h-1.5 w-full bg-transparent mb-2"></div>
-                <span class="text-[11px] text-neutral-500 dark:text-neutral-400 font-medium block">
-                    图床素材库已就绪资源总数
-                </span>
-            </div>
-        </div>
-
-        <!-- 卡片 4: 系统用户 -->
-        <div class="console-glass-card rounded-2xl p-5 sm:p-6 border border-black/8 dark:border-white/5 shadow-lg relative overflow-hidden flex flex-col justify-between bg-white/70 dark:bg-[#121316] backdrop-blur-xl">
-            <div>
-                <span class="text-xs font-semibold text-neutral-500 dark:text-neutral-400 block mb-1">
-                    系统用户
-                </span>
-                <span class="text-3xl sm:text-4xl font-black text-neutral-900 dark:text-white font-mono block my-1">
-                    {authStore.users.length}
-                </span>
-            </div>
-            <div class="mt-4">
-                <div class="h-1.5 w-full bg-transparent mb-2"></div>
-                <span class="text-[11px] text-neutral-500 dark:text-neutral-400 font-medium block">
-                    管理员与创作者正常调度
-                </span>
+            <div class="text-[11px] text-neutral-500 dark:text-neutral-400 flex items-center justify-between border-t border-black/5 dark:border-white/5 pt-2">
+                <span>总创作字数</span>
+                <span class="font-mono font-bold text-neutral-700 dark:text-neutral-300">{blogStore.stats.totalWords} 字</span>
             </div>
         </div>
     </section>
 
     <!-- ========================================================================
-         3. 下部：以 10 分钟为粒度的吞吐直方图 (与截图底部完全一致)
+         3. 核心统计图表 (活动走势折线图与双雷达图)
          ======================================================================== -->
-    <section class="space-y-4 pt-2">
-        <!-- 标题组：| 实时演变 与 以 10 分钟为粒度的吞吐 -->
-        <div class="space-y-1.5">
-            <div class="flex items-center gap-2 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                <span class="w-1 h-3.5 bg-emerald-500 rounded-full inline-block"></span>
-                <span>实时演变</span>
-            </div>
-            <h2 class="text-2xl sm:text-3xl font-black tracking-tight text-neutral-900 dark:text-white">
-                以 10 分钟为粒度的吞吐
-            </h2>
-            <p class="text-xs text-neutral-500 dark:text-neutral-400 font-medium">
-                最近 3 小时 20 分 的成功与失败次数，每 10 分钟一桶。悬停任一柱可查看精确构成。
-            </p>
-        </div>
-
-        <!-- 柱状图主图与交互悬停悬浮框 -->
-        <div class="console-glass-card rounded-3xl p-6 sm:p-8 border border-black/8 dark:border-white/5 bg-white/70 dark:bg-[#121316] backdrop-blur-xl relative">
-            <!-- 悬浮数据卡 (跟随当前 hover 桶展示精确构成) -->
-            {#if hoveredBucket}
-                <div class="absolute top-4 right-6 z-30 px-4 py-2.5 rounded-2xl bg-white/95 dark:bg-[#181a22]/95 text-neutral-900 dark:text-white border border-emerald-500/40 shadow-2xl backdrop-blur-md text-xs font-mono flex items-center gap-4 pointer-events-none animate-in fade-in zoom-in-95 duration-150">
-                    <div class="flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400">
-                        <Icon icon="material-symbols:schedule-outline" class="text-xs text-emerald-500 dark:text-emerald-400" />
-                        <span>{hoveredBucket.time}</span>
-                    </div>
-                    <div class="text-emerald-600 dark:text-emerald-400 font-bold">
-                        成功: {hoveredBucket.success}
-                    </div>
-                    <div class="text-rose-500 dark:text-rose-400 font-bold">
-                        失败: {hoveredBucket.fail}
-                    </div>
-                    <div class="text-neutral-600 dark:text-neutral-300">
-                        总计: {hoveredBucket.total}
-                    </div>
-                    <div class="text-neutral-500 dark:text-neutral-400">
-                        延迟: {hoveredBucket.latency}
-                    </div>
+    <section class="space-y-6">
+        <!-- 图表 1: 发布活动走势折线图 (完全对齐前台侧边栏 Activities) -->
+        <div class="card-base liquid-glass rounded-3xl p-6 sm:p-7 border border-black/5 dark:border-white/8 shadow-xl">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                <div class="relative pl-3 before:w-1 before:h-4 before:rounded-md before:bg-(--primary) before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2">
+                    <h2 class="text-base font-bold text-neutral-900 dark:text-white">发布活动走势</h2>
+                    <p class="text-xs text-neutral-400">与博客侧边栏完全一致的发布活跃度走势分析</p>
                 </div>
-            {/if}
 
-            <!-- 20 桶直方图栅格 (完全对齐图片比例与质感) -->
-            <div class="h-44 sm:h-56 w-full flex items-end gap-2 sm:gap-2.5 px-1 border-b border-black/8 dark:border-white/5 pb-2">
-                {#each throughputData.buckets as bucket, idx}
-                    {@const heightPercent = Math.max(10, Math.round((bucket.total / maxBucketTotal) * 100))}
-                    {@const failHeight = bucket.total > 0 ? Math.round((bucket.fail / bucket.total) * 100) : 0}
-                    {@const isHovered = hoveredIndex === idx}
-
-                    <div
-                        class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-pointer"
-                        onmouseenter={() => { hoveredBucket = bucket; hoveredIndex = idx; }}
-                        onmouseleave={() => { hoveredBucket = null; hoveredIndex = null; }}
-                        role="region"
-                        aria-label={`时段 ${bucket.time}: ${bucket.total} 次请求`}
+                <!-- 尺度切换胶囊选择器 (年 / 月 / 日) -->
+                <div class="flex items-center gap-1 p-1 rounded-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 self-start sm:self-auto">
+                    <button
+                        type="button"
+                        class="px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer {timeScale === 'year' ? 'bg-(--primary) text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}"
+                        onclick={() => { timeScale = "year"; }}
                     >
-                        <!-- 柱体容器 -->
-                        <div
-                            class="w-full rounded-t-xs transition-all duration-200 overflow-hidden relative flex flex-col justify-end {isHovered ? 'scale-y-105 brightness-125 shadow-[0_0_16px_rgba(16,185,129,0.7)]' : 'opacity-85 hover:opacity-100'}"
-                            style="height: {heightPercent}%;"
-                        >
-                            <!-- 失败部分 (红色细顶层) -->
-                            {#if bucket.fail > 0}
-                                <div
-                                    class="w-full bg-rose-500 shrink-0"
-                                    style="height: {Math.max(4, failHeight)}%;"
-                                ></div>
-                            {/if}
+                        按年
+                    </button>
+                    <button
+                        type="button"
+                        class="px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer {timeScale === 'month' ? 'bg-(--primary) text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}"
+                        onclick={() => { timeScale = "month"; }}
+                    >
+                        按月
+                    </button>
+                    <button
+                        type="button"
+                        class="px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer {timeScale === 'day' ? 'bg-(--primary) text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}"
+                        onclick={() => { timeScale = "day"; }}
+                    >
+                        按日
+                    </button>
+                </div>
+            </div>
 
-                            <!-- 成功部分 (翠绿渐变主色) -->
-                            <div class="w-full flex-1 bg-gradient-to-t from-emerald-600 via-emerald-500 to-emerald-400"></div>
-                        </div>
-
-                        <!-- 柱脚指示小点/线 -->
-                        <div class="w-1.5 h-1 mt-1 rounded-full {isHovered ? 'bg-emerald-400 shadow-[0_0_6px_#10b981]' : 'bg-transparent'}"></div>
+            <div class="relative w-full h-64 sm:h-72">
+                <div bind:this={activityContainer} class="w-full h-full transition-opacity duration-300" class:opacity-0={isActivityLoading}></div>
+                {#if isActivityLoading}
+                    <div class="absolute inset-0 flex items-center justify-center text-xs text-neutral-400">
+                        正在渲染折线图...
                     </div>
-                {/each}
+                {/if}
+            </div>
+        </div>
+
+        <!-- 图表 2 & 3: 分类雷达图与标签雷达图 (双列对齐) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- 分类分布雷达图 -->
+            <div class="card-base liquid-glass rounded-3xl p-6 sm:p-7 border border-black/5 dark:border-white/8 shadow-xl flex flex-col justify-between">
+                <div class="relative pl-3 before:w-1 before:h-4 before:rounded-md before:bg-orange-500 before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 mb-2">
+                    <h2 class="text-base font-bold text-neutral-900 dark:text-white">分类覆盖雷达</h2>
+                    <p class="text-xs text-neutral-400">全站博文在各分类专栏的深度分布</p>
+                </div>
+                <div class="relative w-full h-64">
+                    <div bind:this={categoriesContainer} class="w-full h-full transition-opacity duration-300" class:opacity-0={isCategoriesLoading}></div>
+                    {#if isCategoriesLoading}
+                        <div class="absolute inset-0 flex items-center justify-center text-xs text-neutral-400">
+                            正在生成分类雷达...
+                        </div>
+                    {/if}
+                </div>
             </div>
 
-            <!-- X 轴时间指示标注 -->
-            <div class="flex items-center justify-between text-[11px] font-mono text-neutral-400 dark:text-neutral-500 pt-3 px-1">
-                <span>-3h 20m</span>
-                <span class="hidden sm:inline">-2h 30m</span>
-                <span>-1h 40m</span>
-                <span class="hidden sm:inline">-50m</span>
-                <span class="text-emerald-600 dark:text-emerald-400 font-bold">现在</span>
-            </div>
-
-            <!-- 系统运行状态摘要小栏 (贴合控制台运行态) -->
-            <div class="mt-6 pt-5 border-t border-black/8 dark:border-white/5 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono text-neutral-500 dark:text-neutral-400">
-                <div class="flex items-center justify-between p-3 rounded-2xl bg-black/3 dark:bg-white/4 border border-black/5 dark:border-white/5">
-                    <span>后端 API 状态</span>
-                    <span class="text-emerald-600 dark:text-emerald-400 font-bold">已连接</span>
+            <!-- 标签分布雷达图 -->
+            <div class="card-base liquid-glass rounded-3xl p-6 sm:p-7 border border-black/5 dark:border-white/8 shadow-xl flex flex-col justify-between">
+                <div class="relative pl-3 before:w-1 before:h-4 before:rounded-md before:bg-emerald-500 before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 mb-2">
+                    <h2 class="text-base font-bold text-neutral-900 dark:text-white">标签覆盖雷达</h2>
+                    <p class="text-xs text-neutral-400">热门主题标签的渗透与使用频度</p>
                 </div>
-                <div class="flex items-center justify-between p-3 rounded-2xl bg-black/3 dark:bg-white/4 border border-black/5 dark:border-white/5">
-                    <span>渲染管线</span>
-                    <span class="text-cyan-600 dark:text-cyan-400 font-bold">双模液态/毛玻璃</span>
-                </div>
-                <div class="flex items-center justify-between p-3 rounded-2xl bg-black/3 dark:bg-white/4 border border-black/5 dark:border-white/5">
-                    <span>活跃文章归档</span>
-                    <span class="text-neutral-800 dark:text-neutral-200 font-bold">{totalPosts} 篇</span>
+                <div class="relative w-full h-64">
+                    <div bind:this={tagsContainer} class="w-full h-full transition-opacity duration-300" class:opacity-0={isTagsLoading}></div>
+                    {#if isTagsLoading}
+                        <div class="absolute inset-0 flex items-center justify-center text-xs text-neutral-400">
+                            正在生成标签雷达...
+                        </div>
+                    {/if}
                 </div>
             </div>
         </div>
     </section>
 
     <!-- ========================================================================
-         4. 创作内容跟踪与快捷入口 (文章管理快览与快捷入口)
+         4. 底部最新文章动态与快捷管理入口
          ======================================================================== -->
-    <section class="grid grid-cols-1 lg:grid-cols-12 gap-5 pt-2">
-        <!-- 左侧：最新变动文章 (8 列) -->
-        <div class="lg:col-span-8 console-glass-card rounded-3xl p-5 sm:p-6 border border-black/8 dark:border-white/5 shadow-xl space-y-4 bg-white/70 dark:bg-[#121316] backdrop-blur-xl">
-            <div class="flex items-center justify-between border-b border-black/8 dark:border-white/5 pb-3">
-                <div class="flex items-center gap-2">
-                    <span class="w-1.5 h-4 rounded-full bg-emerald-500 shrink-0 shadow-[0_0_8px_#10b981]"></span>
-                    <h3 class="text-sm font-bold text-neutral-900 dark:text-white">
-                        最新文章与创作动态
-                    </h3>
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- 左侧：最新发布文章 (8 列) -->
+        <div class="lg:col-span-8 card-base liquid-glass rounded-3xl p-6 sm:p-7 border border-black/5 dark:border-white/8 shadow-xl space-y-4">
+            <div class="flex items-center justify-between border-b border-black/5 dark:border-white/5 pb-4">
+                <div class="relative pl-3 before:w-1 before:h-4 before:rounded-md before:bg-(--primary) before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2">
+                    <h3 class="text-base font-bold text-neutral-900 dark:text-white">最近文章动态</h3>
+                    <p class="text-xs text-neutral-400">已收录的真实博文清单与元数据</p>
                 </div>
                 <button
                     type="button"
-                    class="text-xs text-emerald-600 dark:text-emerald-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                    class="text-xs text-(--primary) font-bold hover:underline cursor-pointer flex items-center gap-1"
                     onclick={() => onSelectTab("posts")}
                 >
-                    <span>全部文章 ({totalPosts})</span>
-                    <Icon icon="material-symbols:arrow-forward" class="text-xs" />
+                    <span>查看全部</span>
+                    <span>→</span>
                 </button>
             </div>
 
@@ -449,22 +567,42 @@ const totalPosts = $derived(blogStore.stats.totalPosts);
                 <table class="w-full text-left text-xs">
                     <thead>
                         <tr class="text-neutral-400 dark:text-neutral-500 border-b border-black/5 dark:border-white/5 text-[11px] font-mono">
-                            <th class="py-2 font-medium">标题</th>
-                            <th class="py-2 font-medium">分类</th>
-                            <th class="py-2 font-medium">状态</th>
-                            <th class="py-2 font-medium text-right">操作</th>
+                            <th class="py-2.5 font-medium">文章标题</th>
+                            <th class="py-2.5 font-medium">分类</th>
+                            <th class="py-2.5 font-medium">标签</th>
+                            <th class="py-2.5 font-medium">状态</th>
+                            <th class="py-2.5 font-medium text-right">操作</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-black/5 dark:divide-white/5">
                         {#each recentPosts as post}
                             <tr class="hover:bg-black/2 dark:hover:bg-white/2 transition-colors">
-                                <td class="py-3 pr-2 font-medium text-neutral-800 dark:text-neutral-200 max-w-[240px] truncate">
-                                    <span class="hover:text-emerald-500 cursor-pointer" onclick={() => { blogStore.startEditing(post.id); onSelectTab("editor"); }}>
+                                <td class="py-3 pr-2 font-medium text-neutral-800 dark:text-neutral-200 max-w-[200px] truncate">
+                                    <span class="hover:text-(--primary) cursor-pointer" onclick={() => { blogStore.startEditing(post.id); onSelectTab("editor"); }}>
                                         {post.title}
                                     </span>
                                 </td>
-                                <td class="py-3 pr-2 text-neutral-500 dark:text-neutral-400 font-mono text-[11px]">
-                                    {post.categories?.[0] ? (blogStore.categoriesMap.get(post.categories[0])?.name || post.categories[0]) : "默认"}
+                                <td class="py-3 pr-2 text-neutral-500 dark:text-neutral-400 text-[11px]">
+                                    {#if post.categories?.[0]}
+                                        <span class="inline-block px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 font-mono">
+                                            {blogStore.categoriesMap.get(post.categories[0]) || post.categories[0]}
+                                        </span>
+                                    {:else}
+                                        <span class="text-neutral-400">未分类</span>
+                                    {/if}
+                                </td>
+                                <td class="py-3 pr-2">
+                                    <div class="flex flex-wrap gap-1">
+                                        {#if post.tags && post.tags.length > 0}
+                                            {#each post.tags.slice(0, 2) as tagId}
+                                                <span class="inline-block px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono">
+                                                    #{blogStore.tagsMap.get(tagId) || tagId}
+                                                </span>
+                                            {/each}
+                                        {:else}
+                                            <span class="text-neutral-400 text-[11px]">-</span>
+                                        {/if}
+                                    </div>
                                 </td>
                                 <td class="py-3 pr-2">
                                     <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-mono font-bold {post.status === 'published' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'}">
@@ -474,7 +612,7 @@ const totalPosts = $derived(blogStore.stats.totalPosts);
                                 <td class="py-3 text-right">
                                     <button
                                         type="button"
-                                        class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 font-semibold cursor-pointer"
+                                        class="text-(--primary) hover:underline font-bold cursor-pointer"
                                         onclick={() => { blogStore.startEditing(post.id); onSelectTab("editor"); }}
                                     >
                                         编辑
@@ -488,64 +626,59 @@ const totalPosts = $derived(blogStore.stats.totalPosts);
         </div>
 
         <!-- 右侧：快捷入口 (4 列) -->
-        <div class="lg:col-span-4 console-glass-card rounded-3xl p-5 sm:p-6 border border-black/8 dark:border-white/5 shadow-xl space-y-4 bg-white/70 dark:bg-[#121316] backdrop-blur-xl flex flex-col justify-between">
-            <div class="space-y-3">
-                <div class="flex items-center gap-2 border-b border-black/8 dark:border-white/5 pb-3">
-                    <span class="w-1.5 h-4 rounded-full bg-cyan-500 shrink-0 shadow-[0_0_8px_#06b6d4]"></span>
-                    <h3 class="text-sm font-bold text-neutral-900 dark:text-white">
-                        工作台快捷入口
-                    </h3>
+        <div class="lg:col-span-4 card-base liquid-glass rounded-3xl p-6 sm:p-7 border border-black/5 dark:border-white/8 shadow-xl flex flex-col justify-between space-y-4">
+            <div class="space-y-4">
+                <div class="relative pl-3 before:w-1 before:h-4 before:rounded-md before:bg-cyan-500 before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 border-b border-black/5 dark:border-white/5 pb-3">
+                    <h3 class="text-base font-bold text-neutral-900 dark:text-white">快捷导航</h3>
+                    <p class="text-xs text-neutral-400">直达各个常用系统管理功能</p>
                 </div>
 
-                <div class="grid grid-cols-2 gap-2.5">
+                <div class="grid grid-cols-2 gap-3">
                     <button
                         type="button"
-                        class="p-3 rounded-2xl bg-black/2 dark:bg-white/3 border border-black/5 dark:border-white/5 hover:border-emerald-500/40 text-left transition-all cursor-pointer group"
+                        class="p-3.5 rounded-2xl bg-black/2 dark:bg-white/4 border border-black/5 dark:border-white/5 hover:border-(--primary)/50 text-left transition-all cursor-pointer group"
                         onclick={() => { blogStore.startEditing(null); onSelectTab("editor"); }}
                     >
-                        <Icon icon="material-symbols:edit-document-outline" class="text-xl text-emerald-500 mb-1 group-hover:scale-110 transition-transform" />
-                        <div class="font-bold text-xs text-neutral-800 dark:text-neutral-200">撰写新文章</div>
-                        <div class="text-[10px] text-neutral-400">支持实时 Markdown</div>
+                        <Icon icon="material-symbols:edit-document-outline" class="text-2xl text-(--primary) mb-1.5 group-hover:scale-110 transition-transform" />
+                        <div class="font-bold text-xs text-neutral-800 dark:text-neutral-200">撰写文章</div>
+                        <div class="text-[10px] text-neutral-400">实时 Markdown 编辑</div>
                     </button>
 
                     <button
                         type="button"
-                        class="p-3 rounded-2xl bg-black/2 dark:bg-white/3 border border-black/5 dark:border-white/5 hover:border-emerald-500/40 text-left transition-all cursor-pointer group"
+                        class="p-3.5 rounded-2xl bg-black/2 dark:bg-white/4 border border-black/5 dark:border-white/5 hover:border-(--primary)/50 text-left transition-all cursor-pointer group"
                         onclick={() => onSelectTab("categories")}
                     >
-                        <Icon icon="material-symbols:folder-outline" class="text-xl text-blue-500 mb-1 group-hover:scale-110 transition-transform" />
+                        <Icon icon="material-symbols:folder-outline" class="text-2xl text-orange-500 mb-1.5 group-hover:scale-110 transition-transform" />
                         <div class="font-bold text-xs text-neutral-800 dark:text-neutral-200">分类与标签</div>
-                        <div class="text-[10px] text-neutral-400">目录体系管理</div>
+                        <div class="text-[10px] text-neutral-400">分类目录体系管理</div>
                     </button>
 
                     <button
                         type="button"
-                        class="p-3 rounded-2xl bg-black/2 dark:bg-white/3 border border-black/5 dark:border-white/5 hover:border-emerald-500/40 text-left transition-all cursor-pointer group"
+                        class="p-3.5 rounded-2xl bg-black/2 dark:bg-white/4 border border-black/5 dark:border-white/5 hover:border-(--primary)/50 text-left transition-all cursor-pointer group"
                         onclick={() => onSelectTab("attachments")}
                     >
-                        <Icon icon="material-symbols:photo-library-outline" class="text-xl text-amber-500 mb-1 group-hover:scale-110 transition-transform" />
-                        <div class="font-bold text-xs text-neutral-800 dark:text-neutral-200">媒体资源库</div>
-                        <div class="text-[10px] text-neutral-400">上传与素材管理</div>
+                        <Icon icon="material-symbols:photo-library-outline" class="text-2xl text-purple-500 mb-1.5 group-hover:scale-110 transition-transform" />
+                        <div class="font-bold text-xs text-neutral-800 dark:text-neutral-200">媒体图库</div>
+                        <div class="text-[10px] text-neutral-400">封面与插图管理</div>
                     </button>
 
                     <button
                         type="button"
-                        class="p-3 rounded-2xl bg-black/2 dark:bg-white/3 border border-black/5 dark:border-white/5 hover:border-emerald-500/40 text-left transition-all cursor-pointer group"
-                        onclick={() => onSelectTab("keeper")}
+                        class="p-3.5 rounded-2xl bg-black/2 dark:bg-white/4 border border-black/5 dark:border-white/5 hover:border-(--primary)/50 text-left transition-all cursor-pointer group"
+                        onclick={() => onSelectTab("settings")}
                     >
-                        <Icon icon="material-symbols:security-update-good-outline" class="text-xl text-purple-500 mb-1 group-hover:scale-110 transition-transform" />
-                        <div class="font-bold text-xs text-neutral-800 dark:text-neutral-200">系统体检</div>
-                        <div class="text-[10px] text-neutral-400">数据备份与诊断</div>
+                        <Icon icon="material-symbols:settings-outline" class="text-2xl text-cyan-500 mb-1.5 group-hover:scale-110 transition-transform" />
+                        <div class="font-bold text-xs text-neutral-800 dark:text-neutral-200">站点设置</div>
+                        <div class="text-[10px] text-neutral-400">全站标题与全局配置</div>
                     </button>
                 </div>
             </div>
 
-            <div class="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs flex items-center justify-between">
-                <span class="flex items-center gap-1.5 font-medium">
-                    <Icon icon="material-symbols:check-circle-outline" class="text-base text-emerald-500" />
-                    <span>系统状态良好，已完全就绪</span>
-                </span>
-                <span class="font-mono text-[10px]">100% OK</span>
+            <div class="pt-4 border-t border-black/5 dark:border-white/5 flex items-center justify-between text-[11px] text-neutral-400">
+                <span>当前登录身份</span>
+                <span class="font-bold text-neutral-700 dark:text-neutral-300 font-mono">{authStore.user?.displayName || "Halo 管理员"}</span>
             </div>
         </div>
     </section>

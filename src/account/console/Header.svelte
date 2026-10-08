@@ -71,7 +71,6 @@ onMount(() => {
 
     window.addEventListener("glass-mode-changed" as any, handleGlassChanged);
 
-    // 点击外部区域自动关闭用户浮动菜单
     const handleOutsideClick = (e: MouseEvent) => {
         const target = e.target as HTMLElement;
         if (!target.closest("#console-user-avatar-trigger") && !target.closest("#console-user-menu-popover")) {
@@ -134,25 +133,25 @@ async function handleLogout() {
 
 <!-- 全局轻量提示 Toast (顶部居中浮层) -->
 {#if toastMessage}
-    <div class="fixed top-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-2xl bg-white/95 dark:bg-[#121620]/95 text-neutral-900 dark:text-white border border-emerald-500/40 shadow-2xl backdrop-blur-xl text-xs font-mono flex items-center gap-2 pointer-events-none animate-in fade-in zoom-in-95 duration-150">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+    <div class="fixed top-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-2xl card-base liquid-glass text-neutral-900 dark:text-white border border-(--primary)/40 shadow-2xl backdrop-blur-xl text-xs font-mono flex items-center gap-2 pointer-events-none animate-in fade-in zoom-in-95 duration-150">
+        <span class="w-2 h-2 rounded-full bg-(--primary) animate-pulse"></span>
         <span>{toastMessage}</span>
     </div>
 {/if}
 
-<!-- 顶栏区域：左侧当前面包屑与状态 + 右上角 CPAMC 悬浮药丸胶囊操作条 -->
+<!-- 顶栏区域：左侧当前面包屑与状态 + 右上角悬浮药丸胶囊操作条 -->
 <header class="w-full px-4 sm:px-6 lg:px-8 pt-4 pb-2 flex items-center justify-between select-none">
     <!-- 左侧面包屑与移动端汉堡键 -->
     <div class="flex items-center gap-3">
         <!-- 移动端侧边栏汉堡按钮 -->
         <button
             type="button"
-            class="md:hidden w-9 h-9 rounded-full bg-white/80 dark:bg-[#121620]/90 text-neutral-700 dark:text-neutral-300 border border-black/10 dark:border-white/10 flex items-center justify-center hover:text-emerald-500 shadow-xl backdrop-blur-xl cursor-pointer"
+            class="md:hidden w-9 h-9 rounded-full card-base liquid-glass text-neutral-700 dark:text-neutral-300 border border-black/10 dark:border-white/10 flex items-center justify-center hover:text-(--primary) shadow-xl cursor-pointer"
             onclick={onOpenMobileMenu}
             title="打开导航抽屉"
             aria-label="打开导航抽屉"
         >
-            <Icon icon="material-symbols:menu" class="text-lg text-emerald-500 dark:text-emerald-400" />
+            <Icon icon="material-symbols:menu" class="text-lg text-(--primary)" />
         </button>
 
         <div class="flex items-center gap-2 text-xs font-mono">
@@ -168,27 +167,27 @@ async function handleLogout() {
         </div>
     </div>
 
-    <!-- 右上角 CPAMC 经典悬浮药丸工具条 (对应截图右上角的独立操作胶囊) -->
+    <!-- 右上角悬浮药丸工具条 -->
     <div class="flex items-center gap-2">
-        <div class="console-glass-pill h-9 px-2 sm:px-3 rounded-full flex items-center gap-1 sm:gap-1.5 bg-white/80 dark:bg-[#121620]/90 border border-black/8 dark:border-white/10 shadow-2xl backdrop-blur-2xl text-neutral-700 dark:text-neutral-300">
+        <div class="card-base liquid-glass-bar h-9 px-2 sm:px-3 rounded-full flex items-center gap-1 sm:gap-1.5 border border-black/8 dark:border-white/10 shadow-xl text-neutral-700 dark:text-neutral-300">
             <!-- 1. 刷新按钮 -->
             <button
                 type="button"
-                class="p-1.5 rounded-full hover:text-emerald-500 dark:hover:text-emerald-400 hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer relative"
+                class="p-1.5 rounded-full hover:text-(--primary) hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer relative"
                 onclick={handleRefresh}
                 title="刷新与同步数据"
                 aria-label="刷新数据"
             >
                 <Icon
                     icon="material-symbols:refresh"
-                    class="text-base {isRefreshing ? 'animate-spin text-emerald-500 dark:text-emerald-400' : ''}"
+                    class="text-base {isRefreshing ? 'animate-spin text-(--primary)' : ''}"
                 />
             </button>
 
-            <!-- 2. 访问博客前台 (地球/网络图标，对应截图的第二个按钮) -->
+            <!-- 2. 访问博客前台 -->
             <button
                 type="button"
-                class="p-1.5 rounded-full hover:text-emerald-500 dark:hover:text-emerald-400 hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer relative"
+                class="p-1.5 rounded-full hover:text-(--primary) hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer relative"
                 onclick={handleOpenBlog}
                 title="新标签页打开博客首页"
                 aria-label="访问博客首页"
@@ -202,7 +201,7 @@ async function handleLogout() {
             <!-- 3. 玻璃材质切换 (液态玻璃 / 毛玻璃) -->
             <button
                 type="button"
-                class="p-1.5 rounded-full hover:text-emerald-500 dark:hover:text-emerald-400 hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer relative"
+                class="p-1.5 rounded-full hover:text-(--primary) hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer relative"
                 onclick={toggleGlassMode}
                 title={glassMode === 'liquid' ? "当前: 液态玻璃 (点击切换毛玻璃)" : "当前: 毛玻璃 (点击切换液态玻璃)"}
                 aria-label="切换玻璃材质"
@@ -210,11 +209,11 @@ async function handleLogout() {
                 {#if glassMode === 'liquid'}
                     <Icon icon="material-symbols:water-drop" class="text-base text-cyan-500 dark:text-cyan-400" />
                 {:else}
-                    <Icon icon="material-symbols:blur-on" class="text-base text-emerald-500 dark:text-emerald-400" />
+                    <Icon icon="material-symbols:blur-on" class="text-base text-(--primary)" />
                 {/if}
             </button>
 
-            <!-- 4. 主题模式切换 (☀️ / 🌙) -->
+            <!-- 4. 主题模式切换 -->
             <button
                 type="button"
                 class="p-1.5 rounded-full hover:text-amber-500 dark:hover:text-amber-400 hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
@@ -232,7 +231,7 @@ async function handleLogout() {
             <!-- 分割细竖线 -->
             <span class="w-px h-3.5 bg-black/10 dark:bg-white/10"></span>
 
-            <!-- 5. 退出控制台 / 返回博客前台 -->
+            <!-- 5. 退出控制台 -->
             <button
                 type="button"
                 class="p-1.5 rounded-full hover:text-rose-500 dark:hover:text-rose-400 hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
@@ -246,13 +245,13 @@ async function handleLogout() {
     </div>
 </header>
 
-<!-- 右下角常驻悬浮头像胶囊 (对应截图右下角圆形头像) -->
+<!-- 右下角常驻悬浮头像胶囊 -->
 <div class="fixed bottom-5 right-5 sm:right-7 z-40 select-none">
     <div class="relative">
         <button
             id="console-user-avatar-trigger"
             type="button"
-            class="w-10 h-10 rounded-full overflow-hidden p-0.5 bg-white/80 dark:bg-[#121620]/90 border border-black/10 dark:border-white/20 shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer ring-2 ring-emerald-500/30 flex items-center justify-center backdrop-blur-xl"
+            class="w-10 h-10 rounded-full overflow-hidden p-0.5 card-base liquid-glass border border-black/10 dark:border-white/20 shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer ring-2 ring-(--primary)/30 flex items-center justify-center backdrop-blur-xl"
             onclick={() => showUserMenu = !showUserMenu}
             title="个人账号快捷菜单"
             aria-label="个人账号快捷菜单"
@@ -266,14 +265,14 @@ async function handleLogout() {
                 }}
             />
             <!-- 在线状态绿点 -->
-            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-[#121620]"></span>
+            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-(--primary) border-2 border-white dark:border-neutral-900"></span>
         </button>
 
         <!-- 悬浮弹窗卡片 -->
         {#if showUserMenu}
             <div
                 id="console-user-menu-popover"
-                class="absolute bottom-12 right-0 w-64 rounded-2xl p-4 shadow-2xl border border-black/10 dark:border-white/15 bg-white/95 dark:bg-[#151922]/95 backdrop-blur-2xl text-xs space-y-3 animate-in fade-in zoom-in-95 duration-150 z-50"
+                class="absolute bottom-12 right-0 w-64 rounded-2xl p-4 shadow-2xl border border-black/10 dark:border-white/15 card-base liquid-glass text-xs space-y-3 animate-in fade-in zoom-in-95 duration-150 z-50"
             >
                 <!-- 用户概要 -->
                 <div class="flex items-center gap-3 pb-3 border-b border-black/8 dark:border-white/10">
@@ -302,7 +301,7 @@ async function handleLogout() {
                             onSelectTab("uc");
                         }}
                     >
-                        <Icon icon="material-symbols:account-circle-outline" class="text-base text-emerald-500" />
+                        <Icon icon="material-symbols:account-circle-outline" class="text-base text-(--primary)" />
                         <span>个人中心与资料</span>
                     </button>
                     <button
@@ -329,18 +328,14 @@ async function handleLogout() {
                     </button>
                 </div>
 
-                <!-- 退出登录 -->
-                <div class="pt-2 border-t border-black/8 dark:border-white/10">
+                <div class="pt-2 border-t border-black/8 dark:border-white/10 flex justify-between items-center">
+                    <span class="text-[10px] text-neutral-400">状态: 活跃</span>
                     <button
                         type="button"
-                        class="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-rose-500 hover:bg-rose-500/10 font-bold transition-colors cursor-pointer"
-                        onclick={() => {
-                            showUserMenu = false;
-                            handleLogout();
-                        }}
+                        class="text-rose-500 hover:text-rose-600 font-bold text-[11px] cursor-pointer"
+                        onclick={handleLogout}
                     >
-                        <Icon icon="material-symbols:logout" class="text-base" />
-                        <span>退出当前账号</span>
+                        退出登录
                     </button>
                 </div>
             </div>

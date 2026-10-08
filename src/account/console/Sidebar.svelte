@@ -35,10 +35,9 @@ interface NavGroup {
     items: NavItem[];
 }
 
-// 侧边栏分组导航：采用截图中的5大分组视觉层次，但归位于专业博客管理功能
 const navGroups = $derived<NavGroup[]>([
     {
-        groupTitle: "运行",
+        groupTitle: "运行监控",
         items: [
             {
                 id: "dashboard",
@@ -51,7 +50,7 @@ const navGroups = $derived<NavGroup[]>([
                 id: "editor",
                 label: "快速创作",
                 subLabel: "撰写新文章",
-                icon: "material-symbols:bolt-outline",
+                icon: "material-symbols:edit-document-outline",
                 perm: "posts:create",
                 onClick: () => {
                     blogStore.startEditing(null);
@@ -75,7 +74,7 @@ const navGroups = $derived<NavGroup[]>([
                 id: "categories",
                 label: "分类目录",
                 subLabel: "内容层级划分",
-                icon: "material-symbols:folder-open-outline",
+                icon: "material-symbols:folder-outline",
                 perm: "view:public",
                 badge: blogStore.categories.length,
             },
@@ -91,14 +90,14 @@ const navGroups = $derived<NavGroup[]>([
                 id: "attachments",
                 label: "媒体素材",
                 subLabel: "图片与资源附件",
-                icon: "material-symbols:perm-media-outline",
+                icon: "material-symbols:photo-library-outline",
                 perm: "view:public",
                 badge: blogStore.attachments.length,
             },
         ],
     },
     {
-        groupTitle: "观测",
+        groupTitle: "安全观测",
         items: [
             {
                 id: "logs",
@@ -111,7 +110,7 @@ const navGroups = $derived<NavGroup[]>([
         ],
     },
     {
-        groupTitle: "控制",
+        groupTitle: "站点控制",
         items: [
             {
                 id: "settings",
@@ -145,7 +144,7 @@ const navGroups = $derived<NavGroup[]>([
         ],
     },
     {
-        groupTitle: "运维",
+        groupTitle: "系统运维",
         items: [
             {
                 id: "keeper",
@@ -161,19 +160,19 @@ const navGroups = $derived<NavGroup[]>([
 
 <aside
     class="
-        fixed md:sticky top-0 left-0 z-50 md:z-30
-        h-screen shrink-0 flex flex-col justify-between p-3 sm:p-4
-        select-none border-r border-black/8 dark:border-white/5
-        bg-white/85 dark:bg-[#0c0d12]/92 backdrop-blur-3xl
+        fixed md:sticky top-3.5 left-3.5 z-50 md:z-30
+        h-[calc(100vh-1.75rem)] md:my-3.5 md:ml-3.5 shrink-0 flex flex-col justify-between p-3.5 sm:p-4
+        select-none rounded-[1.75rem] border border-black/5 dark:border-white/8
+        card-base liquid-glass shadow-2xl
         text-neutral-800 dark:text-neutral-200 transition-all duration-300 ease-in-out
         {collapsed ? 'w-20' : 'w-64'}
-        {mobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0'}
+        {mobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-[calc(100%+2rem)] md:translate-x-0'}
     "
 >
-    <!-- 折叠切换小按钮 (对应截图侧边栏右边缘正中悬浮的圆形药丸钮 <) -->
+    <!-- 折叠切换小按钮 (悬浮在侧边栏右边缘正中的药丸按钮) -->
     <button
         type="button"
-        class="hidden md:flex absolute -right-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white dark:bg-[#181a20] text-neutral-500 dark:text-neutral-400 hover:text-emerald-500 dark:hover:text-emerald-400 border border-black/10 dark:border-white/10 shadow-xl items-center justify-center transition-all z-50 cursor-pointer hover:scale-110 active:scale-95"
+        class="hidden md:flex absolute -right-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full card-base liquid-glass text-neutral-500 dark:text-neutral-400 hover:text-(--primary) border border-black/10 dark:border-white/10 shadow-xl items-center justify-center transition-all z-50 cursor-pointer hover:scale-110 active:scale-95"
         onclick={onToggleCollapse}
         title={collapsed ? "展开侧边栏" : "收起侧边栏"}
         aria-label={collapsed ? "展开侧边栏" : "收起侧边栏"}
@@ -184,11 +183,11 @@ const navGroups = $derived<NavGroup[]>([
     </button>
 
     <div class="flex-1 overflow-y-auto overflow-x-hidden pr-0.5 custom-scrollbar">
-        <!-- 侧边栏头部：Logo 与 控制台标题 (对应截图左上角 CPAMC 样式) -->
-        <div class="px-2 py-3 mb-4 border-b border-black/8 dark:border-white/5 flex items-center justify-between">
+        <!-- 侧边栏头部：Logo 与 控制台标题 -->
+        <div class="px-2 py-3 mb-4 border-b border-black/5 dark:border-white/5 flex items-center justify-between">
             <div class="flex items-center gap-3 overflow-hidden">
-                <!-- 科技感绿色渐变圆角图标 (带柔光边框) -->
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/25 to-teal-500/10 border border-emerald-500/40 flex items-center justify-center text-emerald-500 dark:text-emerald-400 font-black shadow-xs shrink-0">
+                <!-- 科技感绿色渐变圆角图标 -->
+                <div class="w-9 h-9 rounded-xl bg-(--primary)/15 border border-(--primary)/30 flex items-center justify-center text-(--primary) font-black shadow-xs shrink-0">
                     <Icon icon="material-symbols:terminal" class="text-xl" />
                 </div>
                 {#if !collapsed}
@@ -197,7 +196,7 @@ const navGroups = $derived<NavGroup[]>([
                             <span>BLOG CONSOLE</span>
                         </div>
                         <div class="text-[10px] text-neutral-500 dark:text-neutral-400 font-medium truncate tracking-wide">
-                            博客管理控制台 · v1.0.0
+                            mc00 管理控制台
                         </div>
                     </div>
                 {/if}
@@ -206,7 +205,7 @@ const navGroups = $derived<NavGroup[]>([
             <!-- 移动端关闭抽屉按钮 -->
             <button
                 type="button"
-                class="md:hidden p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10"
+                class="md:hidden p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer"
                 onclick={onCloseMobile}
                 title="关闭抽屉"
                 aria-label="关闭抽屉"
@@ -222,11 +221,12 @@ const navGroups = $derived<NavGroup[]>([
                 {#if visibleItems.length > 0}
                     <div class="space-y-1">
                         {#if !collapsed}
-                            <div class="px-3 text-[10.5px] font-medium text-neutral-400 dark:text-neutral-500 uppercase tracking-wider mb-1.5">
-                                {group.groupTitle}
+                            <!-- 博客标志性左侧绿条竖线小标题 -->
+                            <div class="relative pl-3 before:w-1 before:h-3.5 before:rounded-md before:bg-(--primary) before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 mb-2 text-[11px] font-bold text-neutral-500 dark:text-neutral-400 tracking-wider">
+                                <span>{group.groupTitle}</span>
                             </div>
                         {:else}
-                            <div class="w-full h-px bg-black/8 dark:bg-white/5 my-2"></div>
+                            <div class="w-full h-px bg-black/5 dark:border-white/5 my-2"></div>
                         {/if}
 
                         {#each visibleItems as item}
@@ -237,8 +237,8 @@ const navGroups = $derived<NavGroup[]>([
                                     w-full flex items-center rounded-xl text-xs font-medium transition-all group relative cursor-pointer
                                     {collapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2.5'}
                                     {isActive
-                                        ? 'bg-neutral-900/10 dark:bg-[#1a1e28] text-neutral-900 dark:text-white font-semibold shadow-xs border border-black/8 dark:border-white/10'
-                                        : 'text-neutral-600 dark:text-neutral-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-neutral-900 dark:hover:text-neutral-200'}
+                                        ? 'bg-(--primary)/15 text-(--primary) dark:text-(--primary) font-bold shadow-xs border border-(--primary)/25'
+                                        : 'text-neutral-600 dark:text-neutral-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-neutral-900 dark:hover:text-neutral-200 border border-transparent'}
                                 "
                                 onclick={() => {
                                     if (item.onClick) item.onClick();
@@ -249,20 +249,20 @@ const navGroups = $derived<NavGroup[]>([
                                 <div class="flex items-center gap-2.5 min-w-0">
                                     <Icon
                                         icon={item.icon}
-                                        class="text-base shrink-0 transition-transform group-hover:scale-110 {isActive ? 'text-emerald-600 dark:text-emerald-400' : 'opacity-75 group-hover:opacity-100'}"
+                                        class="text-base shrink-0 transition-transform group-hover:scale-110 {isActive ? 'text-(--primary)' : 'opacity-75 group-hover:opacity-100'}"
                                     />
                                     {#if !collapsed}
                                         <span class="truncate">{item.label}</span>
                                     {/if}
                                 </div>
 
-                                <!-- 徽章 (完全吻合截图中的暗底圆形药丸数字，如「4」) -->
+                                <!-- 徽章 (胶囊数字) -->
                                 {#if !collapsed && item.badge !== undefined && item.badge > 0}
-                                    <span class="text-[10px] min-w-4 h-4 px-1 rounded-full font-mono font-bold flex items-center justify-center bg-black/5 dark:bg-[#181c24] text-neutral-600 dark:text-neutral-300 border border-black/8 dark:border-white/10">
+                                    <span class="text-[10px] min-w-4 h-4 px-1.5 rounded-full font-mono font-bold flex items-center justify-center border {isActive ? 'bg-(--primary)/20 text-(--primary) border-(--primary)/30' : 'bg-black/5 dark:bg-white/8 text-neutral-500 dark:text-neutral-400 border-black/5 dark:border-white/5'}">
                                         {item.badge}
                                     </span>
                                 {:else if collapsed && item.badge !== undefined && item.badge > 0}
-                                    <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981]"></span>
+                                    <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-(--primary) shadow-[0_0_6px_var(--primary)]"></span>
                                 {/if}
                             </button>
                         {/each}
@@ -273,20 +273,20 @@ const navGroups = $derived<NavGroup[]>([
     </div>
 
     <!-- 侧边栏底部用户信息条 (折叠时精简，展开时完整) -->
-    <div class="pt-3 mt-2 border-t border-black/8 dark:border-white/5">
+    <div class="pt-3 mt-2 border-t border-black/5 dark:border-white/5">
         {#if !collapsed}
-            <div class="flex items-center justify-between p-2 rounded-xl bg-black/2 dark:bg-white/3 border border-black/5 dark:border-white/5">
+            <div class="flex items-center justify-between p-2 rounded-2xl bg-black/2 dark:bg-white/3 border border-black/5 dark:border-white/5">
                 <div class="flex items-center gap-2.5 min-w-0">
                     <img
                         src={authStore.currentUser?.avatar || "/favicon.ico"}
                         alt={authStore.currentUser?.name}
-                        class="w-7 h-7 rounded-full object-cover border border-emerald-500/30"
+                        class="w-7 h-7 rounded-full object-cover border border-(--primary)/30"
                     />
                     <div class="min-w-0">
                         <div class="text-xs font-semibold truncate text-neutral-800 dark:text-neutral-200">
                             {authStore.currentUser?.name || "管理员"}
                         </div>
-                        <div class="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 truncate">
+                        <div class="text-[10px] font-mono text-(--primary) truncate">
                             {authStore.currentUser?.role || "admin"}
                         </div>
                     </div>
@@ -305,7 +305,7 @@ const navGroups = $derived<NavGroup[]>([
                 <img
                     src={authStore.currentUser?.avatar || "/favicon.ico"}
                     alt={authStore.currentUser?.name}
-                    class="w-8 h-8 rounded-full object-cover border border-emerald-500/30 cursor-pointer"
+                    class="w-8 h-8 rounded-full object-cover border border-(--primary)/30 cursor-pointer"
                     onclick={() => onSelectTab("uc")}
                     title={authStore.currentUser?.name}
                 />

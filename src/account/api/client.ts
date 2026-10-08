@@ -54,114 +54,148 @@ export async function pingBackend(): Promise<{ online: boolean; latency: number;
     }
 }
 
-// 默认内置文章种子数据
+// 默认内置文章种子数据 (与博客真实前台内容 1:1 对齐)
 const INITIAL_POSTS: PostItem[] = [
     {
-        id: 'post-1',
-        title: 'Halo 2.0 风格管理控制台重构实践：解耦与沉浸式体验',
-        slug: 'halo-2-console-refactor',
-        content: '# Halo 2.0 风格管理控制台重构实践\n\n通过前后端完全解耦架构与 Svelte 5 响应式引擎，我们打造了高质感与高性能的博客工作台。',
-        excerpt: '探索前后端分离、Svelte 5 响应式引擎与液态毛玻璃视觉在现代内容管理系统中的实践。',
+        id: 'post-getting-started',
+        title: 'Guide for Template - Getting Started',
+        slug: 'guide-getting-started',
+        content: '# Guide for Template - Getting Started\n\nTip: For the things that are not mentioned in this guide, you may find the answers in the Astro Docs.\n\n## Front-matter of Posts\n\n```yaml\n---\ntitle: My First Blog Post\npublished: 2020-02-02\ndescription: This is the first post of my new Astro blog.\n```',
+        excerpt: 'How to use this blog template.',
         status: 'published',
         pinned: true,
         author: 'Halo 管理员',
-        authorId: 'admin',
-        categories: ['cat-1'],
-        tags: ['tag-1', 'tag-2'],
-        views: 1420,
-        wordCount: 520,
-        createdAt: '2026-04-01T10:00:00Z',
-        updatedAt: '2026-04-02T14:20:00Z',
+        authorId: 'u-admin',
+        categories: ['cat-guides', 'cat-getting-started'],
+        tags: [],
+        views: 1820,
+        wordCount: 650,
+        createdAt: '2001-10-02T00:00:00Z',
+        updatedAt: '2001-10-02T00:00:00Z',
     },
     {
-        id: 'post-2',
-        title: '深入浅出 Svelte 5：Runes 响应式驱动的现代状态管理',
-        slug: 'svelte-5-runes-guide',
-        content: '# 深入浅出 Svelte 5\n\nRunes 带来更清晰的显式响应式语义，大幅提升了复杂组件状态的可预测性。',
-        excerpt: '解读 $state, $derived, $effect 等全新 Runes 特性及其在工程架构中的最佳实践。',
-        status: 'published',
-        pinned: false,
-        author: '签约专栏作家 Tom',
-        authorId: 'author_tom',
-        categories: ['cat-1', 'cat-2'],
-        tags: ['tag-2', 'tag-3'],
-        views: 880,
-        wordCount: 430,
-        createdAt: '2026-04-03T09:30:00Z',
-        updatedAt: '2026-04-03T11:00:00Z',
-    },
-    {
-        id: 'post-3',
-        title: 'Astro 与 Twilight 毛玻璃视觉：打造高通透感现代博客',
-        slug: 'astro-twilight-glass-design',
-        content: '# Astro 与 Twilight 毛玻璃视觉\n\n结合 CSS 滤镜与折射高光打造通透自然的 Apple 质感界面。',
-        excerpt: '深度解析 LiquidGlass 液态毛玻璃设计系统在 Astro 模板中的落地与多端适配技巧。',
-        status: 'published',
-        pinned: false,
-        author: '签约专栏作家 Tom',
-        authorId: 'author_tom',
-        categories: ['cat-3'],
-        tags: ['tag-4'],
-        views: 650,
-        wordCount: 380,
-        createdAt: '2026-04-05T15:00:00Z',
-        updatedAt: '2026-04-05T15:00:00Z',
-    },
-    {
-        id: 'post-4',
-        title: '下一代轻量化内容发布系统架构思考（草稿）',
-        slug: 'next-gen-cms-architecture',
-        content: '# 下一代轻量化内容发布系统架构思考\n\n解耦前后端，支持多端部署与静态化分发方案。',
-        excerpt: '探讨静态站点生成（SSG）与动态管理后台的有机融合，提升安全与访问速度。',
-        status: 'draft',
-        pinned: false,
-        author: '投稿人 Lucy',
-        authorId: 'contrib_lucy',
-        categories: ['cat-2'],
-        tags: ['tag-5'],
-        views: 0,
-        wordCount: 160,
-        createdAt: '2026-04-06T08:00:00Z',
-        updatedAt: '2026-04-06T08:00:00Z',
-    },
-    {
-        id: 'post-5',
-        title: '测试 Halo 控制台重构效果',
-        slug: 'test-console-feature',
-        content: '# 测试控制台功能\n\n验证文章发布与实时统计指标更新。',
-        excerpt: '快速测试文章保存与多分类标签关联。',
+        id: 'post-mermaid',
+        title: 'Mermaid Example',
+        slug: 'mermaids',
+        content: '# Complete Guide to Markdown with Mermaid Diagrams\n\nThis article demonstrates how to create various complex diagrams using Mermaid in Markdown documents, including flowcharts, sequence diagrams, Gantt charts, class diagrams, and state diagrams.',
+        excerpt: 'A simple example of a Markdown blog post with Mermaid.',
         status: 'published',
         pinned: false,
         author: 'Halo 管理员',
-        authorId: 'admin',
-        categories: ['cat-1'],
-        tags: ['tag-1'],
-        views: 12,
-        wordCount: 39,
-        createdAt: '2026-10-07T12:00:00Z',
-        updatedAt: '2026-10-07T12:00:00Z',
+        authorId: 'u-admin',
+        categories: ['cat-examples'],
+        tags: ['tag-markdown', 'tag-mermaid'],
+        views: 1240,
+        wordCount: 420,
+        createdAt: '2011-11-02T00:00:00Z',
+        updatedAt: '2011-11-02T00:00:00Z',
+    },
+    {
+        id: 'post-encryption',
+        title: 'Encryption Example',
+        slug: 'encryption',
+        content: '# Password Protected Post\n\nThis is an example of a password-protected post in the mc00 theme. The content below is encrypted using AES and can only be viewed by entering the correct password.',
+        excerpt: 'Password: 123456',
+        status: 'published',
+        pinned: false,
+        author: 'Halo 管理员',
+        authorId: 'u-admin',
+        categories: ['cat-examples'],
+        tags: ['tag-encryption'],
+        views: 980,
+        wordCount: 310,
+        createdAt: '2020-02-02T00:00:00Z',
+        updatedAt: '2020-02-02T00:00:00Z',
+    },
+    {
+        id: 'post-video',
+        title: 'Video Example',
+        slug: 'videos',
+        content: '## Instructions\n\nJust copy the embed code from YouTube or other platforms, and paste it in the markdown file.',
+        excerpt: 'This post demonstrates how to embed video in a blog post.',
+        status: 'published',
+        pinned: false,
+        author: 'Halo 管理员',
+        authorId: 'u-admin',
+        categories: ['cat-examples'],
+        tags: ['tag-markdown', 'tag-video'],
+        views: 860,
+        wordCount: 290,
+        createdAt: '2021-12-02T00:00:00Z',
+        updatedAt: '2021-12-02T00:00:00Z',
+    },
+    {
+        id: 'post-copy-protection',
+        title: 'Copy Protection Example',
+        slug: 'copy-protection',
+        content: '# Post with Copy Protection Enabled\n\nThis post has all four copyProtection sub-options enabled in its frontmatter.',
+        excerpt: 'This post demonstrates the copyProtection frontmatter option with granular controls.',
+        status: 'published',
+        pinned: false,
+        author: 'Halo 管理员',
+        authorId: 'u-admin',
+        categories: ['cat-examples'],
+        tags: ['tag-copy-protection'],
+        views: 1120,
+        wordCount: 380,
+        createdAt: '2022-11-01T00:00:00Z',
+        updatedAt: '2022-11-01T00:00:00Z',
+    },
+    {
+        id: 'post-advanced-customization',
+        title: 'Guide for Template - Advanced Customization',
+        slug: 'guide-advanced-customization',
+        content: '# Guide for Template - Advanced Customization\n\nThis guide covers advanced customization options and features available in the mc00 template, from global configurations to specialized Markdown extensions.',
+        excerpt: 'Master the advanced features and customization options of the mc00 template.',
+        status: 'published',
+        pinned: false,
+        author: 'Halo 管理员',
+        authorId: 'u-admin',
+        categories: ['cat-guides', 'cat-advanced-customization'],
+        tags: [],
+        views: 1530,
+        wordCount: 780,
+        createdAt: '2024-02-10T00:00:00Z',
+        updatedAt: '2024-02-10T00:00:00Z',
+    },
+    {
+        id: 'post-draft',
+        title: 'Draft Example',
+        slug: 'draft',
+        content: '# This Article is a Draft\n\nThis article is currently in a draft state and is not published. Therefore, it will not be visible to the general audience.',
+        excerpt: 'This article is currently in a draft state and is not published.',
+        status: 'draft',
+        pinned: false,
+        author: 'Halo 管理员',
+        authorId: 'u-admin',
+        categories: ['cat-examples'],
+        tags: ['tag-markdown'],
+        views: 0,
+        wordCount: 150,
+        createdAt: '2021-12-02T00:00:00Z',
+        updatedAt: '2021-12-02T00:00:00Z',
     }
 ];
 
 const INITIAL_CATEGORIES: CategoryItem[] = [
-    { id: 'cat-1', name: '架构与工程', slug: 'architecture', description: '前后端全栈工程实践与性能优化', color: '#3b82f6', count: 3 },
-    { id: 'cat-2', name: '前端生态', slug: 'frontend', description: 'Svelte, Astro, Vue 与现代化工具链', color: '#10b981', count: 2 },
-    { id: 'cat-3', name: '设计与质感', slug: 'design', description: 'LiquidGlass 液态毛玻璃与界面美学', color: '#8b5cf6', count: 1 },
-    { id: 'cat-4', name: '随笔日常', slug: 'daily', description: '开发者的日常随想与感悟记录', color: '#f59e0b', count: 0 },
+    { id: 'cat-examples', name: '示例', slug: 'examples', description: '各类功能特性演示与排版范例', color: '#3b82f6', count: 5 },
+    { id: 'cat-guides', name: '向导', slug: 'guides', description: '模板指南与全流程使用向导', color: '#10b981', count: 2 },
+    { id: 'cat-advanced-customization', name: '高级定制', slug: 'advanced-customization', description: '进阶玩法与定制扩展', color: '#8b5cf6', count: 1, parentId: 'cat-guides' },
+    { id: 'cat-getting-started', name: '入门指南', slug: 'getting-started', description: '快速上手与基础配置', color: '#f59e0b', count: 1, parentId: 'cat-guides' },
 ];
 
 const INITIAL_TAGS: TagItem[] = [
-    { id: 'tag-1', name: 'Halo2', slug: 'halo2', color: '#3b82f6', count: 2 },
-    { id: 'tag-2', name: 'Svelte5', slug: 'svelte5', color: '#ff3e00', count: 2 },
-    { id: 'tag-3', name: 'Runes', slug: 'runes', color: '#10b981', count: 1 },
-    { id: 'tag-4', name: '毛玻璃UI', slug: 'glassmorphism', color: '#8b5cf6', count: 1 },
-    { id: 'tag-5', name: '静态博客', slug: 'ssg', color: '#ec4899', count: 1 },
+    { id: 'tag-copy-protection', name: '防拷', slug: 'copy-protection', color: '#6366f1', count: 1 },
+    { id: 'tag-encryption', name: '加密', slug: 'encryption', color: '#ec4899', count: 1 },
+    { id: 'tag-markdown', name: '折扣', slug: 'markdown', color: '#10b981', count: 3 },
+    { id: 'tag-mermaid', name: '美人鱼', slug: 'mermaid', color: '#06b6d4', count: 1 },
+    { id: 'tag-video', name: '视频', slug: 'video', color: '#f97316', count: 1 },
 ];
 
 const INITIAL_ATTACHMENTS: AttachmentItem[] = [
-    { id: 'att-1', name: 'twilight-hero.webp', url: '/_astro/Twilight_Cover.CodURR07_Z1vOv5x.webp', size: 184320, type: 'image/webp', uploadedAt: '2026-04-01T12:00:00Z' },
-    { id: 'att-2', name: 'architecture-flow.svg', url: '/icons/favicon.svg', size: 12400, type: 'image/svg+xml', uploadedAt: '2026-04-02T15:20:00Z' },
-    { id: 'att-3', name: 'avatar-admin.png', url: '/logo.png', size: 45600, type: 'image/png', uploadedAt: '2026-04-03T08:00:00Z' }
+    { id: 'att-1', name: 'Cover - Getting Started.jpg', url: '/_astro/Cover - Getting Started.CLLNYX7x_vs76V.webp', size: 145280, type: 'image/webp', uploadedAt: '2026-04-01T12:00:00Z' },
+    { id: 'att-2', name: 'Cover - Advanced Customization.jpg', url: '/_astro/Cover - Advanced Customization.BlPeYdZm_Z1PEq3k.webp', size: 204890, type: 'image/webp', uploadedAt: '2026-04-02T15:20:00Z' },
+    { id: 'att-3', name: 'defaultWallpaper.jpg', url: '/assets/images/defaultWallpaper.jpg', size: 312500, type: 'image/jpeg', uploadedAt: '2026-04-03T08:00:00Z' }
 ];
 
 const INITIAL_USERS: UserProfile[] = [
@@ -188,9 +222,9 @@ const INITIAL_USERS: UserProfile[] = [
 ];
 
 const INITIAL_SETTINGS: SiteSettingsItem = {
-    siteName: 'Twilight Blog',
-    siteSubtitle: '现代化液态毛玻璃博客管理控制台',
-    announcement: '控制台已顺利升级为 CPAMC 风格架构，全功能支持液态/毛玻璃双模式切换。',
+    siteName: 'mc00',
+    siteSubtitle: 'Blog Template',
+    announcement: '欢迎访问 mc00 博客管理控制台，全站支持液态玻璃与毛玻璃材质！',
     allowRegistration: false,
     allowComments: true,
     copyProtection: false,
@@ -223,9 +257,9 @@ const INITIAL_LOGS: AuditLogItem[] = [
 class LocalFallbackDriver {
     static get<T>(key: string, fallback: T): T {
         if (typeof window === 'undefined') return fallback;
-        const saved = localStorage.getItem(`halo_data_${key}`);
+        const saved = localStorage.getItem(`halo_data_v3_${key}`);
         if (!saved) {
-            localStorage.setItem(`halo_data_${key}`, JSON.stringify(fallback));
+            localStorage.setItem(`halo_data_v3_${key}`, JSON.stringify(fallback));
             return fallback;
         }
         try {
@@ -237,7 +271,7 @@ class LocalFallbackDriver {
 
     static set<T>(key: string, value: T): void {
         if (typeof window === 'undefined') return;
-        localStorage.setItem(`halo_data_${key}`, JSON.stringify(value));
+        localStorage.setItem(`halo_data_v3_${key}`, JSON.stringify(value));
     }
 }
 
@@ -424,8 +458,8 @@ export const postsApi = {
                 pinned: !!post.pinned,
                 author: post.author || 'Halo 管理员',
                 authorId: 'admin',
-                categories: post.categories || ['cat-1'],
-                tags: post.tags || ['tag-1'],
+                categories: post.categories || ['cat-examples'],
+                tags: post.tags || [],
                 views: 0,
                 wordCount: (post.content || '').length,
                 createdAt: new Date().toISOString(),

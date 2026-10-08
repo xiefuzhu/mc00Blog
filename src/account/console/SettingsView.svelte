@@ -73,106 +73,112 @@ function handleImportFile(e: Event) {
 }
 </script>
 
-<div class="max-w-4xl mx-auto space-y-6 text-xs select-none">
+<div class="max-w-4xl mx-auto space-y-6 text-xs select-none text-neutral-900 dark:text-neutral-100">
     <!-- 设置面板主体 -->
-    <div class="console-glass liquid-glass p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl space-y-6 bg-[#0f121a]/90 backdrop-blur-2xl">
-        <div class="flex items-center justify-between pb-4 border-b border-white/10">
-            <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                <Icon icon="material-symbols:tune" class="text-lg text-emerald-400" />
-                <span>站点与控制台全局配置</span>
-            </h3>
+    <div class="card-base liquid-glass p-6 sm:p-8 rounded-3xl border border-black/5 dark:border-white/8 shadow-xl space-y-6">
+        <div class="flex items-center justify-between pb-4 border-b border-black/5 dark:border-white/5">
+            <div class="relative pl-3 before:w-1 before:h-4 before:rounded-md before:bg-(--primary) before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2">
+                <h3 class="text-sm font-bold text-neutral-900 dark:text-white">
+                    全站全局与运行时配置
+                </h3>
+                <p class="text-[11px] text-neutral-400">修改后将实时同步生效于博客前台导航栏、大横幅、页面标题及页脚</p>
+            </div>
             {#if saveNotice}
-                <span class="text-xs text-emerald-400 font-semibold font-mono">[配置已成功保存生效]</span>
+                <span class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold font-mono flex items-center gap-1">
+                    <Icon icon="material-symbols:check-circle" class="text-base" />
+                    已成功全局生效
+                </span>
             {/if}
         </div>
 
         <div class="space-y-4">
             <div>
-                <label class="block font-semibold text-neutral-300 mb-1.5">站点主标题</label>
+                <label class="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">站点主标题</label>
                 <input
                     type="text"
-                    class="console-glass-input w-full px-3.5 py-2.5 text-xs bg-[#141720] border border-white/10 rounded-xl text-white"
+                    class="w-full px-3.5 py-2.5 text-xs card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white focus:outline-none focus:border-(--primary)/50"
                     bind:value={siteName}
                 />
             </div>
 
             <div>
-                <label class="block font-semibold text-neutral-300 mb-1.5">站点副标题 / Slogan</label>
+                <label class="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">站点副标题 / Slogan</label>
                 <input
                     type="text"
-                    class="console-glass-input w-full px-3.5 py-2.5 text-xs bg-[#141720] border border-white/10 rounded-xl text-white"
+                    class="w-full px-3.5 py-2.5 text-xs card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white focus:outline-none focus:border-(--primary)/50"
                     bind:value={siteSubtitle}
                 />
             </div>
 
             <div>
-                <label class="block font-semibold text-neutral-300 mb-1.5">全站公告标语</label>
+                <label class="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">全站公告标语</label>
                 <textarea
-                    class="console-glass-input w-full px-3.5 py-2.5 text-xs h-20 resize-none leading-relaxed bg-[#141720] border border-white/10 rounded-xl text-white placeholder-neutral-500"
+                    class="w-full px-3.5 py-2.5 text-xs h-20 resize-none leading-relaxed card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-(--primary)/50"
                     placeholder="输入全站顶部跑马灯或弹窗公告..."
                     bind:value={announcement}
                 ></textarea>
             </div>
 
             <div>
-                <label class="block font-semibold text-neutral-300 mb-1.5">页脚自定义版权说明</label>
+                <label class="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">页脚自定义版权说明</label>
                 <input
                     type="text"
-                    class="console-glass-input w-full px-3.5 py-2.5 text-xs font-mono bg-[#141720] border border-white/10 rounded-xl text-white"
+                    class="w-full px-3.5 py-2.5 text-xs font-mono card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white focus:outline-none focus:border-(--primary)/50"
                     bind:value={footerText}
                 />
             </div>
 
-            <div class="pt-4 space-y-3.5 border-t border-white/10">
-                <label class="flex items-center justify-between cursor-pointer p-2.5 rounded-xl hover:bg-white/5 transition-colors">
+            <div class="pt-4 space-y-3.5 border-t border-black/5 dark:border-white/5">
+                <label class="flex items-center justify-between cursor-pointer p-3 rounded-2xl bg-black/2 dark:bg-white/3 border border-black/5 dark:border-white/5 hover:border-(--primary)/30 transition-colors">
                     <div>
-                        <span class="font-semibold text-white block">开放外部注册</span>
+                        <span class="font-semibold text-neutral-800 dark:text-neutral-200 block">开放外部注册</span>
                         <span class="text-[10.5px] text-neutral-400 block mt-0.5">允许普通读者注册新账号并参与互动</span>
                     </div>
-                    <input type="checkbox" bind:checked={allowRegistration} class="accent-emerald-500 w-4 h-4 cursor-pointer" />
+                    <input type="checkbox" bind:checked={allowRegistration} class="accent-(--primary) w-4 h-4 cursor-pointer" />
                 </label>
 
-                <label class="flex items-center justify-between cursor-pointer p-2.5 rounded-xl hover:bg-white/5 transition-colors">
+                <label class="flex items-center justify-between cursor-pointer p-3 rounded-2xl bg-black/2 dark:bg-white/3 border border-black/5 dark:border-white/5 hover:border-(--primary)/30 transition-colors">
                     <div>
-                        <span class="font-semibold text-white block">文章评论功能</span>
+                        <span class="font-semibold text-neutral-800 dark:text-neutral-200 block">文章评论功能</span>
                         <span class="text-[10.5px] text-neutral-400 block mt-0.5">允许访客发表评论与回复</span>
                     </div>
-                    <input type="checkbox" bind:checked={allowComments} class="accent-emerald-500 w-4 h-4 cursor-pointer" />
+                    <input type="checkbox" bind:checked={allowComments} class="accent-(--primary) w-4 h-4 cursor-pointer" />
                 </label>
 
-                <label class="flex items-center justify-between cursor-pointer p-2.5 rounded-xl hover:bg-white/5 transition-colors">
+                <label class="flex items-center justify-between cursor-pointer p-3 rounded-2xl bg-black/2 dark:bg-white/3 border border-black/5 dark:border-white/5 hover:border-(--primary)/30 transition-colors">
                     <div>
-                        <span class="font-semibold text-white block">防复制保护 (CopyProtection)</span>
+                        <span class="font-semibold text-neutral-800 dark:text-neutral-200 block">防复制保护 (CopyProtection)</span>
                         <span class="text-[10.5px] text-neutral-400 block mt-0.5">限制复制、右键菜单与无感选择</span>
                     </div>
-                    <input type="checkbox" bind:checked={copyProtection} class="accent-emerald-500 w-4 h-4 cursor-pointer" />
+                    <input type="checkbox" bind:checked={copyProtection} class="accent-(--primary) w-4 h-4 cursor-pointer" />
                 </label>
             </div>
 
             <div class="pt-4 flex justify-end">
                 <button
                     type="button"
-                    class="px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-bold text-xs shadow-md transition-all hover:scale-102 active:scale-98 cursor-pointer"
+                    class="px-6 py-2.5 rounded-full bg-(--primary) hover:brightness-110 text-white font-bold text-xs shadow-md transition-all hover:scale-102 active:scale-98 cursor-pointer"
                     onclick={handleSaveSettings}
                 >
-                    保存系统设置
+                    保存系统设置并全站生效
                 </button>
             </div>
         </div>
     </div>
 
     <!-- 数据备份与恢复卡片 -->
-    <div class="console-glass liquid-glass p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl space-y-4 bg-[#0f121a]/90 backdrop-blur-2xl">
-        <h4 class="text-sm font-bold text-white flex items-center gap-2">
-            <Icon icon="material-symbols:archive-outline" class="text-lg text-emerald-400" />
-            <span>全站数据完整离线备份与迁移</span>
-        </h4>
-        <p class="text-neutral-400 leading-relaxed text-xs">
+    <div class="card-base liquid-glass p-6 sm:p-8 rounded-3xl border border-black/5 dark:border-white/8 shadow-xl space-y-4">
+        <div class="relative pl-3 before:w-1 before:h-4 before:rounded-md before:bg-blue-500 before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2">
+            <h4 class="text-sm font-bold text-neutral-900 dark:text-white">
+                全站数据离线备份与迁移
+            </h4>
+        </div>
+        <p class="text-neutral-500 dark:text-neutral-400 leading-relaxed text-xs">
             导出包含所有博客文章、分类、标签、附件索引、全站设置及用户凭据的安全 JSON 数据包，用于灾难恢复与本地持久化。
         </p>
 
         {#if importMessage}
-            <div class="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-mono text-center">
+            <div class="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono text-center">
                 {importMessage}
             </div>
         {/if}
@@ -180,14 +186,14 @@ function handleImportFile(e: Event) {
         <div class="flex items-center gap-3 pt-2 flex-wrap">
             <button
                 type="button"
-                class="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold text-xs border border-white/10 transition-colors flex items-center gap-2 cursor-pointer"
+                class="px-5 py-2.5 rounded-full bg-(--primary)/10 text-(--primary) hover:bg-(--primary)/20 font-semibold text-xs border border-(--primary)/30 transition-colors flex items-center gap-2 cursor-pointer"
                 onclick={handleExportFullBackup}
             >
-                <Icon icon="material-symbols:download" class="text-base text-emerald-400" />
+                <Icon icon="material-symbols:download" class="text-base" />
                 <span>立即下载全量备份文件 (.json)</span>
             </button>
 
-            <label class="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-300 hover:text-white font-semibold text-xs border border-white/8 transition-colors flex items-center gap-2 cursor-pointer">
+            <label class="px-5 py-2.5 rounded-full card-base liquid-glass border border-black/8 dark:border-white/10 hover:border-(--primary)/40 text-neutral-700 dark:text-neutral-300 font-semibold text-xs transition-colors flex items-center gap-2 cursor-pointer">
                 <Icon icon="material-symbols:upload" class="text-base" />
                 <span>从备份文件恢复</span>
                 <input type="file" accept=".json" class="hidden" onchange={handleImportFile} />

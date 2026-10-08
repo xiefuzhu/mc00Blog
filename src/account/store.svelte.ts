@@ -24,8 +24,8 @@ import {
 import { countWords, getReadingTime } from "./markdown";
 import { postsApi, categoriesApi, tagsApi, attachmentsApi, statsApi, logsApi, settingsApi } from "./api";
 
-const BLOG_STORAGE_KEY = "twilight_halo_blog_v2";
-const BLOG_LOGS_STORAGE_KEY = "twilight_halo_logs_v2";
+const BLOG_STORAGE_KEY = "twilight_halo_blog_v3";
+const BLOG_LOGS_STORAGE_KEY = "twilight_halo_logs_v3";
 
 const INITIAL_LOGS: AuditLog[] = [
     {
@@ -182,6 +182,8 @@ class BlogStore {
             } else {
                 this.logs = [...INITIAL_LOGS];
             }
+
+            localStorage.setItem("blog_site_settings", JSON.stringify(this.settings));
         } catch {
             this.resetAllData();
         }
@@ -525,6 +527,10 @@ class BlogStore {
     updateSettings(data: Partial<SiteSettings>) {
         this.settings = { ...this.settings, ...data };
         this.saveToStorage();
+        if (typeof window !== "undefined") {
+            localStorage.setItem("blog_site_settings", JSON.stringify(this.settings));
+            window.dispatchEvent(new CustomEvent("site-settings-changed", { detail: this.settings }));
+        }
         this.recordLog("修改站点设置", "更新站点标题、Slogan或系统全局开关", "info");
         settingsApi.update(data).catch(() => {});
     }

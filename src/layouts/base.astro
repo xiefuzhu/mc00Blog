@@ -638,4 +638,94 @@ if (typeof window !== 'undefined') {
         new Promise<void>(resolve => setTimeout(resolve, maxWait)),
     ]).then(onPageLoaded);
 }
+
+// 全局全站运行时配置同步水合函数
+function syncRuntimeSiteSettings() {
+    try {
+        let settings: any = null;
+        const raw = localStorage.getItem('blog_site_settings') || localStorage.getItem('twilight_halo_blog_v3');
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            settings = parsed.settings || parsed;
+        }
+        if (!settings) return;
+
+        // 1. 同步顶部导航栏站点主标题
+        if (settings.siteName) {
+            const titleEl = document.querySelector('.site-title-text');
+            if (titleEl) {
+                titleEl.textContent = settings.siteName;
+            }
+        }
+
+        // 2. 同步首页大横幅的主标题与副标题
+        if (settings.siteName) {
+            const bannerTitle = document.querySelector('.banner-title');
+            if (bannerTitle) {
+                bannerTitle.textContent = settings.siteName;
+            }
+        }
+        if (settings.siteSubtitle) {
+            const bannerSubtitle = document.querySelector('.banner-subtitle');
+            if (bannerSubtitle) {
+                const typewriter = bannerSubtitle.querySelector('.typewriter-text');
+                if (typewriter) {
+                    typewriter.textContent = settings.siteSubtitle;
+                } else {
+                    bannerSubtitle.textContent = settings.siteSubtitle;
+                }
+            }
+        }
+
+        // 3. 同步浏览器标签页文档标题
+        if (settings.siteName && document.title) {
+            const parts = document.title.split(' - ');
+            if (parts.length > 1) {
+                document.title = `${parts[0]} - ${settings.siteName}`;
+            } else {
+                document.title = settings.siteSubtitle ? `${settings.siteName} - ${settings.siteSubtitle}` : settings.siteName;
+            }
+        }
+
+        // 4. 同步页脚自定义版权说明
+        if (settings.footerText) {
+            const footerEl = document.getElementById('runtime-footer-text');
+            if (footerEl) {
+                footerEl.textContent = settings.footerText;
+                footerEl.classList.remove('hidden');
+            }
+        }
+
+        // 5. 同步公告栏内容
+        if (settings.announcement) {
+            document.querySelectorAll('.announcement-content-text').forEach(el => {
+                el.textContent = settings.announcement;
+            });
+        }
+    } catch {}
+}
+
+if (typeof window !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', syncRuntimeSiteSettings);
+    } else {
+        syncRuntimeSiteSettings();
+    }
+    document.addEventListener('astro:page-load', syncRuntimeSiteSettings);
+    window.addEventListener('site-settings-changed', () => {
+        syncRuntimeSiteSettings();
+    });
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'blog_site_settings' || e.key === 'twilight_halo_blog_v3') {
+            syncRuntimeSiteSettings();
+        }
+    });
+    if ((window as any).swup?.hooks) {
+        (window as any).swup.hooks.on('page:view', syncRuntimeSiteSettings);
+    } else {
+        document.addEventListener('swup:enable', () => {
+            (window as any).swup?.hooks?.on('page:view', syncRuntimeSiteSettings);
+        });
+    }
+}
 </script>

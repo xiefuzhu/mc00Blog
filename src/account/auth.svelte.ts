@@ -3,7 +3,7 @@
  * 规范：绝对禁止输出任何 Emoji 表情符号
  */
 
-import type { User, Role, UserRole, Permission } from "./types";
+import type { User, Role, Permission } from "./types";
 import { DEFAULT_USERS, DEFAULT_ROLES } from "./mockData";
 
 const AUTH_STORAGE_KEY = "twilight_halo_auth_v2";
@@ -20,6 +20,7 @@ class AuthStore {
     activeModalTab = $state<string>("dashboard"); // 兼容旧接口
 
     // 派生属性
+    user = $derived(this.currentUser);
     isLoggedIn = $derived(this.currentUser !== null && this.authToken !== null);
     currentRole = $derived.by(() => {
         if (!this.currentUser) return null;

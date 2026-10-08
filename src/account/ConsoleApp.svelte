@@ -128,7 +128,7 @@ function toggleSidebarCollapse() {
 <div class="console-app-root w-full min-h-screen flex flex-col justify-start relative text-neutral-900 dark:text-neutral-100 font-sans">
     {#if !authStore.isLoggedIn}
         <!-- 未登录状态：展示全屏沉浸式极简毛玻璃登录与注册面板 -->
-        <div class="w-full min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-neutral-900/40 dark:bg-[#090b10]/75 backdrop-blur-xl">
+        <div class="w-full min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-black/25 dark:bg-black/60 backdrop-blur-2xl">
             {#if authMode === 'login'}
                 <LoginCard
                     onLoginSuccess={() => handleSelectTab("dashboard")}
@@ -143,12 +143,12 @@ function toggleSidebarCollapse() {
         </div>
     {:else if !authStore.canAccessConsole()}
         <!-- 已登录但无控制台权限（如 reader 普通读者）：展示拦截与引导 -->
-        <div class="w-full min-h-screen flex items-center justify-center p-4 bg-neutral-900/40 dark:bg-[#090b10]/75 backdrop-blur-xl">
+        <div class="w-full min-h-screen flex items-center justify-center p-4 bg-black/25 dark:bg-black/60 backdrop-blur-2xl">
             <AccessDenied />
         </div>
     {:else}
-        <!-- 已登录且具备权限：CPAMC 经典沉浸式全屏工作台布局 -->
-        <div class="w-full min-h-screen flex flex-row items-stretch relative overflow-x-hidden bg-neutral-100/60 dark:bg-[#090b10]/92 text-neutral-900 dark:text-neutral-100">
+        <!-- 已登录且具备权限：现代化悬浮玻璃工作台布局 -->
+        <div class="w-full min-h-screen flex flex-row items-stretch relative overflow-x-hidden bg-neutral-100/40 dark:bg-black/30 text-neutral-900 dark:text-neutral-100">
             <!-- 移动端侧边栏抽屉遮罩 -->
             {#if mobileDrawerOpen}
                 <div

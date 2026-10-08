@@ -35,7 +35,7 @@ let links: NavbarLink[] = navbarConfig.links.map(
         <a href={url('/')} class="btn-plain scale-animation rounded-full h-11 px-4 font-bold active:scale-95 flex items-center">
             <div class="flex flex-row text-(--primary) items-center text-md">
                 <Icon name="material-symbols:home-pin-outline" class="text-[1.5rem] mr-2" />
-                {siteConfig.title}
+                <span class="site-title-text">{siteConfig.title}</span>
             </div>
         </a>
         <div class="hidden md:flex items-center h-full navbar-nav-links">
