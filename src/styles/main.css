@@ -111,27 +111,21 @@
     /* 导航栏相关浮动面板的过渡禁用 */
     & .dropdown-content {
     transition: none !important;
-    backdrop-filter: none !important;
     }
     & .float-panel {
     transition: none !important;
-    backdrop-filter: none !important;
     }
     & #display-setting {
     transition: none !important;
-    backdrop-filter: none !important;
     }
     & #nav-menu-panel {
     transition: none !important;
-    backdrop-filter: none !important;
     }
     & #translate-panel {
     transition: none !important;
-    backdrop-filter: none !important;
     }
     & #search-panel {
     transition: none !important;
-    backdrop-filter: none !important;
     }
 
     /* 波浪容器的颜色传递 */
@@ -239,7 +233,6 @@
     /* 导航栏相关浮动面板的过渡禁用 */
     .is-theme-transitioning & {
     transition: none !important;
-    backdrop-filter: none !important;
     }
     @apply bg-(--float-panel-bg) rounded-(--radius-large) shadow-xl dark:shadow-none border border-black/5 dark:border-white/10 py-2 min-w-48;
 }
@@ -247,7 +240,6 @@
 @utility float-panel {
     .is-theme-transitioning & {
     transition: none !important;
-    backdrop-filter: none !important;
     }
 
     .wallpaper-transparent & {
@@ -366,7 +358,7 @@
 }
 
 @utility float-panel-closed {
-    @apply -translate-y-1 opacity-0 pointer-events-none;
+    @apply -translate-y-1 opacity-0 pointer-events-none invisible;
 }
 
 @utility search-panel {

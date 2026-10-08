@@ -10,6 +10,7 @@ import NavLinks from "@components/navbar/navLinks.astro";
 import NavMenu from "@components/navbar/navMenu.svelte";
 import Search from "@components/navbar/search.svelte";
 import SettingsMenu from "@components/navbar/settingsMenu.svelte";
+import AccountButton from "@/account/AccountButton.svelte";
 
 
 const className = Astro.props.class;
@@ -27,7 +28,7 @@ let links: NavbarLink[] = navbarConfig.links.map(
 );
 ---
 
-<div id="navbar" class="z-50 onload-animation-down px-3 sm:px-6 md:px-0" data-transparent-mode={navbarTransparentMode}>
+<div id="navbar" class="relative z-50 onload-animation-down px-3 sm:px-6 md:px-0" data-transparent-mode={navbarTransparentMode}>
     <div class:list={[
         className,
         "liquid-glass liquid-glass-bar pointer-events-auto overflow-visible! max-w-(--page-width) h-14.5 mx-auto flex items-center justify-between px-[7px]"]}>
@@ -43,9 +44,10 @@ let links: NavbarLink[] = navbarConfig.links.map(
             })}
         </div>
         <div class="flex items-center h-full navbar-buttons gap-1" id="navbar-buttons">
-            <Search client:idle></Search>
             <NavMenu client:idle links={links}></NavMenu>
             <SettingsMenu client:idle></SettingsMenu>
+            <AccountButton client:load></AccountButton>
+            <Search client:idle></Search>
         </div>
     </div>
 </div>

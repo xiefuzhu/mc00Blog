@@ -21,7 +21,7 @@ let isOpen = $state(false);
 let expandedSection = $state<AccordionSection>(null);
 
 // 材质模式
-let glassMode = $state<"liquid" | "frosted">("liquid");
+let glassMode = $state<"liquid" | "frosted">("frosted");
 
 // 主题模式
 let themeMode = $state<LIGHT_DARK_MODE>(siteConfig.defaultTheme || SYSTEM_MODE);
@@ -116,7 +116,7 @@ onMount(() => {
     if (typeof window !== "undefined" && typeof (window as any).getGlassMode === "function") {
         glassMode = (window as any).getGlassMode();
     } else if (typeof localStorage !== "undefined") {
-        glassMode = (localStorage.getItem("glass-mode") as "liquid" | "frosted") || "liquid";
+        glassMode = (localStorage.getItem("glass-mode") as "liquid" | "frosted") || "frosted";
     }
 
     // 主题
@@ -186,7 +186,7 @@ const currentWallpaperLabel = $derived.by(() => {
     <!-- 下拉设置面板：紧贴设置按钮下方，平滑展开动画与玻璃质感 -->
     <div
         id="settings-menu-wrapper"
-        class="absolute top-[calc(100%+6px)] right-0 w-80 max-w-[calc(100vw-1.5rem)] transition-all duration-200 origin-top-right z-50 {isOpen ? 'scale-100 opacity-100 pointer-events-auto' : 'scale-95 opacity-0 pointer-events-none'}"
+        class="absolute top-[calc(100%+6px)] right-0 w-80 max-w-[calc(100vw-1.5rem)] transition-all duration-200 origin-top-right z-50 {isOpen ? 'scale-100 opacity-100 pointer-events-auto visible' : 'scale-95 opacity-0 pointer-events-none invisible'}"
     >
         <div id="settings-menu-panel" class="float-panel !top-0 liquid-glass p-3 w-full max-h-[calc(100vh-5rem)] overflow-y-auto overflow-x-hidden rounded-2xl shadow-xl">
             <!-- 材质模式切换 -->

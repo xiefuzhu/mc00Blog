@@ -10,7 +10,6 @@ import I18nKey from "@i18n/i18nKey";
 import DropdownPanel from "@/components/common/DropdownPanel.svelte";
 import Icon from "@components/common/icon.svelte";
 
-
 let keywordDesktop = $state("");
 let keywordMobile = $state("");
 let result: SearchResult[] = $state([]);
@@ -40,7 +39,14 @@ const fakeResult: SearchResult[] = [
 
 const togglePanel = () => {
     const panel = document.getElementById("search-panel");
+    const isClosed = panel?.classList.contains("float-panel-closed");
     panel?.classList.toggle("float-panel-closed");
+    if (isClosed) {
+        setTimeout(() => {
+            const mobileInput = document.querySelector("#search-bar-inside input") as HTMLInputElement;
+            mobileInput?.focus();
+        }, 60);
+    }
 };
 
 const toggleDesktopSearch = () => {
@@ -60,10 +66,8 @@ const collapseDesktopSearch = () => {
 };
 
 const handleBlur = () => {
-    // 延迟处理以允许搜索结果的点击事件先于折叠逻辑执行
     setTimeout(() => {
         isDesktopSearchExpanded = false;
-        // 仅隐藏面板并折叠，保留搜索关键词和结果以便下次展开时查看
         setPanelVisibility(false, true);
     }, 200);
 };
@@ -83,16 +87,15 @@ const closeSearchPanel = (): void => {
     if (panel) {
         panel.classList.add("float-panel-closed");
     }
-    // 清空搜索关键词和结果
     keywordDesktop = "";
     keywordMobile = "";
     result = [];
 };
 
-const handleResultClick = (event: Event, url: string): void => {
+const handleResultClick = (event: Event, targetUrl: string): void => {
     event.preventDefault();
     closeSearchPanel();
-    navigateToPage(url);
+    navigateToPage(targetUrl);
 };
 
 const search = async (keyword: string, isDesktop: boolean): Promise<void> => {
@@ -135,8 +138,7 @@ const handleClickOutside = (event: MouseEvent) => {
         return;
     }
     onClickOutside(event, "search-panel", ["search-switch", "search-bar"], () => {
-        const panel = document.getElementById("search-panel");
-        panel?.classList.add("float-panel-closed");
+        closeSearchPanel();
         isDesktopSearchExpanded = false;
     });
 };
@@ -165,15 +167,14 @@ onMount(() => {
             console.warn(
                 "Pagefind load error event received. Search functionality will be limited.",
             );
-            initializeSearch(); // Initialize with pagefindLoaded as false
+            initializeSearch();
         });
-        // Fallback in case events are not caught or pagefind is already loaded by the time this script runs
         setTimeout(() => {
             if (!initialized) {
                 console.log("Fallback: Initializing search after timeout.");
                 initializeSearch();
             }
-        }, 2000); // Adjust timeout as needed
+        }, 2000);
     }
 });
 
@@ -215,71 +216,139 @@ onDestroy(() => {
 });
 </script>
 
-<!-- search bar for desktop view (collapsed by default) -->
-<div
-    id="search-bar"
-    class="hidden lg:flex relative transition-all items-center h-11 rounded-full
-        {isDesktopSearchExpanded ? 'bg-black/4 hover:bg-black/6 focus-within:bg-black/6 dark:bg-white/5 dark:hover:bg-white/10 dark:focus-within:bg-white/10' : 'btn-plain scale-animation active:scale-90'}
-        {isDesktopSearchExpanded ? 'w-48' : 'w-11'}"
-    role="button"
-    tabindex="0"
-    aria-label="Search"
-    onmouseenter={() => {if (!isDesktopSearchExpanded) toggleDesktopSearch()}}
-    onmouseleave={collapseDesktopSearch}
->
-    <Icon icon="material-symbols:search" class="absolute text-[1.25rem] pointer-events-none {isDesktopSearchExpanded ? 'ml-3' : 'left-1/2 -translate-x-1/2'} transition my-auto {isDesktopSearchExpanded ? 'text-black/30 dark:text-white/30' : ''}"></Icon>
-    <input id="search-input-desktop" placeholder="{i18n(I18nKey.search)}" bind:value={keywordDesktop}
-        onfocus={() => {if (!isDesktopSearchExpanded) toggleDesktopSearch(); search(keywordDesktop, true)}}
-        onblur={handleBlur}
-        class="transition-all pl-10 text-sm bg-transparent outline-0
-            h-full {isDesktopSearchExpanded ? 'w-36' : 'w-0'} text-black/50 dark:text-white/50"
+<div class="relative h-full flex items-center">
+    <!-- search bar for desktop view (collapsed by default) -->
+    <div
+        id="search-bar"
+        class="hidden lg:flex relative transition-all duration-300 origin-right items-center h-11 rounded-full
+            {isDesktopSearchExpanded ? 'bg-black/4 hover:bg-black/6 focus-within:bg-black/6 dark:bg-white/5 dark:hover:bg-white/10 dark:focus-within:bg-white/10 w-52' : 'btn-plain scale-animation active:scale-90 w-11'}"
+        role="button"
+        tabindex="0"
+        aria-label="Search"
+        onclick={() => { if (!isDesktopSearchExpanded) toggleDesktopSearch(); document.getElementById('search-input-desktop')?.focus(); }}
+        onmouseenter={() => {if (!isDesktopSearchExpanded) toggleDesktopSearch()}}
+        onmouseleave={collapseDesktopSearch}
     >
-</div>
-
-<!-- toggle btn for phone/tablet view -->
-<button onclick={togglePanel} aria-label="Search Panel" id="search-switch"
-        class="btn-plain scale-animation lg:hidden! rounded-full w-11 h-11 active:scale-90 flex items-center justify-center">
-    <Icon icon="material-symbols:search" class="text-[1.25rem]"></Icon>
-</button>
-
-<!-- search panel -->
-<DropdownPanel
-        id="search-panel"
-        class="float-panel-closed absolute md:w-120 top-20 left-4 md:left-[unset] right-4 z-50 search-panel"
->
-    <!-- search bar inside panel for phone/tablet -->
-    <div id="search-bar-inside" class="flex relative lg:hidden transition-all items-center h-11 rounded-full
-      bg-black/4 hover:bg-black/6 focus-within:bg-black/6
-      dark:bg-white/5 dark:hover:bg-white/10 dark:focus-within:bg-white/10
-  ">
-        <Icon icon="material-symbols:search" class="absolute text-[1.25rem] pointer-events-none ml-3 transition my-auto text-black/30 dark:text-white/30"></Icon>
-        <input placeholder="Search" bind:value={keywordMobile}
-               class="pl-10 absolute inset-0 text-sm bg-transparent outline-0
-               focus:w-60 text-black/50 dark:text-white/50"
+        <Icon icon="material-symbols:search" class="absolute text-[1.25rem] pointer-events-none {isDesktopSearchExpanded ? 'left-3' : 'left-1/2 -translate-x-1/2'} transition-all my-auto {isDesktopSearchExpanded ? 'text-black/40 dark:text-white/40' : ''}"></Icon>
+        <input id="search-input-desktop" placeholder="{i18n(I18nKey.search)}" bind:value={keywordDesktop}
+            onfocus={() => {if (!isDesktopSearchExpanded) toggleDesktopSearch(); search(keywordDesktop, true)}}
+            onblur={handleBlur}
+            class="transition-all duration-300 pl-10 pr-8 text-sm bg-transparent outline-0
+                h-full {isDesktopSearchExpanded ? 'w-full opacity-100' : 'w-0 opacity-0'} text-black/75 dark:text-white/75"
         >
+        {#if isDesktopSearchExpanded && keywordDesktop}
+            <button
+                type="button"
+                onmousedown={(e) => { e.preventDefault(); keywordDesktop = ""; result = []; setPanelVisibility(false, true); }}
+                class="absolute right-2.5 p-0.5 text-black/30 hover:text-black/60 dark:text-white/30 dark:hover:text-white/60 transition-colors"
+                aria-label="Clear"
+            >
+                <Icon icon="material-symbols:close-rounded" class="text-sm" />
+            </button>
+        {/if}
     </div>
-    <!-- search results -->
-    {#each result as item}
-        <a href={item.url}
-           onclick={(e) => handleResultClick(e, item.url)}
-           class="transition first-of-type:mt-2 lg:first-of-type:mt-0 group block
-       rounded-xl text-lg px-3 py-2 hover:bg-(--btn-plain-bg-hover) active:bg-(--btn-plain-bg-active)">
-            <div class="transition text-90 inline-flex font-bold group-hover:text-(--primary)">
-                {item.meta.title}<Icon icon="fa6-solid:chevron-right" class="transition text-[0.75rem] translate-x-1 my-auto text-(--primary)"></Icon>
+
+    <!-- toggle btn for phone/tablet view -->
+    <button onclick={togglePanel} aria-label="Search Panel" id="search-switch"
+            class="btn-plain scale-animation lg:hidden! rounded-full w-11 h-11 active:scale-90 flex items-center justify-center">
+        <Icon icon="material-symbols:search" class="text-[1.25rem]"></Icon>
+    </button>
+
+    <!-- search panel: Responsive anchored right on both mobile and desktop -->
+    <DropdownPanel
+        id="search-panel"
+        class="float-panel-closed absolute !top-[calc(100%+8px)] -right-[7px] sm:!right-0 w-[calc(100vw-1.5rem)] sm:w-[24rem] md:w-120 max-w-[calc(100vw-1.5rem)] md:max-w-none z-50 pointer-events-auto search-panel p-3.5 shadow-2xl transition-all duration-200 max-h-[calc(100vh-5.5rem)] overflow-y-auto overflow-x-hidden rounded-2xl"
+    >
+        <!-- search bar inside panel for phone/tablet -->
+        <div class="flex items-center gap-2 lg:hidden w-full mb-2">
+            <div id="search-bar-inside" class="flex relative flex-1 items-center h-10 rounded-full
+                bg-black/5 hover:bg-black/8 focus-within:bg-black/8
+                dark:bg-white/5 dark:hover:bg-white/10 dark:focus-within:bg-white/10
+            ">
+                <Icon icon="material-symbols:search" class="absolute left-3 text-lg pointer-events-none my-auto text-black/30 dark:text-white/30"></Icon>
+                <input placeholder="{i18n(I18nKey.search)}" bind:value={keywordMobile}
+                       class="w-full h-10 pl-9 pr-8 text-sm bg-transparent outline-0
+                       text-black/75 dark:text-white/75 placeholder:text-black/40 dark:placeholder:text-white/40"
+                >
+                {#if keywordMobile}
+                    <button
+                        type="button"
+                        onclick={() => { keywordMobile = ""; result = []; }}
+                        class="absolute right-2.5 p-1 text-black/30 hover:text-black/60 dark:text-white/30 dark:hover:text-white/60 transition-colors"
+                        aria-label="Clear"
+                    >
+                        <Icon icon="material-symbols:close-rounded" class="text-base" />
+                    </button>
+                {/if}
             </div>
-            <div class="transition text-sm text-50">
-                {@html item.excerpt}
+            <button
+                type="button"
+                onclick={closeSearchPanel}
+                class="btn-plain scale-animation rounded-full h-9 px-3 text-xs shrink-0 text-neutral-600 dark:text-neutral-300 hover:text-(--primary)"
+            >
+                取消
+            </button>
+        </div>
+
+        <!-- Search Status / Guidance -->
+        {#if isSearching}
+            <div class="py-8 flex flex-col items-center justify-center text-black/40 dark:text-white/40 gap-2">
+                <Icon icon="eos-icons:loading" class="text-2xl" />
+                <span class="text-xs">正在搜索...</span>
             </div>
-        </a>
-    {/each}
-</DropdownPanel>
+        {:else if (keywordDesktop || keywordMobile) && result.length === 0}
+            <div class="py-8 flex flex-col items-center justify-center text-black/40 dark:text-white/40 gap-1.5">
+                <Icon icon="material-symbols:search-off-rounded" class="text-3xl opacity-60" />
+                <span class="text-sm font-medium">未找到相关结果</span>
+                <span class="text-xs opacity-75">尝试更换其他关键词搜索</span>
+            </div>
+        {:else if !(keywordDesktop || keywordMobile)}
+            <div class="py-6 px-3 flex flex-col items-center justify-center text-center text-black/40 dark:text-white/40 gap-1.5">
+                <Icon icon="material-symbols:manage-search-rounded" class="text-3xl opacity-60 text-(--primary)" />
+                <span class="text-sm font-medium text-neutral-600 dark:text-neutral-300">输入关键词开始搜索</span>
+                <span class="text-xs opacity-75">支持搜索全站文章标题、标签与正文内容</span>
+            </div>
+        {/if}
+
+        <!-- search results -->
+        {#if result.length > 0}
+            <div class="search-results-list max-h-[calc(100vh-14rem)] overflow-y-auto mt-2 flex flex-col gap-1 pr-0.5 custom-scrollbar">
+                {#each result as item}
+                    <a href={item.url}
+                       onclick={(e) => handleResultClick(e, item.url)}
+                       class="transition group block rounded-xl text-base px-3 py-2.5 hover:bg-(--btn-plain-bg-hover) active:bg-(--btn-plain-bg-active)">
+                        <div class="transition text-90 inline-flex font-bold group-hover:text-(--primary) items-center gap-1">
+                            <span>{item.meta.title}</span>
+                            <Icon icon="fa6-solid:chevron-right" class="transition text-[0.7rem] translate-x-0 group-hover:translate-x-1 my-auto text-(--primary)" />
+                        </div>
+                        {#if item.excerpt}
+                            <div class="transition text-xs text-50 line-clamp-2 mt-0.5 leading-relaxed">
+                                {@html item.excerpt}
+                            </div>
+                        {/if}
+                    </a>
+                {/each}
+            </div>
+        {/if}
+    </DropdownPanel>
+</div>
 
 <style>
     input:focus {
         outline: 0;
     }
     :global(.search-panel) {
-        max-height: calc(100vh - 100px);
+        max-height: calc(85vh - 70px);
         overflow-y: auto;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.15);
+        border-radius: 9999px;
+    }
+    :global(.dark) .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
     }
 </style>

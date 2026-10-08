@@ -138,29 +138,7 @@
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
 }
 
-/* 二级菜单、主题色、夜间模式菜单、手机端导航在有banner时启用半透明效果 */
-:is(#banner-wrapper ~ *, body:has(#banner-wrapper)) .dropdown-content,
-:is(#banner-wrapper ~ *, body:has(#banner-wrapper)) #display-setting,
-:is(#banner-wrapper ~ *, body:has(#banner-wrapper)) #nav-menu-panel,
-:is(#banner-wrapper ~ *, body:has(#banner-wrapper)) #translate-panel,
-:is(#banner-wrapper ~ *, body:has(#banner-wrapper)) #search-panel,
-:is(#banner-wrapper ~ *, body:has(#banner-wrapper)) #settings-menu-panel {
-    backdrop-filter: blur(20px) !important;
-    background: rgba(255, 255, 255, 0.55) !important;
-    border: 1px solid rgba(255, 255, 255, 0.55) !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
-}
-/* 二级菜单、主题色、夜间模式菜单、手机端导航在有banner时启用半透明效果 - 暗色主题 */
-:root.dark :is(#banner-wrapper ~ *, body:has(#banner-wrapper)) .dropdown-content,
-:root.dark :is(#banner-wrapper ~ *, body:has(#banner-wrapper)) #display-setting,
-:root.dark :is(#banner-wrapper ~ *, body:has(#banner-wrapper)) #nav-menu-panel,
-:root.dark :is(#banner-wrapper ~ *, body:has(#banner-wrapper)) #translate-panel,
-:root.dark :is(#banner-wrapper ~ *, body:has(#banner-wrapper)) #search-panel,
-:root.dark :is(#banner-wrapper ~ *, body:has(#banner-wrapper)) #settings-menu-panel {
-    background: rgba(0, 0, 0, 0.55) !important;
-    border: 1px solid rgba(0, 0, 0, 0.55) !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
-}
+/* 二级菜单与导航浮动面板统一由 liquid-glass.css 和 LiquidGlass.astro 进行材质渲染 */
 
 /* 响应式优化 */
 
@@ -242,7 +220,7 @@
         gap: 0.123rem !important;
     }
     /* Only size the trigger buttons; do not affect nested buttons inside panels */
-    #navbar-buttons button:not(.float-panel *) {
+    #navbar-buttons button:not(.float-panel *):not(#account-menu-panel *):not(#account-modal-panel *) {
         width: 2.4rem !important;
         height: 2.4rem !important;
         padding: 0 !important;
@@ -262,7 +240,7 @@
         gap: 0.111rem !important;
     }
     /* Only size the trigger buttons; do not affect nested buttons inside panels */
-    #navbar-buttons button:not(.float-panel *) {
+    #navbar-buttons button:not(.float-panel *):not(#account-menu-panel *):not(#account-modal-panel *) {
         width: 2.1rem !important;
         height: 2.1rem !important;
         padding: 0 !important;

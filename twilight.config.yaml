@@ -412,7 +412,7 @@ particle:
 # 音乐播放器配置
 musicPlayer:
     # 启用音乐播放器功能
-    enable: true
+    enable: false
     # 默认模式 ("meting" API | "local" 本地)
     mode: "meting"
     # meting 模式专属配置

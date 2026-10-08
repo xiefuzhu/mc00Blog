@@ -4,7 +4,7 @@
 	"version": "1.0.0",
 	"description": "A blog template",
 	"scripts": {
-		"type-check": "tsc --noEmit --isolatedDeclarations",
+		"type-check": "tsc --noEmit",
 		"check-stylus": "node scripts/compile-inline-stylus.cjs",
 		"check": "astro check",
 		"dev": "node scripts/generate-icons.js && astro dev",

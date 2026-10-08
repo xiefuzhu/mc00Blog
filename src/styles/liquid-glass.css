@@ -1,10 +1,30 @@
 /* Glass surfaces transplanted from the source blog. Refraction itself stays in LiquidGlass.astro. */
 
+:root {
+  --frosted-blur: 5px; /* 25% blur based on 20px baseline standard */
+}
+
+:is(.card-base, .btn-card, .album-card, .menu-card, .moment-item, .password-container, .project-card, .skill-card, .timeline-card, .site-footer, .pagination-bar):not([class*="fixed"]):not([class*="absolute"]):not(.float-panel) {
+  position: relative;
+}
+
 .liquid-glass,
 .card-base,
 .btn-card,
 .float-panel,
 #settings-menu-panel,
+#nav-menu-panel,
+#search-panel,
+#account-menu-panel,
+#account-modal-panel,
+#display-setting,
+#translate-panel,
+#wallpaper-mode-panel,
+#light-dark-panel,
+.dropdown-menu-custom,
+.dropdown-content,
+.playlist-panel,
+.expanded-player,
 .album-card,
 .menu-card,
 .moment-item,
@@ -19,16 +39,38 @@
 .toc-floating-panel,
 .glass-bg-upload,
 #glass-bg-clear {
-  position: relative;
-  background-color: rgba(235, 238, 245, 0.25) !important;
+  /* 适当压暗浅色模式下控件的背景遮罩颜色 */
+  background-color: rgba(215, 224, 236, 0.68) !important;
   background-image: none !important;
-  border: none !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
   border-radius: 22px;
-  box-shadow: 0 14px 36px -18px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 14px 36px -18px rgba(0, 0, 0, 0.25);
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   will-change: transform;
+}
+
+/* 弹出菜单/浮动面板层级的通用防透光与毛玻璃兜底 */
+.float-panel,
+#settings-menu-panel,
+#nav-menu-panel,
+#search-panel,
+#account-menu-panel,
+#account-modal-panel,
+#display-setting,
+#translate-panel,
+#wallpaper-mode-panel,
+#light-dark-panel,
+.dropdown-menu-custom,
+.dropdown-content,
+.playlist-panel,
+.expanded-player {
+  background-color: rgba(224, 232, 244, 0.92) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  backdrop-filter: blur(var(--frosted-blur, 5px)) !important;
+  -webkit-backdrop-filter: blur(var(--frosted-blur, 5px)) !important;
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.25) !important;
 }
 
 :root.dark .liquid-glass,
@@ -36,6 +78,18 @@
 :root.dark .btn-card,
 :root.dark .float-panel,
 :root.dark #settings-menu-panel,
+:root.dark #nav-menu-panel,
+:root.dark #search-panel,
+:root.dark #account-menu-panel,
+:root.dark #account-modal-panel,
+:root.dark #display-setting,
+:root.dark #translate-panel,
+:root.dark #wallpaper-mode-panel,
+:root.dark #light-dark-panel,
+:root.dark .dropdown-menu-custom,
+:root.dark .dropdown-content,
+:root.dark .playlist-panel,
+:root.dark .expanded-player,
 :root.dark .album-card,
 :root.dark .menu-card,
 :root.dark .moment-item,
@@ -50,39 +104,72 @@
 :root.dark .toc-floating-panel,
 :root.dark .glass-bg-upload,
 :root.dark #glass-bg-clear {
-  background-color: rgba(10, 16, 28, 0.36) !important;
-  border: none !important;
+  background-color: rgba(15, 23, 42, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+:root.dark .float-panel,
+:root.dark #settings-menu-panel,
+:root.dark #nav-menu-panel,
+:root.dark #search-panel,
+:root.dark #account-menu-panel,
+:root.dark #account-modal-panel,
+:root.dark #display-setting,
+:root.dark #translate-panel,
+:root.dark #wallpaper-mode-panel,
+:root.dark #light-dark-panel,
+:root.dark .dropdown-menu-custom,
+:root.dark .dropdown-content,
+:root.dark .playlist-panel,
+:root.dark .expanded-player {
+  background-color: rgba(15, 23, 42, 0.92) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(var(--frosted-blur, 5px)) !important;
+  -webkit-backdrop-filter: blur(var(--frosted-blur, 5px)) !important;
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.65) !important;
 }
 
 .btn-card:hover {
-  background-color: rgba(220, 226, 238, 0.35) !important;
-  border: none !important;
+  background-color: rgba(200, 212, 228, 0.75) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
 }
 
 :root.dark .btn-card:hover {
-  background-color: rgba(18, 26, 44, 0.48) !important;
-  border: none !important;
+  background-color: rgba(30, 41, 59, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
 
 :is(body, body:has(#banner-wrapper), #banner-wrapper ~ *) #navbar > div.liquid-glass.liquid-glass-bar {
   border-radius: 999px !important;
-  background-color: rgba(235, 238, 245, 0.25) !important;
+  background-color: rgba(215, 224, 236, 0.72) !important;
   background-image: none !important;
-  border: none !important;
-  box-shadow: 0 14px 36px -18px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 0 14px 36px -18px rgba(0, 0, 0, 0.25);
 }
 
 :root.dark :is(body, body:has(#banner-wrapper), #banner-wrapper ~ *) #navbar > div.liquid-glass.liquid-glass-bar {
-  background-color: rgba(10, 16, 28, 0.36) !important;
-  border: none !important;
+  background-color: rgba(15, 23, 42, 0.72) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
-/* Frosted Glass Mode (纯高斯模糊 10%) */
+/* Frosted Glass Mode (纯高斯模糊 25% / 5px) */
 :root[data-glass-mode="frosted"] .liquid-glass,
 :root[data-glass-mode="frosted"] .card-base,
 :root[data-glass-mode="frosted"] .btn-card,
 :root[data-glass-mode="frosted"] .float-panel,
 :root[data-glass-mode="frosted"] #settings-menu-panel,
+:root[data-glass-mode="frosted"] #nav-menu-panel,
+:root[data-glass-mode="frosted"] #search-panel,
+:root[data-glass-mode="frosted"] #account-menu-panel,
+:root[data-glass-mode="frosted"] #account-modal-panel,
+:root[data-glass-mode="frosted"] #display-setting,
+:root[data-glass-mode="frosted"] #translate-panel,
+:root[data-glass-mode="frosted"] #wallpaper-mode-panel,
+:root[data-glass-mode="frosted"] #light-dark-panel,
+:root[data-glass-mode="frosted"] .dropdown-menu-custom,
+:root[data-glass-mode="frosted"] .dropdown-content,
+:root[data-glass-mode="frosted"] .playlist-panel,
+:root[data-glass-mode="frosted"] .expanded-player,
 :root[data-glass-mode="frosted"] .album-card,
 :root[data-glass-mode="frosted"] .menu-card,
 :root[data-glass-mode="frosted"] .moment-item,
@@ -98,12 +185,28 @@
 :root[data-glass-mode="frosted"] .glass-bg-upload,
 :root[data-glass-mode="frosted"] #glass-bg-clear,
 :root[data-glass-mode="frosted"] #navbar > div.liquid-glass {
-  backdrop-filter: blur(2px) !important;
-  -webkit-backdrop-filter: blur(2px) !important;
-  background-color: rgba(255, 255, 255, 0.28) !important;
+  backdrop-filter: blur(var(--frosted-blur, 5px)) !important;
+  -webkit-backdrop-filter: blur(var(--frosted-blur, 5px)) !important;
+  background-color: rgba(220, 228, 240, 0.78) !important;
   background-image: none !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.2) !important;
+}
+
+:root[data-glass-mode="frosted"] .float-panel,
+:root[data-glass-mode="frosted"] #settings-menu-panel,
+:root[data-glass-mode="frosted"] #nav-menu-panel,
+:root[data-glass-mode="frosted"] #search-panel,
+:root[data-glass-mode="frosted"] #account-menu-panel,
+:root[data-glass-mode="frosted"] #account-modal-panel,
+:root[data-glass-mode="frosted"] #display-setting,
+:root[data-glass-mode="frosted"] #translate-panel,
+:root[data-glass-mode="frosted"] #wallpaper-mode-panel,
+:root[data-glass-mode="frosted"] #light-dark-panel,
+:root[data-glass-mode="frosted"] .dropdown-menu-custom,
+:root[data-glass-mode="frosted"] .dropdown-content {
+  background-color: rgba(224, 232, 244, 0.94) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
 }
 
 :root.dark[data-glass-mode="frosted"] .liquid-glass,
@@ -111,6 +214,18 @@
 :root.dark[data-glass-mode="frosted"] .btn-card,
 :root.dark[data-glass-mode="frosted"] .float-panel,
 :root.dark[data-glass-mode="frosted"] #settings-menu-panel,
+:root.dark[data-glass-mode="frosted"] #nav-menu-panel,
+:root.dark[data-glass-mode="frosted"] #search-panel,
+:root.dark[data-glass-mode="frosted"] #account-menu-panel,
+:root.dark[data-glass-mode="frosted"] #account-modal-panel,
+:root.dark[data-glass-mode="frosted"] #display-setting,
+:root.dark[data-glass-mode="frosted"] #translate-panel,
+:root.dark[data-glass-mode="frosted"] #wallpaper-mode-panel,
+:root.dark[data-glass-mode="frosted"] #light-dark-panel,
+:root.dark[data-glass-mode="frosted"] .dropdown-menu-custom,
+:root.dark[data-glass-mode="frosted"] .dropdown-content,
+:root.dark[data-glass-mode="frosted"] .playlist-panel,
+:root.dark[data-glass-mode="frosted"] .expanded-player,
 :root.dark[data-glass-mode="frosted"] .album-card,
 :root.dark[data-glass-mode="frosted"] .menu-card,
 :root.dark[data-glass-mode="frosted"] .moment-item,
@@ -126,21 +241,37 @@
 :root.dark[data-glass-mode="frosted"] .glass-bg-upload,
 :root.dark[data-glass-mode="frosted"] #glass-bg-clear,
 :root.dark[data-glass-mode="frosted"] #navbar > div.liquid-glass {
-  backdrop-filter: blur(2px) !important;
-  -webkit-backdrop-filter: blur(2px) !important;
-  background-color: rgba(15, 23, 42, 0.38) !important;
+  backdrop-filter: blur(var(--frosted-blur, 5px)) !important;
+  -webkit-backdrop-filter: blur(var(--frosted-blur, 5px)) !important;
+  background-color: rgba(15, 23, 42, 0.78) !important;
   background-image: none !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.5) !important;
 }
 
+:root.dark[data-glass-mode="frosted"] .float-panel,
+:root.dark[data-glass-mode="frosted"] #settings-menu-panel,
+:root.dark[data-glass-mode="frosted"] #nav-menu-panel,
+:root.dark[data-glass-mode="frosted"] #search-panel,
+:root.dark[data-glass-mode="frosted"] #account-menu-panel,
+:root.dark[data-glass-mode="frosted"] #account-modal-panel,
+:root.dark[data-glass-mode="frosted"] #display-setting,
+:root.dark[data-glass-mode="frosted"] #translate-panel,
+:root.dark[data-glass-mode="frosted"] #wallpaper-mode-panel,
+:root.dark[data-glass-mode="frosted"] #light-dark-panel,
+:root.dark[data-glass-mode="frosted"] .dropdown-menu-custom,
+:root.dark[data-glass-mode="frosted"] .dropdown-content {
+  background-color: rgba(15, 23, 42, 0.94) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
 :root[data-glass-mode="frosted"] .btn-card:hover {
-  background-color: rgba(255, 255, 255, 0.38) !important;
+  background-color: rgba(200, 212, 228, 0.85) !important;
   background-image: none !important;
 }
 
 :root.dark[data-glass-mode="frosted"] .btn-card:hover {
-  background-color: rgba(30, 41, 59, 0.48) !important;
+  background-color: rgba(30, 41, 59, 0.85) !important;
   background-image: none !important;
 }
 
@@ -176,3 +307,380 @@
 .glass-bg-upload input {
   display: none;
 }
+
+/* ==========================================================================
+   CPAMC & LiquidGlass 控制台现代毛玻璃规范体系
+   ========================================================================== */
+
+/* 1. .console-glass 控制台核心毛玻璃容器规范 */
+.console-glass {
+  background-color: rgba(245, 248, 253, 0.85) !important;
+  background-image: none !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 22px;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.7),
+              0 14px 36px -18px rgba(0, 0, 0, 0.12),
+              0 4px 12px -2px rgba(0, 0, 0, 0.04);
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+:root.dark .console-glass,
+.dark .console-glass {
+  background-color: rgba(14, 17, 24, 0.88) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15),
+              0 16px 40px -18px rgba(0, 0, 0, 0.5),
+              0 4px 14px -2px rgba(0, 0, 0, 0.35);
+}
+
+/* 2. .console-glass-card 控制台指标卡片与列表卡片 */
+.console-glass-card {
+  position: relative;
+  background-color: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 20px;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.65),
+              0 8px 24px -10px rgba(0, 0, 0, 0.08);
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform, box-shadow, border-color;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.25s ease,
+              border-color 0.25s ease;
+}
+
+:root.dark .console-glass-card,
+.dark .console-glass-card {
+  background-color: rgba(18, 22, 32, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.16),
+              0 10px 28px -10px rgba(0, 0, 0, 0.45);
+}
+
+.console-glass-card:hover {
+  transform: translateY(-3px);
+  background-color: rgba(255, 255, 255, 0.92);
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.9),
+              0 18px 36px -12px rgba(0, 0, 0, 0.14),
+              0 0 16px -2px rgba(16, 185, 129, 0.2);
+}
+
+:root.dark .console-glass-card:hover,
+.dark .console-glass-card:hover {
+  background-color: rgba(22, 27, 39, 0.92);
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.25),
+              0 20px 40px -12px rgba(0, 0, 0, 0.6),
+              0 0 20px -2px rgba(16, 185, 129, 0.28);
+}
+
+/* 3. .console-glass-hero CPAMC 风格顶部 Hero 状态大卡 */
+.console-glass-hero {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(240, 246, 255, 0.75) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 24px;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: inset 0 1px 2px 0 rgba(255, 255, 255, 0.95),
+              0 20px 45px -15px rgba(0, 0, 0, 0.1);
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
+  overflow: hidden;
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+:root.dark .console-glass-hero,
+.dark .console-glass-hero {
+  background: linear-gradient(135deg, rgba(16, 20, 29, 0.92) 0%, rgba(11, 14, 20, 0.85) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.15),
+              0 24px 50px -15px rgba(0, 0, 0, 0.6);
+}
+
+/* 4. .console-glass-pill 顶部浮岛操作胶囊栏、超大圆角 full-rounded 悬浮操作栏 */
+.console-glass-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.8),
+              0 8px 24px -4px rgba(0, 0, 0, 0.1);
+  color: #1e293b;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.2s ease,
+              border-color 0.2s ease,
+              color 0.2s ease;
+}
+
+:root.dark .console-glass-pill,
+.dark .console-glass-pill {
+  background-color: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2),
+              0 10px 28px -4px rgba(0, 0, 0, 0.5);
+  color: #f1f5f9;
+}
+
+button.console-glass-pill:hover,
+a.console-glass-pill:hover,
+.console-glass-pill.is-interactive:hover {
+  transform: translateY(-1.5px);
+  background-color: rgba(255, 255, 255, 0.92);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.95),
+              0 10px 24px -3px rgba(0, 0, 0, 0.12),
+              0 0 14px -2px rgba(59, 130, 246, 0.2);
+}
+
+:root.dark button.console-glass-pill:hover,
+:root.dark a.console-glass-pill:hover,
+:root.dark .console-glass-pill.is-interactive:hover,
+.dark button.console-glass-pill:hover,
+.dark a.console-glass-pill:hover,
+.dark .console-glass-pill.is-interactive:hover {
+  background-color: rgba(30, 41, 59, 0.92);
+  border-color: rgba(96, 165, 250, 0.4);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25),
+              0 12px 28px -3px rgba(0, 0, 0, 0.6),
+              0 0 16px -2px rgba(96, 165, 250, 0.25);
+}
+
+/* 5. .console-glass-input 半透输入框与下拉选择框，聚焦时呈现柔和微光发光圈 */
+.console-glass-input {
+  background-color: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  border-radius: 14px;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+  color: #0f172a;
+  outline: none;
+  transition: background-color 0.2s ease,
+              border-color 0.2s ease,
+              box-shadow 0.2s ease,
+              color 0.2s ease;
+}
+
+:root.dark .console-glass-input,
+.dark .console-glass-input {
+  background-color: rgba(15, 23, 42, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.console-glass-input::placeholder {
+  color: #94a3b8;
+}
+
+:root.dark .console-glass-input::placeholder,
+.dark .console-glass-input::placeholder {
+  color: #64748b;
+}
+
+.console-glass-input:focus,
+.console-glass-input:focus-visible,
+.console-glass-input:focus-within {
+  background-color: rgba(255, 255, 255, 0.95);
+  border-color: var(--primary, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2),
+              0 0 16px rgba(59, 130, 246, 0.16),
+              inset 0 1px 1px rgba(255, 255, 255, 0.8);
+  outline: none;
+}
+
+:root.dark .console-glass-input:focus,
+:root.dark .console-glass-input:focus-visible,
+:root.dark .console-glass-input:focus-within,
+.dark .console-glass-input:focus,
+.dark .console-glass-input:focus-visible,
+.dark .console-glass-input:focus-within {
+  background-color: rgba(15, 23, 42, 0.88);
+  border-color: var(--primary, #60a5fa);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.32),
+              0 0 20px rgba(96, 165, 250, 0.25),
+              inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  outline: none;
+}
+
+/* 6. .console-glass-btn 与 .console-glass-btn-primary 带有半透明折射质感的按钮 */
+.console-glass-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 14px;
+  font-weight: 600;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(245, 248, 255, 0.65) 100%);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #1e293b;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.9),
+              0 4px 12px -2px rgba(0, 0, 0, 0.06);
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.18s ease,
+              border-color 0.18s ease,
+              color 0.18s ease,
+              filter 0.18s ease;
+}
+
+:root.dark .console-glass-btn,
+.dark .console-glass-btn {
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.65) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #f1f5f9;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15),
+              0 4px 14px -2px rgba(0, 0, 0, 0.35);
+}
+
+.console-glass-btn:hover {
+  transform: translateY(-1.5px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 246, 255, 0.8) 100%);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 1),
+              0 8px 20px -3px rgba(0, 0, 0, 0.1),
+              0 0 12px -2px rgba(59, 130, 246, 0.18);
+}
+
+:root.dark .console-glass-btn:hover,
+.dark .console-glass-btn:hover {
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.95) 0%, rgba(20, 30, 48, 0.85) 100%);
+  border-color: rgba(96, 165, 250, 0.4);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25),
+              0 8px 22px -3px rgba(0, 0, 0, 0.55),
+              0 0 14px -2px rgba(96, 165, 250, 0.25);
+}
+
+.console-glass-btn:active {
+  transform: translateY(0);
+  background-color: rgba(240, 244, 250, 0.85);
+  box-shadow: 0 2px 6px -1px rgba(0, 0, 0, 0.08);
+}
+
+:root.dark .console-glass-btn:active,
+.dark .console-glass-btn:active {
+  background-color: rgba(20, 30, 48, 0.85);
+  box-shadow: 0 2px 8px -1px rgba(0, 0, 0, 0.4);
+}
+
+.console-glass-btn-primary {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.92) 0%, rgba(37, 99, 235, 0.88) 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.45),
+              0 6px 18px -4px rgba(59, 130, 246, 0.45) !important;
+}
+
+.console-glass-btn-primary:hover {
+  filter: brightness(1.08);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.6),
+              0 10px 24px -4px rgba(59, 130, 246, 0.58),
+              0 0 16px rgba(59, 130, 246, 0.35) !important;
+}
+
+.console-glass-btn-danger {
+  background-color: rgba(239, 68, 68, 0.12) !important;
+  color: #dc2626 !important;
+  border: 1px solid rgba(239, 68, 68, 0.25) !important;
+}
+
+:root.dark .console-glass-btn-danger,
+.dark .console-glass-btn-danger {
+  background-color: rgba(239, 68, 68, 0.18) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+
+.console-glass-btn-danger:hover {
+  background-color: rgba(239, 68, 68, 0.22) !important;
+}
+
+/* data-glass-mode="frosted" 状态适配 */
+:root[data-glass-mode="frosted"] .console-glass {
+  background-color: rgba(245, 248, 253, 0.88) !important;
+  backdrop-filter: blur(var(--frosted-blur, 16px)) !important;
+  -webkit-backdrop-filter: blur(var(--frosted-blur, 16px)) !important;
+}
+
+:root.dark[data-glass-mode="frosted"] .console-glass {
+  background-color: rgba(14, 17, 24, 0.9) !important;
+  backdrop-filter: blur(var(--frosted-blur, 16px)) !important;
+  -webkit-backdrop-filter: blur(var(--frosted-blur, 16px)) !important;
+}
+
+:root[data-glass-mode="frosted"] .console-glass-card {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(var(--frosted-blur, 14px)) !important;
+  -webkit-backdrop-filter: blur(var(--frosted-blur, 14px)) !important;
+}
+
+:root.dark[data-glass-mode="frosted"] .console-glass-card {
+  background-color: rgba(18, 22, 32, 0.88) !important;
+  backdrop-filter: blur(var(--frosted-blur, 14px)) !important;
+  -webkit-backdrop-filter: blur(var(--frosted-blur, 14px)) !important;
+}
+
+:root[data-glass-mode="frosted"] .console-glass-hero {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94) 0%, rgba(240, 246, 255, 0.88) 100%) !important;
+  backdrop-filter: blur(var(--frosted-blur, 20px)) !important;
+  -webkit-backdrop-filter: blur(var(--frosted-blur, 20px)) !important;
+}
+
+:root.dark[data-glass-mode="frosted"] .console-glass-hero {
+  background: linear-gradient(135deg, rgba(16, 20, 29, 0.95) 0%, rgba(11, 14, 20, 0.92) 100%) !important;
+  backdrop-filter: blur(var(--frosted-blur, 20px)) !important;
+  -webkit-backdrop-filter: blur(var(--frosted-blur, 20px)) !important;
+}
+
+/* Custom sleek scrollbar for console */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(150, 150, 150, 0.25);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(150, 150, 150, 0.45);
+}
+:root.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+:root.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+

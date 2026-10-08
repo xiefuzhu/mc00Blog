@@ -1,7 +1,7 @@
 ---
 import "katex/dist/katex.css";
 
-import { siteConfig, profileConfig, musicPlayerConfig, pioConfig } from "@/config";
+import { siteConfig, profileConfig, pioConfig } from "@/config";
 import { getAnalyticsConfig } from "@utils/analytics";
 import type { Favicon } from "@/types/config";
 import { defaultFavicons } from "@constants/icon";
@@ -41,7 +41,6 @@ import { pathsEqual, url } from "@utils/url";
 import FontLoader from "@components/fontLoader.astro";
 import LoadingOverlay from "@components/loadingOverlay.astro";
 import ConfigCarrier from "@components/configCarrier.astro";
-import MusicPlayer from "@components/musicPlayer.svelte";
 import Pio from "@components/pio.svelte";
 import "@styles/navbar.css";
 import "@styles/banner.css";
@@ -145,7 +144,7 @@ const { enabled: analyticsEnabled, code: analyticsCode } = getAnalyticsConfig();
 ---
 
 <!DOCTYPE html>
-<html lang={siteLang} class:list={["text-[14px] md:text-[16px] is-loading", { "bg-(--page-bg)": !enableWallpaperTransparent, "wallpaper-transparent": enableWallpaperTransparent }]}
+<html lang={siteLang} data-glass-mode="frosted" class:list={["text-[14px] md:text-[16px] is-loading", { "bg-(--page-bg)": !enableWallpaperTransparent, "wallpaper-transparent": enableWallpaperTransparent }]}
 >
     <head>
         <meta charset="UTF-8" />
@@ -225,8 +224,8 @@ const { enabled: analyticsEnabled, code: analyticsCode } = getAnalyticsConfig();
             const hue = localStorage.getItem('hue') || configHue;
             // Apply the hue to the document
             document.documentElement.style.setProperty('--hue', hue);
-            // Load glass mode from local storage
-            const glassMode = localStorage.getItem('glass-mode') || 'liquid';
+            // Load glass mode from local storage (default: frosted)
+            const glassMode = localStorage.getItem('glass-mode') || 'frosted';
             document.documentElement.setAttribute('data-glass-mode', glassMode);
             // Load wallpaper mode from local storage
             const storedWallpaper = localStorage.getItem('wallpaperMode') || 'fullscreen';
@@ -263,8 +262,6 @@ const { enabled: analyticsEnabled, code: analyticsCode } = getAnalyticsConfig();
         <slot />
         <!-- Analytics -->
         {analyticsEnabled && analyticsCode && <Fragment set:html={analyticsCode} />}
-        <!-- Music Player - 仅在启用时加载 -->
-        {musicPlayerConfig.enable && <MusicPlayer client:idle />}
         <!-- Pio 看板娘组件 - 如果启用了侧边栏，可能需要调整 z-index -->
         {pioConfig.enable && <Pio client:visible />}
         <LiquidGlass />

@@ -36,6 +36,9 @@ type ConfigFile = {
 };
 
 const config = yaml.load(rawConfig) as ConfigFile;
+if (config.musicPlayer) {
+    config.musicPlayer.enable = false;
+}
 
 const linkPresetNameMap: Record<string, LinkPreset> = {
     Home: LinkPreset.Home,
@@ -155,7 +158,10 @@ export const footerConfig: FooterConfig = config.footer;
 export const particleConfig: ParticleConfig = config.particle;
 
 // 音乐播放器配置
-export const musicPlayerConfig: MusicPlayerConfig = config.musicPlayer;
+export const musicPlayerConfig: MusicPlayerConfig = {
+    ...config.musicPlayer,
+    enable: false,
+};
 
 // 看板娘配置
 export const pioConfig: PioConfig = config.pio;
