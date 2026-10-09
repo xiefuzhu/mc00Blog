@@ -1,11 +1,11 @@
 ---
-export const prerender = true;
-
+// 项目在请求时从 PHP 后端获取
+export const prerender = false;
 
 import { LinkPresets } from "@constants/link-presets";
 import { LinkPreset } from "@/types/config";
 import {
-    projectsData,
+    getProjects,
     getProjectStats,
     getProjectsByCategory,
     getFeaturedProjects,
@@ -22,10 +22,13 @@ import BackwardButton from "@components/backwardButton.astro";
 const title = LinkPresets[LinkPreset.Projects].name;
 const subtitle = LinkPresets[LinkPreset.Projects].description;
 
+// 获取全部项目 (后端不可达时为空)
+const projectsData = await getProjects();
+
 // 获取项目统计信息
-const stats = getProjectStats();
-const featuredProjects = getFeaturedProjects();
-const allTechStack = getAllTechStack();
+const stats = getProjectStats(projectsData);
+const featuredProjects = getFeaturedProjects(projectsData);
+const allTechStack = getAllTechStack(projectsData);
 
 // 获取所有分类
 const categories = [
@@ -35,7 +38,7 @@ const categories = [
 // 按分类获取项目
 const projectsByCategory = categories.reduce(
     (acc, category) => {
-        acc[category] = getProjectsByCategory(category);
+        acc[category] = getProjectsByCategory(projectsData, category);
         return acc;
     },
     {} as Record<string, typeof projectsData>,

@@ -1,11 +1,11 @@
 ---
-export const prerender = true;
-
+// 时间线在请求时从 PHP 后端获取
+export const prerender = false;
 
 import { LinkPresets } from "@constants/link-presets";
 import { LinkPreset } from "@/types/config";
 import {
-    timelineData,
+    getTimeline,
     getTimelineStats,
     getTimelineByType,
     getCurrentItems,
@@ -22,18 +22,21 @@ import BackwardButton from "@components/backwardButton.astro";
 const title = LinkPresets[LinkPreset.Timeline].name;
 const subtitle = LinkPresets[LinkPreset.Timeline].description;
 
+// 获取全部时间线 (后端不可达时为空)
+const timelineData = await getTimeline();
+
 // 收集所有时间线图标用于预加载
 const allIcons = timelineData
     .map((item) => item.icon || getTypeIcon(item.type))
     .filter(Boolean);
 
 // 获取时间线统计信息
-const stats = getTimelineStats();
-const currentItems = getCurrentItems();
-const workExperience = getTotalWorkExperience();
+const stats = getTimelineStats(timelineData);
+const currentItems = getCurrentItems(timelineData);
+const workExperience = getTotalWorkExperience(timelineData);
 
 // 获取所有时间线项目（按时间倒序）
-const allTimelineItems = getTimelineByType();
+const allTimelineItems = getTimelineByType(timelineData);
 
 // 类型图标映射
 const getTypeIcon = (type: string) => {

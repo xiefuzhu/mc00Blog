@@ -1,8 +1,11 @@
 ---
+// 日记在请求时从 PHP 后端获取
+export const prerender = false;
+
 import { LinkPresets } from "@constants/link-presets";
 import { LinkPreset } from "@/types/config";
 import { siteConfig } from "@/config";
-import { sortedMoments } from "@/utils/diary";
+import { getMoments } from "@/utils/diary";
 import { i18n } from "@i18n/translation";
 import I18nKey from "@i18n/i18nKey";
 import GridLayout from "@layouts/grid.astro";
@@ -12,6 +15,9 @@ import ImageWrapper from "@components/common/imageWrapper.astro";
 
 const pageTitle = LinkPresets[LinkPreset.Diary].name;
 const pageDescription = LinkPresets[LinkPreset.Diary].description;
+
+// 获取全部日记 (后端不可达时为空)
+const sortedMoments = await getMoments();
 
 // 时间格式化函数
 function formatTime(dateString: string): string {

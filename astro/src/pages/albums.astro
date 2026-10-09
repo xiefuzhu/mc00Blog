@@ -1,7 +1,10 @@
 ---
+// 相册在请求时从 PHP 后端获取
+export const prerender = false;
+
 import { LinkPresets } from "@constants/link-presets";
 import { LinkPreset } from "@/types/config";
-import { sortedAlbums } from "@utils/albums";
+import { getAlbums } from "@utils/albums";
 import { i18n } from "@i18n/translation";
 import I18nKey from "@i18n/i18nKey";
 import GridLayout from "@layouts/grid.astro";
@@ -13,7 +16,7 @@ const pageTitle = LinkPresets[LinkPreset.Albums].name;
 const pageDescription = LinkPresets[LinkPreset.Albums].description;
 
 // 获取所有相册
-const albumsData = sortedAlbums.filter(album => album.visible);
+const albumsData = (await getAlbums()).filter(album => album.visible);
 ---
 
 <GridLayout title={pageTitle} description={pageDescription}>

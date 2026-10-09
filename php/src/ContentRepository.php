@@ -292,6 +292,7 @@ class ContentRepository {
                     'entryId' => $entry['id'],
                     'format' => $entry['format'],
                     'meta' => $entry['meta'],
+                    'children' => [],
                 ];
                 $parentPath = $entry['folderPath'];
                 $parent = ($parentPath !== '' && isset($index[$parentPath])) ? $index[$parentPath] : $root;

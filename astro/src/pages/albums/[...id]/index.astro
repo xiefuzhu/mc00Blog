@@ -1,6 +1,9 @@
 ---
+// 相册详情在请求时从 PHP 后端获取
+export const prerender = false;
+
 import type { AlbumGroup } from "@utils/albums";
-import { sortedAlbums } from "@utils/albums";
+import { getAlbums } from "@utils/albums";
 import { i18n } from "@i18n/translation";
 import I18nKey from "@i18n/i18nKey";
 import GridLayout from "@layouts/grid.astro";
@@ -8,22 +11,16 @@ import BackwardButton from "@components/backwardButton.astro";
 import ImageWrapper from "@components/common/imageWrapper.astro";
 
 
-export const getStaticPaths = async () => {
-    return sortedAlbums.filter(album => album.visible).map((album) => ({
-        params: { id: album.id },
-        props: { album },
-    }));
-};
-
-
-interface Props {
-    album: AlbumGroup;
-}
-
-const { album } = Astro.props;
+const albumId = Astro.params.id ?? "";
+const album: AlbumGroup | undefined = (await getAlbums()).find(
+    (item) => item.id === albumId && item.visible,
+);
 
 if (!album) {
-    return Astro.redirect("/404");
+    return new Response("相册不存在", {
+        status: 404,
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+    });
 }
 ---
 

@@ -1,6 +1,7 @@
-// Diary data configuration file
-// Used to manage data for the diary display page
-const diaryModules = import.meta.glob('../content/diary/**/*.json', { eager: true });
+// Diary data (运行时从 PHP 后端读取)
+// 后端不可达时返回空数组, 页面显示空内容。
+
+import { fetchJsonCollection, resolveAssetUrl } from "@/lib/content";
 
 export interface Moment {
     id: string;
@@ -11,19 +12,23 @@ export interface Moment {
     basePath?: string;
 }
 
-export const moments: Moment[] = Object.entries(diaryModules).map(([path, mod]: [string, any]) => {
-    const id = path.split('/').pop()?.replace('.json', '') || '';
-    const data = mod.default as any;
-    const basePath = path.replace('../', '').replace(/\/[^/]+$/, '');
-    const moment: Moment = {
-        id,
-        ...data,
-        basePath,
-    };
-    return moment;
-});
+// biome-ignore lint/suspicious/noExplicitAny: 后端返回的是无类型的 JSON
+type RawMoment = Record<string, any>;
 
-// Sort moments by date in descending order
-export const sortedMoments = [...moments].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-);
+/** 日记列表 (来自后端 php/articles/diary, 按日期倒序) */
+export async function getMoments(): Promise<Moment[]> {
+    const entries = await fetchJsonCollection<RawMoment>("diary");
+    const moments: Moment[] = entries.map(
+        (entry) =>
+            ({
+                ...entry,
+                id: entry.id,
+                images: Array.isArray(entry.images)
+                    ? entry.images.map((src: string) => resolveAssetUrl("diary", entry.folderPath, String(src)))
+                    : [],
+                basePath: `articles/diary/${entry.folderPath}`,
+            }) as unknown as Moment,
+    );
+
+    return moments.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}

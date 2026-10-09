@@ -243,6 +243,25 @@ export async function fetchCollectionEntries<T>(key: string): Promise<T[]> {
     return result.data.entries as T[];
 }
 
+/**
+ * 拉取某个 JSON 集合, 把每条的 data 展开成条目对象并附带 id / folderPath。
+ * 用于 albums / diary / projects / skills / timeline 五个非文章集合。
+ */
+export async function fetchJsonCollection<T extends Record<string, unknown>>(
+    key: string,
+): Promise<Array<T & { id: string; folderPath: string }>> {
+    const entries = await fetchCollectionEntries<{
+        id?: unknown;
+        folderPath?: unknown;
+        data?: unknown;
+    }>(key);
+    return entries.map((entry) => ({
+        ...((entry.data ?? {}) as T),
+        id: asString(entry.id),
+        folderPath: asString(entry.folderPath),
+    }));
+}
+
 /* -------------------------------------------------------------------------- */
 /* 渲染                                                                        */
 /* -------------------------------------------------------------------------- */

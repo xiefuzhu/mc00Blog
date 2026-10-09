@@ -1,6 +1,7 @@
-// Timeline data configuration file
-// Used to manage data for the timeline page
-const timelineModules = import.meta.glob('../content/timeline/*.json', { eager: true });
+// Timeline data (运行时从 PHP 后端读取)
+// 后端不可达时返回空数组, 页面显示空内容。
+
+import { fetchJsonCollection } from "@/lib/content";
 
 export interface TimelineItem {
     id: string;
@@ -25,63 +26,60 @@ export interface TimelineItem {
     basePath?: string;
 }
 
-export const timelineData: TimelineItem[] = Object.entries(timelineModules).map(([path, mod]: [string, any]) => {
-    const id = path.split('/').pop()?.replace('.json', '') || '';
-    const data = mod.default;
-    const basePath = path.replace('../', '').replace(/\/[^/]+$/, '');
-    return { id, ...data, basePath } as TimelineItem;
-});
+// biome-ignore lint/suspicious/noExplicitAny: 后端返回的是无类型的 JSON
+type RawTimelineItem = Record<string, any>;
+
+/** 时间线列表 (来自后端 php/articles/timeline) */
+export async function getTimeline(): Promise<TimelineItem[]> {
+    const entries = await fetchJsonCollection<RawTimelineItem>("timeline");
+    return entries.map(
+        (entry) =>
+            ({
+                ...entry,
+                id: entry.id,
+                basePath: `articles/timeline/${entry.folderPath}`,
+            }) as unknown as TimelineItem,
+    );
+}
 
 // Get timeline statistics
-export const getTimelineStats = () => {
+export const getTimelineStats = (timelineData: TimelineItem[]) => {
     const total = timelineData.length;
     const byType = {
         education: timelineData.filter((item) => item.type === "education").length,
         work: timelineData.filter((item) => item.type === "work").length,
         project: timelineData.filter((item) => item.type === "project").length,
-        achievement: timelineData.filter((item) => item.type === "achievement")
-            .length,
+        achievement: timelineData.filter((item) => item.type === "achievement").length,
     };
     return { total, byType };
 };
 
-
 // Get timeline items by type
-export const getTimelineByType = (type?: string) => {
+export const getTimelineByType = (timelineData: TimelineItem[], type?: string) => {
     if (!type || type === "all") {
-        return timelineData.sort(
-            (a, b) =>
-                new Date(b.startDate).getTime() - new Date(a.startDate).getTime(),
+        return [...timelineData].sort(
+            (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime(),
         );
     }
     return timelineData
         .filter((item) => item.type === type)
-        .sort(
-            (a, b) =>
-                new Date(b.startDate).getTime() - new Date(a.startDate).getTime(),
-        );
+        .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
 };
-
 
 // Get featured timeline items
-export const getFeaturedTimeline = () => {
+export const getFeaturedTimeline = (timelineData: TimelineItem[]) => {
     return timelineData
         .filter((item) => item.featured)
-        .sort(
-            (a, b) =>
-                new Date(b.startDate).getTime() - new Date(a.startDate).getTime(),
-        );
+        .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
 };
 
-
 // Get current ongoing items
-export const getCurrentItems = () => {
+export const getCurrentItems = (timelineData: TimelineItem[]) => {
     return timelineData.filter((item) => !item.endDate);
 };
 
-
 // Calculate total work experience
-export const getTotalWorkExperience = () => {
+export const getTotalWorkExperience = (timelineData: TimelineItem[]) => {
     const workItems = timelineData.filter((item) => item.type === "work");
     let totalMonths = 0;
     workItems.forEach((item) => {
