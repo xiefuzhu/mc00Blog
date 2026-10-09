@@ -5,17 +5,21 @@
  */
 
 class Storage {
-    private static $dataDir = __DIR__ . '/../data';
-
-    private static function ensureDataDir() {
-        if (!is_dir(self::$dataDir)) {
-            mkdir(self::$dataDir, 0777, true);
+    /** 数据目录 (由 config.php 的 dataDir 控制) */
+    private static function dataDir(): string {
+        $dir = (string) Config::get('dataDir', dirname(__DIR__) . '/data');
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0777, true);
         }
+        return rtrim(str_replace('\\', '/', $dir), '/');
+    }
+
+    private static function file(string $collection): string {
+        return self::dataDir() . '/' . $collection . '.json';
     }
 
     public static function get($collection, $default = []) {
-        self::ensureDataDir();
-        $file = self::$dataDir . '/' . $collection . '.json';
+        $file = self::file($collection);
         if (!file_exists($file)) {
             self::initDefaultData($collection);
         }
@@ -27,9 +31,10 @@ class Storage {
     }
 
     public static function set($collection, $data) {
-        self::ensureDataDir();
-        $file = self::$dataDir . '/' . $collection . '.json';
-        return file_put_contents($file, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+        return file_put_contents(
+            self::file($collection),
+            json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)
+        );
     }
 
     private static function initDefaultData($collection) {

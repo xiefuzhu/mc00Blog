@@ -1,24 +1,16 @@
 <?php
 /**
  * PHP RESTful 后端单入口
- * 前后端完全解耦，提供标准 RESTful API
- * 可通过 php -S 127.0.0.1:8000 -t public 启动
+ *
+ * 前后端完全解耦: 前端 (astro/) 通过 HTTP JSON 与本服务通信。
+ * 启动: php/start.bat (Windows) 或 php/start.sh (Unix), 内部调用 serve.php 读取 config.php。
  */
 
-// 统一跨域与安全响应头
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
-header('Content-Type: application/json; charset=utf-8');
-
-// OPTIONS 预检请求直接通过
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(204);
-    exit;
-}
-
-// 自动加载核心类
+require_once __DIR__ . '/../src/Config.php';
+require_once __DIR__ . '/../src/Frontmatter.php';
+require_once __DIR__ . '/../src/Auth.php';
 require_once __DIR__ . '/../src/Storage.php';
+require_once __DIR__ . '/../src/ContentRepository.php';
 require_once __DIR__ . '/../src/Controllers/AuthController.php';
 require_once __DIR__ . '/../src/Controllers/PostController.php';
 require_once __DIR__ . '/../src/Controllers/CategoryController.php';
@@ -28,35 +20,84 @@ require_once __DIR__ . '/../src/Controllers/StatsController.php';
 require_once __DIR__ . '/../src/Controllers/UserController.php';
 require_once __DIR__ . '/../src/Controllers/SettingsController.php';
 require_once __DIR__ . '/../src/Controllers/LogsController.php';
+require_once __DIR__ . '/../src/Controllers/ContentController.php';
+require_once __DIR__ . '/../src/Controllers/PublicController.php';
 
-// 统一 JSON 输出辅助函数
-function jsonResponse($success, $data = null, $message = '', $statusCode = 200) {
-    http_response_code($statusCode);
-    echo json_encode([
-        'success' => $success,
-        'data' => $data,
-        'message' => $message,
-        'timestamp' => time()
-    ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+/* -------------------------------------------------------------------------- */
+/* 跨域与安全响应头 (来源由 config.php 的 corsOrigins 控制)                     */
+/* -------------------------------------------------------------------------- */
+
+$allowedOrigins = Config::get('corsOrigins', ['*']);
+if (!is_array($allowedOrigins)) $allowedOrigins = ['*'];
+$requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
+
+if (in_array('*', $allowedOrigins, true)) {
+    header('Access-Control-Allow-Origin: *');
+} elseif ($requestOrigin !== '' && in_array($requestOrigin, $allowedOrigins, true)) {
+    header('Access-Control-Allow-Origin: ' . $requestOrigin);
+    header('Vary: Origin');
+}
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-Api-Key');
+header('Content-Type: application/json; charset=utf-8');
+
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
+    http_response_code(204);
     exit;
 }
 
-// 获取请求路径与方法
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$method = $_SERVER['REQUEST_METHOD'];
+/* -------------------------------------------------------------------------- */
+/* 响应辅助                                                                    */
+/* -------------------------------------------------------------------------- */
 
-// 统一去除 /api 前缀，匹配路由
+/** 统一业务信封 (auth / posts / categories / ... 等业务接口使用) */
+function jsonResponse($success, $data = null, $message = '', $statusCode = 200) {
+    rawJson([
+        'success' => $success,
+        'data' => $data,
+        'message' => $message,
+        'timestamp' => time(),
+    ], $statusCode);
+}
+
+/** 原始 JSON 响应 (content / public 接口使用, 契约与前端 contentApi 一致) */
+function rawJson($payload, $statusCode = 200) {
+    http_response_code($statusCode);
+    echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    exit;
+}
+
+/* -------------------------------------------------------------------------- */
+/* 路由解析                                                                    */
+/* -------------------------------------------------------------------------- */
+
+$uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
 $path = preg_replace('#^/api#', '', $uri);
 $path = rtrim($path, '/');
 if ($path === '') $path = '/';
 
-// 获取 JSON 请求体
-$rawBody = file_get_contents('php://input');
-$body = json_decode($rawBody, true) ?: [];
+$body = json_decode(file_get_contents('php://input') ?: '', true) ?: [];
 
-// 路由分发器
+/* -------------------------------------------------------------------------- */
+/* 写操作统一鉴权 (登录/注册等公开写接口除外)                                   */
+/* -------------------------------------------------------------------------- */
+
+$publicWritePaths = ['/auth/login', '/auth/register', '/auth/quick-login'];
+if (in_array($method, ['POST', 'PUT', 'DELETE', 'PATCH'], true) && !in_array($path, $publicWritePaths, true)) {
+    Auth::requireWrite();
+}
+
+/* -------------------------------------------------------------------------- */
+/* 路由分发                                                                    */
+/* -------------------------------------------------------------------------- */
+
 try {
-    // 1. 认证路由
+    $content = new ContentController();
+    $public = new PublicController();
+
+    /* 1. 认证 */
     if ($path === '/auth/login' && $method === 'POST') {
         (new AuthController())->login($body);
     } elseif ($path === '/auth/register' && $method === 'POST') {
@@ -67,86 +108,120 @@ try {
         (new AuthController())->me();
     }
 
-    // 2. 统计大盘路由
+    /* 2. 内容管理 (/api/content/*) */
+    elseif ($path === '/content/capabilities' && $method === 'GET') {
+        $content->capabilities();
+    } elseif ($path === '/content/tree' && $method === 'GET') {
+        $content->tree();
+    } elseif ($path === '/content/entry' && $method === 'GET') {
+        $content->entryGet($_GET);
+    } elseif ($path === '/content/entry' && $method === 'PUT') {
+        $content->entryPut();
+    } elseif ($path === '/content/entry' && $method === 'POST') {
+        $content->entryMove();
+    } elseif ($path === '/content/entry' && $method === 'DELETE') {
+        $content->entryDelete($_GET);
+    } elseif ($path === '/content/folder' && $method === 'POST') {
+        $content->folderCreate();
+    } elseif ($path === '/content/folder' && $method === 'PUT') {
+        $content->folderRename();
+    } elseif ($path === '/content/folder' && $method === 'DELETE') {
+        $content->folderDelete($_GET);
+    }
+
+    /* 3. 公开读取 (/api/public/*) */
+    elseif ($path === '/public/posts' && $method === 'GET') {
+        $public->posts();
+    } elseif (preg_match('#^/public/posts/(.+)$#', $path, $m) && $method === 'GET') {
+        $public->post(urldecode($m[1]));
+    } elseif ($path === '/public/directory' && $method === 'GET') {
+        $public->directory();
+    } elseif (preg_match('#^/public/collection/([a-zA-Z0-9_\-]+)$#', $path, $m) && $method === 'GET') {
+        $public->collection($m[1]);
+    } elseif ($path === '/public/asset' && $method === 'GET') {
+        $public->asset($_GET);
+    }
+
+    /* 4. 统计大盘 */
     elseif ($path === '/stats' && $method === 'GET') {
         (new StatsController())->getStats();
     }
 
-    // 3. 文章路由
+    /* 5. 文章 (业务信封) */
     elseif ($path === '/posts' && $method === 'GET') {
         (new PostController())->list($_GET);
-    } elseif (preg_match('#^/posts/([a-zA-Z0-9_\-]+)$#', $path, $matches) && $method === 'GET') {
-        (new PostController())->get($matches[1]);
+    } elseif (preg_match('#^/posts/([a-zA-Z0-9_\-]+)$#', $path, $m) && $method === 'GET') {
+        (new PostController())->get($m[1]);
     } elseif ($path === '/posts' && $method === 'POST') {
         (new PostController())->create($body);
-    } elseif (preg_match('#^/posts/([a-zA-Z0-9_\-]+)$#', $path, $matches) && $method === 'PUT') {
-        (new PostController())->update($matches[1], $body);
-    } elseif (preg_match('#^/posts/([a-zA-Z0-9_\-]+)$#', $path, $matches) && $method === 'DELETE') {
-        (new PostController())->delete($matches[1]);
+    } elseif (preg_match('#^/posts/([a-zA-Z0-9_\-]+)$#', $path, $m) && $method === 'PUT') {
+        (new PostController())->update($m[1], $body);
+    } elseif (preg_match('#^/posts/([a-zA-Z0-9_\-]+)$#', $path, $m) && $method === 'DELETE') {
+        (new PostController())->delete($m[1]);
     }
 
-    // 4. 分类路由
+    /* 6. 分类 */
     elseif ($path === '/categories' && $method === 'GET') {
         (new CategoryController())->list();
     } elseif ($path === '/categories' && $method === 'POST') {
         (new CategoryController())->create($body);
-    } elseif (preg_match('#^/categories/([a-zA-Z0-9_\-]+)$#', $path, $matches) && $method === 'PUT') {
-        (new CategoryController())->update($matches[1], $body);
-    } elseif (preg_match('#^/categories/([a-zA-Z0-9_\-]+)$#', $path, $matches) && $method === 'DELETE') {
-        (new CategoryController())->delete($matches[1]);
+    } elseif (preg_match('#^/categories/([a-zA-Z0-9_\-]+)$#', $path, $m) && $method === 'PUT') {
+        (new CategoryController())->update($m[1], $body);
+    } elseif (preg_match('#^/categories/([a-zA-Z0-9_\-]+)$#', $path, $m) && $method === 'DELETE') {
+        (new CategoryController())->delete($m[1]);
     }
 
-    // 5. 标签路由
+    /* 7. 标签 */
     elseif ($path === '/tags' && $method === 'GET') {
         (new TagController())->list();
     } elseif ($path === '/tags' && $method === 'POST') {
         (new TagController())->create($body);
-    } elseif (preg_match('#^/tags/([a-zA-Z0-9_\-]+)$#', $path, $matches) && $method === 'PUT') {
-        (new TagController())->update($matches[1], $body);
-    } elseif (preg_match('#^/tags/([a-zA-Z0-9_\-]+)$#', $path, $matches) && $method === 'DELETE') {
-        (new TagController())->delete($matches[1]);
+    } elseif (preg_match('#^/tags/([a-zA-Z0-9_\-]+)$#', $path, $m) && $method === 'PUT') {
+        (new TagController())->update($m[1], $body);
+    } elseif (preg_match('#^/tags/([a-zA-Z0-9_\-]+)$#', $path, $m) && $method === 'DELETE') {
+        (new TagController())->delete($m[1]);
     }
 
-    // 6. 附件资源路由
+    /* 8. 媒体附件 */
     elseif ($path === '/attachments' && $method === 'GET') {
         (new AttachmentController())->list();
     } elseif ($path === '/attachments' && $method === 'POST') {
         (new AttachmentController())->create($body);
-    } elseif (preg_match('#^/attachments/([a-zA-Z0-9_\-]+)$#', $path, $matches) && $method === 'DELETE') {
-        (new AttachmentController())->delete($matches[1]);
+    } elseif (preg_match('#^/attachments/([a-zA-Z0-9_\-]+)$#', $path, $m) && $method === 'DELETE') {
+        (new AttachmentController())->delete($m[1]);
     }
 
-    // 7. 用户管理路由
+    /* 9. 用户 */
     elseif ($path === '/users' && $method === 'GET') {
         (new UserController())->list();
-    } elseif (preg_match('#^/users/([a-zA-Z0-9_\-]+)$#', $path, $matches) && $method === 'GET') {
-        (new UserController())->get($matches[1]);
+    } elseif (preg_match('#^/users/([a-zA-Z0-9_\-]+)$#', $path, $m) && $method === 'GET') {
+        (new UserController())->get($m[1]);
     } elseif ($path === '/users' && $method === 'POST') {
         (new UserController())->create($body);
-    } elseif (preg_match('#^/users/([a-zA-Z0-9_\-]+)$#', $path, $matches) && $method === 'PUT') {
-        (new UserController())->update($matches[1], $body);
-    } elseif (preg_match('#^/users/([a-zA-Z0-9_\-]+)$#', $path, $matches) && $method === 'DELETE') {
-        (new UserController())->delete($matches[1]);
+    } elseif (preg_match('#^/users/([a-zA-Z0-9_\-]+)$#', $path, $m) && $method === 'PUT') {
+        (new UserController())->update($m[1], $body);
+    } elseif (preg_match('#^/users/([a-zA-Z0-9_\-]+)$#', $path, $m) && $method === 'DELETE') {
+        (new UserController())->delete($m[1]);
     }
 
-    // 8. 站点设置路由
+    /* 10. 站点设置 */
     elseif ($path === '/settings' && $method === 'GET') {
         (new SettingsController())->get();
     } elseif ($path === '/settings' && ($method === 'PUT' || $method === 'POST')) {
         (new SettingsController())->update($body);
     }
 
-    // 9. 操作日志路由
+    /* 11. 操作日志 */
     elseif ($path === '/logs' && $method === 'GET') {
         (new LogsController())->list();
     } elseif ($path === '/logs' && $method === 'POST') {
         (new LogsController())->create($body);
     }
 
-    // 404 路由未命中
+    /* 404 */
     else {
         jsonResponse(false, null, "Endpoint not found: [{$method}] {$uri}", 404);
     }
-} catch (Exception $e) {
-    jsonResponse(false, null, "Internal server error: " . $e->getMessage(), 500);
+} catch (Throwable $e) {
+    jsonResponse(false, null, 'Internal server error: ' . $e->getMessage(), 500);
 }

@@ -19,3 +19,6 @@ pnpm-debug.log*
 
 # private config
 .env
+
+# php backend runtime data (自动生成, 首次访问时按默认值初始化)
+php/data/
