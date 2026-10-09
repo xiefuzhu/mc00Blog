@@ -1,7 +1,0 @@
-{
-    "//": "前端配置文件 (astro 根目录): 后端通信地址与鉴权密钥。需与 php/config.php 保持一致。",
-    "baseUrl": "http://127.0.0.1:8000/api",
-    "authKey": "mc00-dev-shared-key-change-me",
-    "timeoutMs": 4000,
-    "healthPath": "/stats"
-}
