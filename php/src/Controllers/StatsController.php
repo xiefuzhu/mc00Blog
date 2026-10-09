@@ -10,7 +10,6 @@ class StatsController {
         $categories = Storage::get('categories');
         $tags = Storage::get('tags');
         $attachments = Storage::get('attachments');
-        $users = Storage::get('users');
 
         $totalWords = 0;
         $publishedCount = 0;
@@ -63,7 +62,6 @@ class StatsController {
             'categoryCount' => count($categories),
             'tagCount' => count($tags),
             'attachmentCount' => count($attachments),
-            'userCount' => count($users) ?: 4,
             'recentPosts' => $recentPosts,
             'systemStatus' => 'NORMAL',
             'healthMessage' => '运行平稳。',

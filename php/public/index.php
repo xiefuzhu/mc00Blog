@@ -11,13 +11,12 @@ require_once __DIR__ . '/../src/Frontmatter.php';
 require_once __DIR__ . '/../src/Auth.php';
 require_once __DIR__ . '/../src/Storage.php';
 require_once __DIR__ . '/../src/ContentRepository.php';
-require_once __DIR__ . '/../src/Controllers/AuthController.php';
+require_once __DIR__ . '/../src/Controllers/AdminController.php';
 require_once __DIR__ . '/../src/Controllers/PostController.php';
 require_once __DIR__ . '/../src/Controllers/CategoryController.php';
 require_once __DIR__ . '/../src/Controllers/TagController.php';
 require_once __DIR__ . '/../src/Controllers/AttachmentController.php';
 require_once __DIR__ . '/../src/Controllers/StatsController.php';
-require_once __DIR__ . '/../src/Controllers/UserController.php';
 require_once __DIR__ . '/../src/Controllers/SettingsController.php';
 require_once __DIR__ . '/../src/Controllers/LogsController.php';
 require_once __DIR__ . '/../src/Controllers/ContentController.php';
@@ -81,10 +80,10 @@ if ($path === '') $path = '/';
 $body = json_decode(file_get_contents('php://input') ?: '', true) ?: [];
 
 /* -------------------------------------------------------------------------- */
-/* 写操作统一鉴权 (登录/注册等公开写接口除外)                                   */
+/* 写操作统一鉴权 (后台密码登录接口除外)                                        */
 /* -------------------------------------------------------------------------- */
 
-$publicWritePaths = ['/auth/login', '/auth/register', '/auth/quick-login'];
+$publicWritePaths = ['/admin/login'];
 if (in_array($method, ['POST', 'PUT', 'DELETE', 'PATCH'], true) && !in_array($path, $publicWritePaths, true)) {
     Auth::requireWrite();
 }
@@ -97,15 +96,11 @@ try {
     $content = new ContentController();
     $public = new PublicController();
 
-    /* 1. 认证 */
-    if ($path === '/auth/login' && $method === 'POST') {
-        (new AuthController())->login($body);
-    } elseif ($path === '/auth/register' && $method === 'POST') {
-        (new AuthController())->register($body);
-    } elseif ($path === '/auth/quick-login' && $method === 'POST') {
-        (new AuthController())->quickLogin();
-    } elseif ($path === '/auth/me' && $method === 'GET') {
-        (new AuthController())->me();
+    /* 1. 后台门禁 */
+    if ($path === '/admin/login' && $method === 'POST') {
+        (new AdminController())->login($body);
+    } elseif ($path === '/admin/session' && $method === 'GET') {
+        (new AdminController())->session();
     }
 
     /* 2. 内容管理 (/api/content/*) */
@@ -191,27 +186,14 @@ try {
         (new AttachmentController())->delete($m[1]);
     }
 
-    /* 9. 用户 */
-    elseif ($path === '/users' && $method === 'GET') {
-        (new UserController())->list();
-    } elseif (preg_match('#^/users/([a-zA-Z0-9_\-]+)$#', $path, $m) && $method === 'GET') {
-        (new UserController())->get($m[1]);
-    } elseif ($path === '/users' && $method === 'POST') {
-        (new UserController())->create($body);
-    } elseif (preg_match('#^/users/([a-zA-Z0-9_\-]+)$#', $path, $m) && $method === 'PUT') {
-        (new UserController())->update($m[1], $body);
-    } elseif (preg_match('#^/users/([a-zA-Z0-9_\-]+)$#', $path, $m) && $method === 'DELETE') {
-        (new UserController())->delete($m[1]);
-    }
-
-    /* 10. 站点设置 */
+    /* 9. 站点设置 */
     elseif ($path === '/settings' && $method === 'GET') {
         (new SettingsController())->get();
     } elseif ($path === '/settings' && ($method === 'PUT' || $method === 'POST')) {
         (new SettingsController())->update($body);
     }
 
-    /* 11. 操作日志 */
+    /* 10. 操作日志 */
     elseif ($path === '/logs' && $method === 'GET') {
         (new LogsController())->list();
     } elseif ($path === '/logs' && $method === 'POST') {

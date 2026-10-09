@@ -10,7 +10,6 @@ import NavLinks from "@components/navbar/navLinks.astro";
 import NavMenu from "@components/navbar/navMenu.svelte";
 import Search from "@components/navbar/search.svelte";
 import SettingsMenu from "@components/navbar/settingsMenu.svelte";
-import AccountButton from "@/account/AccountButton.svelte";
 
 
 const className = Astro.props.class;
@@ -46,7 +45,6 @@ let links: NavbarLink[] = navbarConfig.links.map(
         <div class="flex items-center h-full navbar-buttons gap-1" id="navbar-buttons">
             <NavMenu client:idle links={links}></NavMenu>
             <SettingsMenu client:idle></SettingsMenu>
-            <AccountButton client:load></AccountButton>
             <Search client:idle></Search>
         </div>
     </div>

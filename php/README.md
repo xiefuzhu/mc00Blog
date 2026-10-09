@@ -18,8 +18,9 @@ php/start.sh       # macOS / Linux
 | 配置项 | 说明 |
 | --- | --- |
 | `host` / `port` | 服务监听地址，启动脚本读取 |
-| `authKey` | 共享密钥，前端以 `Authorization: Bearer <authKey>` 携带 |
-| `tokenTtl` | 登录令牌有效期（秒） |
+| `authKey` | 共享密钥，前端以 `Authorization: Bearer <authKey>` 携带；仅用于健康检查与服务间只读调用 |
+| `adminPassword` | 后台管理密码：进入 `/console/` 时输入，校验通过后签发会话令牌 |
+| `tokenTtl` | 会话令牌有效期（秒） |
 | `requireAuthKeyForPublic` | 公开读取接口是否也要密钥 |
 | `articlesDir` | 文章/内容根目录（默认 `php/articles`） |
 | `dataDir` | 业务数据 JSON 目录（默认 `php/data`） |
@@ -43,13 +44,15 @@ php/articles/
 
 ## 鉴权
 
-- 共享密钥：`Authorization: Bearer <authKey>` 或 `X-Api-Key`，用于服务间调用与健康检查。
-- 登录令牌：`POST /api/auth/login` 成功后由 `authKey` 做 HMAC-SHA256 签名签发，前端后续请求携带。
-- 所有写操作（POST / PUT / DELETE）需要上述任一凭据；`/auth/login`、`/auth/register`、`/auth/quick-login` 除外。
+管理后台采用**单密码门禁 + 会话令牌**，不再有账号、角色与注册体系。
+
+- 共享密钥：`Authorization: Bearer <authKey>` 或 `X-Api-Key`，仅用于健康检查（`GET /api/stats`）等服务间只读调用，**不再具备写权限**。
+- 会话令牌：`POST /api/admin/login` 用 `adminPassword` 校验成功后，由 `authKey` 做 HMAC-SHA256 签名签发；`GET /api/admin/session` 用于校验令牌是否仍然有效。
+- 所有写操作（POST / PUT / DELETE）只接受有效会话令牌；未携带或令牌失效一律返回 401。`/api/admin/login` 是唯一公开的写接口。
 
 ## 主要接口
 
-内容管理（契约与前端 `astro/src/account/contentApi.ts` 一致，响应为 `{ ok, ... }`）：
+内容管理（契约与前端 `astro/src/console/contentApi.ts` 一致，响应为 `{ ok, ... }`）：
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
@@ -63,6 +66,13 @@ php/articles/
 | PUT | `/api/content/folder` | 重命名/移动文件夹 |
 | DELETE | `/api/content/folder?collection=&path=&keepEntries=` | 删除文件夹 |
 
+后台门禁（单密码登录，响应为统一信封）：
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| POST | `/api/admin/login` | `{ password }` 校验通过后返回 `{ token, expiresAt }` |
+| GET | `/api/admin/session` | 校验当前令牌，返回 `{ authenticated: true }` |
+
 公开读取（供博客前台运行时拉取）：
 
 | 方法 | 路径 | 说明 |
@@ -73,7 +83,7 @@ php/articles/
 | GET | `/api/public/collection/{key}` | 某个集合的全部条目 |
 | GET | `/api/public/asset?collection=&path=` | 集合目录内的静态资源（文章配图等） |
 
-业务接口（`/api/auth/*`、`/api/posts`、`/api/categories`、`/api/tags`、`/api/attachments`、`/api/users`、`/api/settings`、`/api/logs`、`/api/stats`）沿用统一信封 `{ success, data, message, timestamp }`，详见 `API_SPEC.md`。
+业务接口（`/api/admin/*`、`/api/posts`、`/api/categories`、`/api/tags`、`/api/attachments`、`/api/settings`、`/api/logs`、`/api/stats`）沿用统一信封 `{ success, data, message, timestamp }`，详见 `API_SPEC.md`。
 
 ## 依赖
 

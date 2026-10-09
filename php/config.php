@@ -19,6 +19,10 @@ return [
     // 共享密钥: 前端以 Authorization: Bearer <authKey> 携带, 用于服务间调用与健康检查。
     'authKey' => 'mc00-dev-shared-key-change-me',
 
+    // 后台管理密码: 进入 /console/ 管理后台时必须输入, 由后端校验后签发会话令牌。
+    // 写操作 (文章/分类/标签/设置/日志等) 只接受该令牌, 共享密钥不再具备写权限。
+    'adminPassword' => 'mc00-admin-change-me',
+
     // 登录令牌有效期 (秒)。登录成功后由后端用 authKey 做 HMAC 签名签发令牌。
     'tokenTtl' => 7 * 24 * 60 * 60,
 

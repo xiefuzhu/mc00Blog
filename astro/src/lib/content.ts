@@ -15,7 +15,7 @@
 
 import { parse as parseHtml } from "node-html-parser";
 
-import { renderContent, extractHtmlBody } from "@/account/preview";
+import { renderContent, extractHtmlBody } from "@/console/preview";
 import { getBackendBaseUrl } from "@/config/backend";
 import { backendRequest } from "@/lib/backend";
 import { getCategoryPathParts } from "@utils/category";

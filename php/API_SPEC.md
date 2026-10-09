@@ -27,13 +27,14 @@
 
 ## 二、 核心端点清单
 
-### 1. 认证接口 (Authentication)
+### 1. 后台门禁接口 (Admin Gate)
+
+管理后台采用单密码门禁，校验通过后签发 HMAC-SHA256 会话令牌；所有写操作只接受该令牌。
 
 | 请求方法 | 路由路径 | 说明 | 请求体 (Body) |
 |---|---|---|---|
-| POST | `/api/auth/login` | 常规账号密码登录 | `{"username": "admin", "password": "..."}` |
-| POST | `/api/auth/quick-login` | 一键免密快速登入 | `{}` |
-| GET | `/api/auth/me` | 获取当前用户信息 | 无 |
+| POST | `/api/admin/login` | 提交管理密码换取会话令牌 | `{"password": "..."}` → `{"token": "...", "expiresAt": 1775560000}` |
+| GET | `/api/admin/session` | 校验当前令牌是否仍然有效 | 无 → `{"authenticated": true}` |
 
 ### 2. 文章接口 (Posts)
 
@@ -66,31 +67,21 @@
 | POST | `/api/attachments` | 登记/新增媒体素材：`{"name":"...","url":"...","size":102400,"type":"image/webp"}` |
 | DELETE | `/api/attachments/{id}` | 删除指定媒体素材 |
 
-### 5. 用户与权限接口 (Users & Permissions)
-
-| 请求方法 | 路由路径 | 说明 |
-|---|---|---|
-| GET | `/api/users` | 获取全站用户列表 |
-| GET | `/api/users/{id}` | 获取用户详细资料 |
-| POST | `/api/users` | 创建新用户：`{"username":"...","name":"...","email":"...","role":"author"}` |
-| PUT | `/api/users/{id}` | 更新用户角色与资料 |
-| DELETE | `/api/users/{id}` | 删除用户 |
-
-### 6. 系统设置接口 (Settings)
+### 5. 系统设置接口 (Settings)
 
 | 请求方法 | 路由路径 | 说明 |
 |---|---|---|
 | GET | `/api/settings` | 获取站点系统全局配置 |
 | PUT | `/api/settings` | 更新系统配置：`{"siteName":"...","announcement":"..."}` |
 
-### 7. 操作日志接口 (Audit Logs)
+### 6. 操作日志接口 (Audit Logs)
 
 | 请求方法 | 路由路径 | 说明 |
 |---|---|---|
 | GET | `/api/logs` | 获取最新 100 条管理操作审计日志 |
 | POST | `/api/logs` | 记录操作日志：`{"action":"...","detail":"...","level":"info","operator":"admin"}` |
 
-### 8. 统计与大盘指标 (Dashboard Stats & Throughput)
+### 7. 统计与大盘指标 (Dashboard Stats & Throughput)
 
 | 请求方法 | 路由路径 | 说明 |
 |---|---|---|
@@ -104,12 +95,11 @@
 
 | 功能模块 | PHP 控制器 (当前) | Java Spring Boot 控制器 (后续) |
 |---|---|---|
-| 认证鉴权 | `AuthController.php` | `com.blog.controller.AuthController` (`@RestController @RequestMapping("/api/auth")`) |
+| 后台门禁 | `AdminController.php` | `com.blog.controller.AdminController` (`@RestController @RequestMapping("/api/admin")`) |
 | 文章管理 | `PostController.php` | `com.blog.controller.PostController` (`@RestController @RequestMapping("/api/posts")`) |
 | 分类管理 | `CategoryController.php` | `com.blog.controller.CategoryController` (`@RequestMapping("/api/categories")`) |
 | 标签管理 | `TagController.php` | `com.blog.controller.TagController` (`@RequestMapping("/api/tags")`) |
 | 媒体资源 | `AttachmentController.php` | `com.blog.controller.AttachmentController` (`@RequestMapping("/api/attachments")`) |
-| 用户管理 | `UserController.php` | `com.blog.controller.UserController` (`@RequestMapping("/api/users")`) |
 | 站点设置 | `SettingsController.php` | `com.blog.controller.SettingsController` (`@RequestMapping("/api/settings")`) |
 | 审计日志 | `LogsController.php` | `com.blog.controller.LogsController` (`@RequestMapping("/api/logs")`) |
 | 仪表盘指标 | `StatsController.php` | `com.blog.controller.StatsController` (`@RequestMapping("/api/stats")`) |

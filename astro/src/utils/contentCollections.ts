@@ -26,7 +26,7 @@ export interface SiteCollectionDefinition {
     i18nKey: string;
     /** 仓库相对根目录 */
     root: string;
-    /** src/content 下的相对根目录 */
+    /** articles 下的相对根目录 */
     relRoot: string;
     /** 允许的扩展名 (含点号) */
     extensions: string[];
@@ -42,7 +42,7 @@ export const SITE_COLLECTIONS: SiteCollectionDefinition[] = [
     {
         key: "posts",
         i18nKey: "posts",
-        root: "src/content/posts",
+        root: "articles/posts",
         relRoot: "posts",
         extensions: [".md", ".mdx", ".html"],
         entryKind: "markdown",
@@ -52,7 +52,7 @@ export const SITE_COLLECTIONS: SiteCollectionDefinition[] = [
     {
         key: "albums",
         i18nKey: "albums",
-        root: "src/content/albums",
+        root: "articles/albums",
         relRoot: "albums",
         extensions: [".json"],
         entryKind: "json",
@@ -62,7 +62,7 @@ export const SITE_COLLECTIONS: SiteCollectionDefinition[] = [
     {
         key: "diary",
         i18nKey: "diary",
-        root: "src/content/diary",
+        root: "articles/diary",
         relRoot: "diary",
         extensions: [".json"],
         entryKind: "json",
@@ -72,7 +72,7 @@ export const SITE_COLLECTIONS: SiteCollectionDefinition[] = [
     {
         key: "projects",
         i18nKey: "projects",
-        root: "src/content/projects",
+        root: "articles/projects",
         relRoot: "projects",
         extensions: [".json"],
         entryKind: "json",
@@ -82,7 +82,7 @@ export const SITE_COLLECTIONS: SiteCollectionDefinition[] = [
     {
         key: "skills",
         i18nKey: "skills",
-        root: "src/content/skills",
+        root: "articles/skills",
         relRoot: "skills",
         extensions: [".json"],
         entryKind: "json",
@@ -92,7 +92,7 @@ export const SITE_COLLECTIONS: SiteCollectionDefinition[] = [
     {
         key: "timeline",
         i18nKey: "timeline",
-        root: "src/content/timeline",
+        root: "articles/timeline",
         relRoot: "timeline",
         extensions: [".json"],
         entryKind: "json",
@@ -135,14 +135,14 @@ export interface ContentSourceEntry {
     /** 前台真实路由 */
     url: string;
     format: SiteEntryFormat;
-    /** 仓库相对文件路径 (例如 src/content/posts/guide/Getting Started.md) */
+    /** 仓库相对文件路径 (例如 articles/posts/guide/Getting Started.md) */
     filePath: string;
     /** 附加元数据 (标题/日期/草稿/原始 JSON 数据等) */
     meta: Record<string, unknown>;
 }
 
 export interface SiteDirectoryNode {
-    /** 相对 src/content 的唯一路径 (集合根节点为集合名) */
+    /** 相对 articles 的唯一路径 (集合根节点为集合名) */
     path: string;
     /** 相对集合根目录的文件夹路径 (集合根节点为空串) */
     folderPath: string;

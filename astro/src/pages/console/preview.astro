@@ -59,8 +59,8 @@ import BaseLayout from "@layouts/base.astro";
         hydratePreview,
         ensurePreviewStyles,
         buildSandboxDocument,
-    } from "@/account/preview";
-    import { normalizeContentFormat } from "@/account/markdown";
+    } from "@/console/preview";
+    import { normalizeContentFormat } from "@/console/markdown";
 
     function setText(id: string, value: string): void {
         const node = document.getElementById(id);

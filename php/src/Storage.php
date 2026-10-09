@@ -193,40 +193,11 @@ class Storage {
             self::set('attachments', $attachments);
         }
 
-        if ($collection === 'users') {
-            $users = [
-                [
-                    'id' => 'u-admin',
-                    'username' => 'admin',
-                    'name' => 'Halo 管理员',
-                    'email' => 'admin@halo.run',
-                    'role' => 'admin',
-                    'avatar' => '/logo.png',
-                    'bio' => '系统超级管理员，负责全站配置与架构维护。',
-                    'status' => 'active',
-                    'createdAt' => '2026-01-01T00:00:00.000Z'
-                ],
-                [
-                    'id' => 'u-tom',
-                    'username' => 'tom',
-                    'name' => '签约专栏作家 Tom',
-                    'email' => 'tom@mc00blog.local',
-                    'role' => 'author',
-                    'avatar' => 'https://api.dicebear.com/7.x/bottts/svg?seed=tom',
-                    'bio' => '专注于前沿前端生态与交互动效。',
-                    'status' => 'active',
-                    'createdAt' => '2026-02-01T00:00:00.000Z'
-                ]
-            ];
-            self::set('users', $users);
-        }
-
         if ($collection === 'settings') {
             $settings = [
                 'siteName' => 'mc00',
                 'siteSubtitle' => 'Blog Template',
                 'announcement' => '欢迎访问 mc00 博客管理控制台，全站支持液态玻璃与毛玻璃材质！',
-                'allowRegistration' => false,
                 'allowComments' => true,
                 'copyProtection' => false,
                 'enableRss' => true,

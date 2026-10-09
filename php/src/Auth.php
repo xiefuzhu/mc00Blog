@@ -1,10 +1,10 @@
 <?php
 /**
- * 鉴权: 共享密钥 + HMAC 登录令牌
+ * 鉴权: 共享密钥 + HMAC 会话令牌
  *
  *  - 共享密钥: 前端以 Authorization: Bearer <authKey> 携带, 用于服务间调用与健康检查。
- *  - 登录令牌: 登录成功后由后端用 authKey 做 HMAC-SHA256 签名签发, 后续请求携带。
- *  - 写操作: 共享密钥或有效登录令牌任一通过即可。
+ *  - 会话令牌: 管理员在后台输入密码通过校验后, 由后端用 authKey 做 HMAC-SHA256 签名签发。
+ *  - 写操作: 只接受有效会话令牌, 共享密钥不再具备写权限。
  */
 
 class Auth {
@@ -24,6 +24,18 @@ class Auth {
         if ($expected === '') return true;
         $provided = self::bearerToken();
         return is_string($provided) && $provided !== '' && hash_equals($expected, $provided);
+    }
+
+    /** 校验后台管理密码 (未配置 adminPassword 时视为放行) */
+    public static function verifyAdminPassword(string $password): bool {
+        $expected = (string) Config::get('adminPassword', '');
+        if ($expected === '') return true;
+        return hash_equals($expected, $password);
+    }
+
+    /** 用 authKey 为管理员签发会话令牌 */
+    public static function issueAdminToken(): array {
+        return self::issueToken(['id' => 'u-admin', 'username' => 'admin', 'role' => 'admin']);
     }
 
     /** 用 authKey 签发登录令牌 */
@@ -56,11 +68,10 @@ class Auth {
         return $payload;
     }
 
-    /** 写操作鉴权守卫: 不通过直接返回 401 并终止 */
+    /** 写操作鉴权守卫: 只接受有效会话令牌, 不通过直接返回 401 并终止 */
     public static function requireWrite(): void {
-        if (self::checkSharedKey()) return;
         if (self::verifyToken(self::bearerToken()) !== null) return;
-        jsonResponse(false, null, '未授权: 缺少有效的共享密钥或登录令牌', 401);
+        jsonResponse(false, null, '未授权: 请先进入管理后台并完成密码验证', 401);
     }
 
     private static function secret(): string {

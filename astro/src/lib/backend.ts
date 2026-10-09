@@ -9,7 +9,7 @@
 
 import { getAuthKey, getBackendBaseUrl, getHealthUrl, getRequestTimeout } from "@/config/backend";
 
-/** 控制台会话令牌的存储键 (与 authStore / contentApi 共用) */
+/** 控制台会话令牌的存储键 (与 adminSession / contentApi 共用) */
 export const AUTH_TOKEN_KEY = "twilight_halo_auth_token";
 const LEGACY_AUTH_TOKEN_KEY = "halo_auth_token";
 
