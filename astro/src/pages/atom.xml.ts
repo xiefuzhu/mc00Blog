@@ -1,17 +1,16 @@
-import { getImage } from "astro:assets";
-import { parse as htmlParser } from "node-html-parser";
-import type { APIContext, ImageMetadata } from "astro";
-import MarkdownIt from "markdown-it";
+import type { APIContext } from "astro";
 import sanitizeHtml from "sanitize-html";
 
 import { siteConfig, profileConfig } from "@/config";
-import { getEntryHtml, getSortedPosts } from "@utils/post";
+import { getSortedPostsWithContent } from "@utils/post";
+import { renderPostEntry } from "@/lib/content";
 import { getCategoryPathParts } from "@utils/category";
 import { parseTags } from "@utils/tag";
-import { getFileDirFromPath, getPostUrl } from "@utils/url";
+import { getPostUrl } from "@utils/url";
 
 
-const markdownParser = new MarkdownIt();
+// 文章在请求时从 PHP 后端获取
+export const prerender = false;
 
 function escapeXml(value: string) {
     return value
@@ -26,19 +25,15 @@ function wrapCdata(value: string) {
     return value.replace(/]]>/g, "]]]]><![CDATA[>");
 }
 
-// get dynamic import of images as a map collection
-const imagesGlob = import.meta.glob<{ default: ImageMetadata }>(
-    "/src/content/**/*.{jpeg,jpg,png,gif,webp}", // include posts and assets
-);
-
 export async function GET(context: APIContext) {
     if (!context.site) {
         throw Error("site not set");
     }
 
-    // Use the same ordering as site listing (pinned first, then by published desc)
     // 过滤掉加密文章和草稿文章
-    const posts = (await getSortedPosts()).filter((post) => !post.data.encrypted && post.data.draft !== true);
+    const posts = (await getSortedPostsWithContent()).filter(
+        (post) => !post.data.encrypted && post.data.draft !== true,
+    );
 
     // 创建Atom feed头部
     let atomFeed = `<?xml version="1.0" encoding="utf-8"?>
@@ -52,67 +47,13 @@ export async function GET(context: APIContext) {
         <language>${escapeXml(siteConfig.lang)}</language>`;
 
     for (const post of posts) {
-        // 取正文 HTML：HTML 文章复用 loader 预渲染的结果，Markdown / MDX 走 Markdown 渲染
-        const body = getEntryHtml(post, (content) => markdownParser.render(content));
-        // convert html string to DOM-like structure
-        const html = htmlParser.parse(body);
-        // hold all img tags in variable images
-        const images = html.querySelectorAll("img");
-
-        for (const img of images) {
-            const src = img.getAttribute("src");
-            if (!src) continue;
-            // Handle content-relative images and convert them to built _astro paths
-            if (
-                src.startsWith("./") ||
-                src.startsWith("../") ||
-                (!src.startsWith("http") && !src.startsWith("/"))
-            ) {
-                let importPath: string | null = null;
-                // derive base directory from real file path to preserve casing
-                const contentDirRaw = post.filePath
-                    ? getFileDirFromPath(post.filePath)
-                    : "src/content/posts";
-                const contentDir = contentDirRaw.startsWith("src/")
-                    ? contentDirRaw
-                    : `src/${contentDirRaw}`;
-                if (src.startsWith("./")) {
-                    // Path relative to the post file directory
-                    const prefixRemoved = src.slice(2);
-                    importPath = `/${contentDir}/${prefixRemoved}`;
-                } else if (src.startsWith("../")) {
-                    // Path like ../assets/images/xxx -> relative to /src/content/
-                    const cleaned = src.replace(/^\.\.\//, "");
-                    importPath = `/src/content/${cleaned}`;
-                } else {
-                    // direct filename (no ./ prefix) - assume it's in the same directory as the post
-                    importPath = `/${contentDir}/${src}`;
-                }
-                // import the image module dynamically
-                const imageMod = await imagesGlob[importPath]?.()?.then(
-                    (res) => res.default,
-                );
-                if (imageMod) {
-                    // optimize the image and get the final src URL
-                    const optimizedImg = await getImage({ src: imageMod });
-                    img.setAttribute("src", new URL(optimizedImg.src, context.site).href);
-                } else {
-                    // log the failed import path
-                    console.log(
-                        `Failed to load image: ${importPath} for post: ${post.id}`,
-                    );
-                }
-            } else if (src.startsWith("/")) {
-                // images starting with `/` are in public dir
-                img.setAttribute("src", new URL(src, context.site).href);
-            }
-        }
+        // 服务端渲染正文; 图片等相对路径已被改写为后端资源接口的绝对地址
+        const content = sanitizeHtml(renderPostEntry(post).html, {
+            allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img"]),
+        });
 
         // 添加Atom条目
         const postUrl = new URL(getPostUrl(post), context.site).href;
-        const content = sanitizeHtml(html.toString(), {
-            allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img"]),
-        });
 
         atomFeed += `
         <entry>
@@ -120,7 +61,7 @@ export async function GET(context: APIContext) {
             <link href="${escapeXml(postUrl)}" rel="alternate" type="text/html"/>
             <id>${escapeXml(postUrl)}</id>
             <published>${post.data.published.toISOString()}</published>
-            <updated>${post.data.updated?.toISOString() || post.data.published.toISOString()}</updated>
+            <updated>${(post.data.updated || post.data.published).toISOString()}</updated>
             <summary>${escapeXml(post.data.description || "")}</summary>
             <content type="html"><![CDATA[${wrapCdata(content)}]]></content>
             <author>
@@ -154,7 +95,6 @@ export async function GET(context: APIContext) {
     return new Response(atomFeed, {
         headers: {
             "Content-Type": "application/atom+xml; charset=utf-8",
-
         },
     });
 }

@@ -131,7 +131,7 @@ try {
 
     /* 3. 公开读取 (/api/public/*) */
     elseif ($path === '/public/posts' && $method === 'GET') {
-        $public->posts();
+        $public->posts($_GET);
     } elseif (preg_match('#^/public/posts/(.+)$#', $path, $m) && $method === 'GET') {
         $public->post(urldecode($m[1]));
     } elseif ($path === '/public/directory' && $method === 'GET') {

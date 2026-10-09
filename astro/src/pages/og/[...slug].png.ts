@@ -1,11 +1,10 @@
-import type { APIContext, GetStaticPaths } from "astro";
-import type { CollectionEntry } from "astro:content";
+import type { APIContext } from "astro";
 import * as fs from "node:fs";
 import satori from "satori";
 import sharp from "sharp";
 
 import { profileConfig, siteConfig } from "@/config";
-import { getSortedPosts } from "@utils/post";
+import { fetchPost } from "@/lib/content";
 import { defaultFavicons } from "@constants/icon";
 
 
@@ -18,21 +17,8 @@ interface FontOptions {
     style?: FontStyle;
     lang?: string;
 }
-export const prerender = true;
-
-export const getStaticPaths: GetStaticPaths = async () => {
-    if (!siteConfig.generateOgImages) {
-        return [];
-    }
-
-    const allPosts = await getSortedPosts();
-    const publishedPosts = allPosts.filter((post) => !post.data.draft);
-
-    return publishedPosts.map((post) => ({
-        params: { slug: post.id },
-        props: { post },
-    }));
-};
+// OG 图片在请求时按 slug 从后端取文章生成
+export const prerender = false;
 
 let fontCache: { regular: Buffer | null; bold: Buffer | null } | null = null;
 
@@ -94,10 +80,11 @@ async function fetchNotoSansSCFonts() {
     }
 }
 
-export async function GET({
-    props,
-}: APIContext<{ post: CollectionEntry<"posts"> }>) {
-    const { post } = props;
+export async function GET({ params }: APIContext) {
+    const post = await fetchPost(params.slug ?? "");
+    if (!post) {
+        return new Response("Not Found", { status: 404 });
+    }
 
     // Try to fetch fonts from Google Fonts (woff2) at runtime.
     const { regular: fontRegular, bold: fontBold } = await fetchNotoSansSCFonts();

@@ -1,12 +1,10 @@
 ---
 import { Icon } from "astro-icon/components";
-import { render } from "astro:content";
-import type { CollectionEntry } from "astro:content";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 
 import { siteConfig, profileConfig, postConfig } from "@/config";
-import { getSortedPosts } from "@utils/post";
+import { fetchPost, renderPostEntry } from "@/lib/content";
 import { formatDateToYYYYMMDD } from "@utils/date";
 import { getFileDirFromPath, getPostUrl, getPostUrlBySlug, removeFileExtension} from "@utils/url";
 import { SUPPORTED_LANGUAGES, langToTranslateMap } from "@i18n/language";
@@ -22,44 +20,20 @@ import CopyProtection from "@components/copyProtection.astro";
 import GridLayout from "@layouts/grid.astro";
 
 
-export async function getStaticPaths() {
-    const blogEntries = await getSortedPosts();
-    const paths: {
-        params: { slug: string };
-        props: { entry: CollectionEntry<"posts"> };
-    }[] = [];
+// 文章在请求时从 PHP 后端读取, 因此按需渲染而非预生成
+export const prerender = false;
 
-    for (const entry of blogEntries) {
-        // 将 id 转换为 slug（移除扩展名）以匹配路由参数
-        const slug = removeFileExtension(entry.id);
-        // 为每篇文章创建默认的 slug 路径
-        paths.push({
-            params: { slug },
-            props: { entry },
-        });
-        // 如果文章有自定义固定链接，也创建对应的路径
-        if (entry.data.routeName) {
-            // 移除开头的斜杠和结尾的斜杠
-            // 同时移除可能的 "posts/" 前缀，避免重复
-            let routeName = entry.data.routeName
-                .replace(/^\/+/, "")
-                .replace(/\/+$/, "");
-            if (routeName.startsWith("posts/")) {
-                routeName = routeName.replace(/^posts\//, "");
-            }
-            paths.push({
-                params: { slug: routeName },
-                props: { entry },
-            });
-        }
-    }
+const slug = removeFileExtension(Astro.params.slug ?? "");
+const entry = await fetchPost(slug);
 
-    return paths;
+if (!entry) {
+    return new Response("文章不存在", {
+        status: 404,
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+    });
 }
 
-
-const { entry } = Astro.props;
-const { Content, headings, remarkPluginFrontmatter } = await render(entry);
+const { html, headings, frontmatter: remarkPluginFrontmatter } = renderPostEntry(entry);
 
 // 处理加密逻辑
 let isEncrypted = !!(entry.data.encrypted && entry.data.password);
@@ -220,7 +194,7 @@ const jsonLd = {
                 password={entry.data.password}
             >
                 <Markdown class="mb-6 markdown-content onload-animation-up">
-                    <Content />
+                    <Fragment set:html={html} />
                 </Markdown>
                 {
                     postConfig.license.enable && (

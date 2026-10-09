@@ -1,0 +1,36 @@
+# 构建校验 (Build check)
+#
+# 内容页 (首页/归档/文章/订阅/sitemap) 在请求时从 PHP 后端取数, 标记为
+# `prerender = false`, 因此站点必须部署在支持按需渲染的主机 (Vercel / Netlify /
+# Cloudflare Pages / 自建 Node 服务), 不能再部署到纯静态的 GitHub Pages。
+#
+# 这里只做「安装 + 构建」的回归校验, 不再发布 Pages。
+
+name: Build check
+
+on:
+  push:
+    branches: [ wes, astro, php ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: astro/pnpm-lock.yaml
+      - name: Install dependencies
+        working-directory: astro
+        run: pnpm install --frozen-lockfile
+      - name: Build site
+        working-directory: astro
+        run: pnpm build

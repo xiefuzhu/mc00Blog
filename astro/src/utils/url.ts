@@ -1,5 +1,3 @@
-import type { CollectionEntry } from "astro:content";
-
 import { CATEGORY_SEPARATOR } from "@utils/category";
 import { i18n } from "@i18n/translation";
 import I18nKey from "@i18n/i18nKey";
@@ -33,7 +31,6 @@ export function getPostUrlByRouteName(routeName: string): string {
     return url(`/posts/${cleanRouteName}/`);
 }
 
-export function getPostUrl(post: CollectionEntry<"posts">): string;
 export function getPostUrl(post: { id: string; data: { routeName?: string } }): string;
 export function getPostUrl(post: any): string {
     // 如果文章有自定义固定链接，优先使用固定链接

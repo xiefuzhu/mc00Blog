@@ -1,5 +1,5 @@
 ---
-import type { CollectionEntry } from "astro:content";
+import type { PostEntry } from "@utils/post";
 
 import PostCard from "@components/post/postCard.astro";
 
@@ -11,7 +11,7 @@ const interval = 30;
 ---
 
 <div class="transition flex flex-col gap-3 py-1 md:py-0 md:gap-4 mb-4">
-    {page.data.map((entry: CollectionEntry<"posts">) => (
+    {page.data.map((entry: PostEntry) => (
         <PostCard
             entry={entry}
             class:list="onload-animation-up"

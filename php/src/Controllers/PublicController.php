@@ -7,12 +7,16 @@
  */
 
 class PublicController {
-    /** GET /api/public/posts */
-    public function posts(): void {
+    /**
+     * GET /api/public/posts[?withContent=1]
+     * withContent=1 时同时返回正文 (供 RSS / Atom 等需要全文的场景使用)。
+     */
+    public function posts(array $query = []): void {
+        $withContent = !empty($query['withContent']);
         rawJson([
             'ok' => true,
             'generatedAt' => date('c'),
-            'posts' => ContentRepository::listPublishedPosts(),
+            'posts' => ContentRepository::listPublishedPosts($withContent),
         ]);
     }
 

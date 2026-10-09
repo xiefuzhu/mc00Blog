@@ -1,5 +1,5 @@
 ---
-import type { CollectionEntry } from "astro:content";
+import type { PostEntry } from "@utils/post";
 
 import { getPostUrl } from "@utils/url";
 import { postConfig } from "@/config";
@@ -8,7 +8,7 @@ import Twikoo from "./comment/twikoo.astro";
 
 
 interface Props {
-    post?: CollectionEntry<"posts">;
+    post?: PostEntry;
     path?: string;
 }
 

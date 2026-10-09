@@ -1,4 +1,7 @@
 ---
+// 文章列表在请求时从 PHP 后端获取, 因此按需渲染 (后端不可达时列表为空)
+export const prerender = false;
+
 import { LinkPresets } from "@constants/link-presets";
 import { LinkPreset } from "@/types/config";
 import { getSortedPostsList } from "@utils/post";

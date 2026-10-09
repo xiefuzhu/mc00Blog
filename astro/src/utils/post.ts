@@ -1,156 +1,77 @@
-import { type CollectionEntry, getCollection } from "astro:content";
-import { execSync } from "node:child_process";
-import fs from "node:fs";
-import path from "node:path";
-import { parse as parseHtml } from "node-html-parser";
+/**
+ * 文章数据层 (服务端)
+ *
+ * 数据全部来自 PHP 后端 (见 src/lib/content.ts), 后端不可达时返回空数组。
+ * 这里只做「与展示层约定一致」的加工: 上下篇串联、标签/分类聚合。
+ */
 
+import { i18n } from "@i18n/translation";
+import I18nKey from "@i18n/i18nKey";
 import { CATEGORY_SEPARATOR, type CategoryPath, getCategoryPathParts } from "@utils/category";
 import { parseTags, type Tag } from "@utils/tag";
 import { getCategoryUrl } from "@utils/url";
-import { i18n } from "@i18n/translation";
-import I18nKey from "@i18n/i18nKey";
+import { fetchPosts, type PostEntry } from "@/lib/content";
 
+export type { PostEntry, PostData, PostReadingMeta, RenderedPost, TocHeading } from "@/lib/content";
 
-type ResolvedPost = CollectionEntry<"posts"> & {
-    data: CollectionEntry<"posts">["data"] & { published: Date };
-};
-
-function getFileBirthtime(filePath: string): Date {
-    try {
-        return fs.statSync(filePath).birthtime;
-    } catch {
-        return new Date();
+/** 串联上下篇 (next = 更新的一篇, prev = 更早的一篇), 与后端排序保持一致 */
+function linkNeighbors(posts: PostEntry[]): PostEntry[] {
+    for (let i = 1; i < posts.length; i++) {
+        posts[i].data.nextSlug = posts[i - 1].id;
+        posts[i].data.nextTitle = posts[i - 1].data.title;
     }
+    for (let i = 0; i < posts.length - 1; i++) {
+        posts[i].data.prevSlug = posts[i + 1].id;
+        posts[i].data.prevTitle = posts[i + 1].data.title;
+    }
+    return posts;
 }
 
-function getGitFirstCommitDate(filePath: string): Date | null {
-    try {
-        const output = execSync(
-            `git log --diff-filter=A --follow --format="%aI" -- "${filePath}"`,
-            { encoding: "utf-8", stdio: ["pipe", "pipe", "ignore"], timeout: 5000 },
-        );
-        const dateStr = output.split("\n").find(Boolean);
-        return dateStr ? new Date(dateStr) : null;
-    } catch {
-        return null;
-    }
+/** 已发布文章 (置顶优先, 其次按发布日期倒序), 后端已排好序 */
+export async function getSortedPosts(): Promise<PostEntry[]> {
+    return linkNeighbors(await fetchPosts(false));
 }
 
-function resolvePublishDate(post: CollectionEntry<"posts">) {
-    if (post.data.published) return;
-    const filePath = post.filePath || path.join(process.cwd(), "src", "content", "posts", post.id);
-
-    const gitDate = getGitFirstCommitDate(filePath);
-    if (gitDate && !isNaN(gitDate.getTime())) {
-        (post.data as Record<string, unknown>).published = gitDate;
-        return;
-    }
-
-    (post.data as Record<string, unknown>).published = getFileBirthtime(filePath);
+/** 已发布文章 (含正文), 供 RSS / Atom 等需要全文的场景使用 */
+export async function getSortedPostsWithContent(): Promise<PostEntry[]> {
+    return linkNeighbors(await fetchPosts(true));
 }
 
-// // Retrieve posts and sort them by publication date
-async function getRawSortedPosts(): Promise<ResolvedPost[]> {
-    const allBlogPosts = await getCollection("posts", ({ data }) => {
-        return import.meta.env.PROD ? data.draft !== true : true;
-    });
-
-    for (const post of allBlogPosts) {
-        resolvePublishDate(post);
-    }
-
-    const sorted = allBlogPosts.sort((a, b) => {
-        // 首先按置顶状态排序，置顶文章在前
-        if (a.data.pinned && !b.data.pinned) return -1;
-        if (!a.data.pinned && b.data.pinned) return 1;
-
-        // 如果置顶状态相同，则按发布日期排序
-        const dateA = new Date(a.data.published!);
-        const dateB = new Date(b.data.published!);
-        return dateA > dateB ? -1 : 1;
-    });
-
-    return sorted as ResolvedPost[];
-}
-
-export async function getSortedPosts() {
-    const sorted = await getRawSortedPosts();
-
-    for (let i = 1; i < sorted.length; i++) {
-        sorted[i].data.nextSlug = sorted[i - 1].id;
-        sorted[i].data.nextTitle = sorted[i - 1].data.title;
-    }
-    for (let i = 0; i < sorted.length - 1; i++) {
-        sorted[i].data.prevSlug = sorted[i + 1].id;
-        sorted[i].data.prevTitle = sorted[i + 1].data.title;
-    }
-
-    return sorted;
-}
 export type PostForList = {
     id: string;
-    data: ResolvedPost["data"];
+    data: PostEntry["data"];
 };
-export async function getSortedPostsList(): Promise<PostForList[]> {
-    const sortedFullPosts = await getRawSortedPosts();
 
-    // delete post.body
-    const sortedPostsList = sortedFullPosts.map((post) => ({
+export async function getSortedPostsList(): Promise<PostForList[]> {
+    const sortedFullPosts = await fetchPosts(false);
+    return sortedFullPosts.map((post) => ({
         id: post.id,
         data: post.data,
     }));
-
-    return sortedPostsList;
 }
 
-/** 内容条目里可能存在的预渲染结果（HTML 文章由自定义 loader 写入） */
-type PreRenderedEntry = {
-    rendered?: { html?: string };
-    body?: string;
-};
-
-/**
- * 取条目正文的 HTML 字符串。
- * - 由自定义 loader 预渲染的条目（HTML 文章）直接复用 loader 写入的 HTML
- * - 其余条目（Markdown / MDX）交给传入的 Markdown 渲染器处理
- */
-export function getEntryHtml(
-    entry: CollectionEntry<"posts">,
-    renderMarkdown: (content: string) => string,
-): string {
-    const preRendered = (entry as unknown as PreRenderedEntry).rendered?.html;
-    if (typeof preRendered === "string") {
-        return preRendered;
-    }
-    return renderMarkdown(String((entry as unknown as PreRenderedEntry).body ?? ""));
+/** 取条目正文的 HTML 字符串 (Markdown 渲染器由调用方提供) */
+export function getEntryHtml(entry: PostEntry, renderMarkdown: (content: string) => string): string {
+    return renderMarkdown(entry.body || "");
 }
 
-/**
- * 取条目正文的纯文本（去标签），用于摘要、搜索索引等场景。
- * HTML 文章取预渲染 HTML 的文本内容，Markdown 文章取原始正文。
- */
-export function getEntryText(entry: CollectionEntry<"posts">): string {
-    const preRendered = (entry as unknown as PreRenderedEntry).rendered?.html;
-    if (typeof preRendered === "string") {
-        return parseHtml(preRendered).textContent.replace(/\s+/g, " ").trim();
-    }
-    return String((entry as unknown as PreRenderedEntry).body ?? "");
+/** 取条目正文的纯文本, 用于摘要 / 搜索索引等场景 */
+export function getEntryText(entry: PostEntry): string {
+    return String(entry.body ?? "");
 }
+
 export async function getTagList(): Promise<Tag[]> {
-    const allBlogPosts = await getCollection<"posts">("posts", ({ data }) => {
-        return import.meta.env.PROD ? data.draft !== true : true;
-    });
+    const allBlogPosts = await fetchPosts(false);
 
     const countMap: { [key: string]: number } = {};
-    allBlogPosts.forEach((post: { data: { tags: string[] } }) => {
-        const tags = parseTags(post.data.tags);
+    allBlogPosts.forEach((post) => {
+        const tags = parseTags(post.data.tags as never);
         tags.forEach((tag: string) => {
             if (!countMap[tag]) countMap[tag] = 0;
             countMap[tag]++;
         });
     });
 
-    // sort tags
     const keys: string[] = Object.keys(countMap).sort((a, b) => {
         return a.toLowerCase().localeCompare(b.toLowerCase());
     });
@@ -173,12 +94,10 @@ export type CategoryTreeItem = {
 };
 
 export async function getCategoryList(): Promise<Category[]> {
-    const allBlogPosts = await getCollection<"posts">("posts", ({ data }) => {
-        return import.meta.env.PROD ? data.draft !== true : true;
-    });
+    const allBlogPosts = await fetchPosts(false);
     const count: { [key: string]: number } = {};
-    allBlogPosts.forEach((post: { data: { category: string | string[] | null } }) => {
-        const categoryParts = getCategoryPathParts(post.data.category);
+    allBlogPosts.forEach((post) => {
+        const categoryParts = getCategoryPathParts(post.data.category as never);
         if (!categoryParts) {
             const ucKey = i18n(I18nKey.uncategorized);
             count[ucKey] = count[ucKey] ? count[ucKey] + 1 : 1;
@@ -205,9 +124,7 @@ export async function getCategoryList(): Promise<Category[]> {
 }
 
 export async function getCategoryTree(): Promise<CategoryTreeItem[]> {
-    const allBlogPosts = await getCollection<"posts">("posts", ({ data }) => {
-        return import.meta.env.PROD ? data.draft !== true : true;
-    });
+    const allBlogPosts = await fetchPosts(false);
 
     type CategoryTreeInternal = {
         name: string;
@@ -220,7 +137,7 @@ export async function getCategoryTree(): Promise<CategoryTreeItem[]> {
     const uncategorizedKey = i18n(I18nKey.uncategorized);
 
     for (const post of allBlogPosts) {
-        const rawParts = getCategoryPathParts(post.data.category);
+        const rawParts = getCategoryPathParts(post.data.category as never);
         const categoryParts = rawParts && rawParts.length > 0 ? rawParts : [uncategorizedKey];
         let currentLevel = root;
         let currentPath: string[] = [];

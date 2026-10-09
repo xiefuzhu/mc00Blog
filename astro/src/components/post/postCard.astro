@@ -1,9 +1,8 @@
 ---
 import { Icon } from "astro-icon/components";
-import { render } from "astro:content";
-import type { CollectionEntry } from "astro:content";
 
 import { getFileDirFromPath, getPostUrl } from "@utils/url";
+import type { PostEntry } from "@utils/post";
 import { postConfig } from "@/config";
 import { i18n } from "@i18n/translation";
 import I18nKey from "@i18n/i18nKey";
@@ -13,7 +12,7 @@ import PostMetadata from "./postMeta.astro";
 
 interface Props {
     class?: string;
-    entry: CollectionEntry<"posts">;
+    entry: PostEntry;
     style?: string;
 }
 
@@ -46,7 +45,7 @@ const showDefaultCover = postConfig.card.cover.showDefaultCover;
 const renderCoverArea = hasCover || showDefaultCover;
 const titleSize = postConfig.card.titleSize;
 
-const { remarkPluginFrontmatter } = await render(entry);
+const remarkPluginFrontmatter = entry.reading;
 
 // derive image base path from the real file path to preserve directory casing
 const imageBaseDir = getFileDirFromPath(entry.filePath || "");

@@ -5,7 +5,6 @@ import svelte, { vitePreprocess } from "@astrojs/svelte";
 import tailwindcss from "@tailwindcss/vite";
 import swup from "@swup/astro";
 import mdx from "@astrojs/mdx";
-import sitemap from "@astrojs/sitemap";
 import cloudflarePages from "@astrojs/cloudflare";
 import netlify from "@astrojs/netlify";
 import vercel from "@astrojs/vercel";
@@ -37,17 +36,15 @@ import { remarkMermaid } from "./src/plugins/remark-mermaid.js";
 import { remarkReadingTime } from "./src/plugins/remark-reading-time.mjs";
 
 
-// Choose adapter depending on deployment environment
-const adapter = process.env.GITHUB_ACTIONS
-    ? undefined
-    : (process.env.CF_PAGES
-        ? cloudflarePages()
-        : (process.env.NETLIFY
-            ? netlify()
-            : (process.env.EDGEONE
-                ? edgeone()
-                : vercel({ mode: "serverless" })
-            )
+// Choose adapter depending on deployment environment.
+// 内容页在请求时从 PHP 后端取数 (prerender = false), 因此必须始终有 adapter。
+const adapter = process.env.CF_PAGES
+    ? cloudflarePages()
+    : (process.env.NETLIFY
+        ? netlify()
+        : (process.env.EDGEONE
+            ? edgeone()
+            : vercel({ mode: "serverless" })
         )
     );
 
@@ -147,7 +144,6 @@ export default defineConfig({
             },
         }),
         mdx(),
-        sitemap(),
         svelte({
             preprocess: vitePreprocess(),
         }),

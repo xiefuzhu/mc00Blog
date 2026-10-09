@@ -481,8 +481,12 @@ class ContentRepository {
     /* 公开读取 (博客前台)                                                 */
     /* ------------------------------------------------------------------ */
 
-    /** 已发布文章列表 (置顶优先, 其次按发布日期倒序) */
-    public static function listPublishedPosts(): array {
+    /**
+     * 已发布文章列表 (置顶优先, 其次按发布日期倒序)
+     *
+     * @param bool $withContent 是否同时返回正文 (RSS / Atom 等需要全文的场景)
+     */
+    public static function listPublishedPosts(bool $withContent = false): array {
         $posts = [];
         $root = self::collectionRoot('posts');
         foreach (self::walkFiles($root) as $abs) {
@@ -500,8 +504,16 @@ class ContentRepository {
             $routeName = isset($data['routeName']) && is_string($data['routeName']) ? ltrim($data['routeName'], '/') : '';
             [, $body] = Frontmatter::split($text);
             $plain = self::plainText($body);
+            $stats = self::readingStats($plain);
 
-            $posts[] = [
+            // 未声明 published 时退回文件修改时间, 保证列表有可排序/可显示的日期
+            $published = self::firstString($data['published'] ?? null);
+            if ($published === null) {
+                $mtime = @filemtime($abs);
+                $published = $mtime !== false ? date('c', $mtime) : '';
+            }
+
+            $post = [
                 'id' => $id,
                 'slug' => $id,
                 'relPath' => $relPath,
@@ -510,11 +522,17 @@ class ContentRepository {
                 'format' => self::detectFormat($relPath),
                 'data' => $data,
                 'excerpt' => self::firstString($data['description'] ?? null) ?? mb_substr($plain, 0, 160),
-                'wordCount' => mb_strlen(preg_replace('/\s+/', '', $plain) ?? ''),
+                'words' => $stats['words'],
+                'minutes' => $stats['minutes'],
+                'wordCount' => $stats['words'],
                 'pinned' => ($data['pinned'] ?? false) === true,
-                'published' => (string) ($data['published'] ?? ''),
+                'published' => $published,
                 'updated' => (string) ($data['updated'] ?? ''),
             ];
+            if ($withContent) {
+                $post['content'] = $body;
+            }
+            $posts[] = $post;
         }
 
         usort($posts, function ($a, $b) {
@@ -591,5 +609,20 @@ class ContentRepository {
         $text = preg_replace('/[#*`_~\[\]()!>|-]/', '', $text) ?? $text;
         $text = strip_tags($text);
         return trim(preg_replace('/\s+/', ' ', $text) ?? $text);
+    }
+
+    /**
+     * 估算字数与阅读时长 (与前端 reading-time 的 200 wpm 口径对齐)。
+     * 拉丁词按空白切分, 中日韩字符按单字计数。
+     */
+    private static function readingStats(string $plain): array {
+        $cjk = preg_match_all('/[\x{3040}-\x{30ff}\x{3400}-\x{4dbf}\x{4e00}-\x{9fff}\x{f900}-\x{faff}\x{ac00}-\x{d7af}]/u', $plain) ?: 0;
+        $tokens = preg_split('/[^\p{L}\p{N}\']+/u', $plain, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $latin = max(count($tokens) - $cjk, 0);
+        $words = $cjk + $latin;
+        return [
+            'words' => $words,
+            'minutes' => $words > 0 ? max(1, (int) round($words / 200)) : 1,
+        ];
     }
 }
