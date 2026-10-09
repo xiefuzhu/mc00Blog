@@ -1,6 +1,7 @@
 <script lang="ts">
 import { authStore } from "./auth.svelte";
 import Icon from "@components/common/icon.svelte";
+import Button from "./console/Button.svelte";
 
 function handleGoConsole() {
     authStore.closeModal();
@@ -29,20 +30,22 @@ function handleGoConsole() {
                 为了带来更纯粹专业的创作体验，博客管理系统已从前台弹窗升级为独立的沉浸式管理工作台。
             </p>
             <div class="flex gap-2">
-                <button
-                    type="button"
-                    class="flex-1 py-2 px-3 rounded-xl bg-black/5 dark:bg-white/10 text-xs font-medium hover:bg-black/10"
+                <Button
+                    variant="secondary"
+                    size="md"
+                    block
+                    label="关闭"
+                    title="关闭提示"
                     onclick={() => authStore.closeModal()}
-                >
-                    关闭
-                </button>
-                <button
-                    type="button"
-                    class="flex-1 py-2 px-3 rounded-xl bg-(--primary) text-white text-xs font-semibold hover:opacity-90 shadow-sm"
+                />
+                <Button
+                    variant="primary"
+                    size="md"
+                    block
+                    label="立即前往控制台"
+                    title="打开控制台"
                     onclick={handleGoConsole}
-                >
-                    立即前往控制台
-                </button>
+                />
             </div>
         </div>
     </div>

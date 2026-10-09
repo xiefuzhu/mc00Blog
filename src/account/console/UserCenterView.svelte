@@ -1,7 +1,7 @@
 <script lang="ts">
 import { authStore } from "../auth.svelte";
 import { ROLE_INFO } from "../mockData";
-import Icon from "@components/common/icon.svelte";
+import Button from "./Button.svelte";
 
 let name = $state(authStore.currentUser?.name || "");
 let email = $state(authStore.currentUser?.email || "");
@@ -83,7 +83,7 @@ function handleUpdatePassword() {
                 <label class="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">显示名称 / 昵称</label>
                 <input
                     type="text"
-                    class="w-full px-3.5 py-2.5 text-xs card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white focus:outline-none focus:border-(--primary)/50"
+                    class="console-field w-full"
                     bind:value={name}
                 />
             </div>
@@ -92,7 +92,7 @@ function handleUpdatePassword() {
                 <label class="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">电子邮箱</label>
                 <input
                     type="email"
-                    class="w-full px-3.5 py-2.5 text-xs font-mono card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white focus:outline-none focus:border-(--primary)/50"
+                    class="console-field w-full font-mono"
                     bind:value={email}
                 />
             </div>
@@ -102,7 +102,7 @@ function handleUpdatePassword() {
                 <input
                     type="text"
                     placeholder="https://..."
-                    class="w-full px-3.5 py-2.5 text-xs font-mono card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-(--primary)/50"
+                    class="console-field w-full font-mono"
                     bind:value={avatarUrl}
                 />
             </div>
@@ -110,20 +110,21 @@ function handleUpdatePassword() {
             <div>
                 <label class="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">个性签名 / 简介</label>
                 <textarea
-                    class="w-full px-3.5 py-2.5 text-xs h-20 resize-none leading-relaxed card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-(--primary)/50"
+                    class="console-field w-full h-20 resize-none leading-relaxed"
+                    style="border-radius: 1rem;"
                     placeholder="写几句话介绍一下自己吧..."
                     bind:value={bio}
                 ></textarea>
             </div>
 
             <div class="pt-2 flex justify-end">
-                <button
-                    type="button"
-                    class="px-5 py-2.5 rounded-xl bg-(--primary) hover:brightness-110 text-white font-bold text-xs shadow-md transition-all active:scale-98 cursor-pointer"
+                <Button
+                    variant="primary"
+                    size="md"
+                    label="保存个人资料"
+                    title="保存并同步个人资料"
                     onclick={handleSave}
-                >
-                    保存个人资料
-                </button>
+                />
             </div>
         </div>
     </div>
@@ -148,18 +149,19 @@ function handleUpdatePassword() {
                 <input
                     type="password"
                     placeholder="输入新密码..."
-                    class="w-full px-3.5 py-2 text-xs font-mono card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-(--primary)/50"
+                    class="console-field w-full font-mono"
                     bind:value={newPassword}
                 />
             </div>
             <div class="flex items-end">
-                <button
-                    type="button"
-                    class="w-full py-2 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-neutral-800 dark:text-white font-semibold text-xs border border-black/5 dark:border-white/10 transition-colors cursor-pointer"
+                <Button
+                    variant="secondary"
+                    size="md"
+                    block
+                    label="更新登录密码"
+                    title="更新当前账号密码"
                     onclick={handleUpdatePassword}
-                >
-                    更新登录密码
-                </button>
+                />
             </div>
         </div>
     </div>

@@ -404,11 +404,12 @@ export const authApi = {
 
 // 2. 文章管理模块
 export const postsApi = {
-    async list(params: { keyword?: string; status?: string; category?: string } = {}): Promise<PostItem[]> {
+    async list(params: { keyword?: string; status?: string; category?: string; folder?: string } = {}): Promise<PostItem[]> {
         const query = new URLSearchParams();
         if (params.keyword) query.set('keyword', params.keyword);
         if (params.status) query.set('status', params.status);
         if (params.category) query.set('category', params.category);
+        if (params.folder) query.set('folder', params.folder);
 
         try {
             const qs = query.toString();
@@ -420,6 +421,9 @@ export const postsApi = {
             }
             if (params.category) {
                 posts = posts.filter(p => p.categories.includes(params.category!));
+            }
+            if (params.folder !== undefined) {
+                posts = posts.filter(p => (p.folder || '') === params.folder);
             }
             if (params.keyword) {
                 const kw = params.keyword.toLowerCase();
@@ -463,7 +467,9 @@ export const postsApi = {
                 views: 0,
                 wordCount: (post.content || '').length,
                 createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
+                updatedAt: new Date().toISOString(),
+                folder: post.folder || '',
+                format: post.format || 'markdown'
             };
             posts.unshift(newPost);
             LocalFallbackDriver.set('posts', posts);
@@ -501,6 +507,23 @@ export const postsApi = {
             let posts = LocalFallbackDriver.get<PostItem[]>('posts', INITIAL_POSTS);
             posts = posts.filter(p => p.id !== id);
             LocalFallbackDriver.set('posts', posts);
+        }
+    },
+
+    /** 把文章移动到指定文章文件夹 (空串 = 文章根目录) */
+    async move(id: string, folder: string): Promise<PostItem> {
+        try {
+            return await request(`/posts/${id}/move`, {
+                method: 'PUT',
+                body: JSON.stringify({ folder })
+            });
+        } catch {
+            const posts = LocalFallbackDriver.get<PostItem[]>('posts', INITIAL_POSTS);
+            const idx = posts.findIndex(item => item.id === id);
+            if (idx === -1) throw new Error('文章不存在');
+            posts[idx] = { ...posts[idx], folder, updatedAt: new Date().toISOString() };
+            LocalFallbackDriver.set('posts', posts);
+            return posts[idx];
         }
     }
 };

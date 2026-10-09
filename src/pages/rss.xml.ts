@@ -7,7 +7,7 @@ import MarkdownIt from "markdown-it";
 import sanitizeHtml from "sanitize-html";
 
 import { siteConfig } from "@/config";
-import { getSortedPosts } from "@utils/post";
+import { getEntryHtml, getSortedPosts } from "@utils/post";
 import { getCategoryPathLabel } from "@utils/category";
 import { parseTags } from "@utils/tag";
 import { getFileDirFromPath, getPostUrl } from "@utils/url";
@@ -30,8 +30,8 @@ export async function GET(context: APIContext) {
     const feed: RSSFeedItem[] = [];
 
     for (const post of posts) {
-        // convert markdown to html string, ensure post.body is a string
-        const body = markdownParser.render(String(post.body ?? ""));
+        // 取正文 HTML：HTML 文章复用 loader 预渲染的结果，Markdown / MDX 走 Markdown 渲染
+        const body = getEntryHtml(post, (content) => markdownParser.render(content));
         // convert html string to DOM-like structure
         const html = htmlParser.parse(body);
         // hold all img tags in variable images

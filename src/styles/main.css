@@ -6,6 +6,8 @@
 @import './anime.css' layer(base);
 /* 导入动过渡样式 */
 @import './transition.css' layer(base);
+/* 导入控制台统一按钮族与选择/悬停标识样式 */
+@import './console.css' layer(components);
 
 @plugin '@tailwindcss/typography';
 

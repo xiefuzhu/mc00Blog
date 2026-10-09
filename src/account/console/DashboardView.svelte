@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { blogStore } from "../store.svelte";
 import { authStore } from "../auth.svelte";
 import Icon from "@components/common/icon.svelte";
+import Button from "./Button.svelte";
 import type { ConsoleTab } from "../types";
 
 let { onSelectTab } = $props<{
@@ -353,22 +354,22 @@ const recentPosts = $derived(blogStore.posts.slice(0, 5));
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
-                <button
-                    type="button"
-                    class="px-5 py-2.5 rounded-full bg-(--primary) text-white font-bold text-xs sm:text-sm shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer flex items-center gap-2"
+                <Button
+                    variant="primary"
+                    size="lg"
+                    icon="material-symbols:edit-document-outline"
+                    label="撰写新文章"
+                    title="打开快速创作"
                     onclick={() => { blogStore.startEditing(null); onSelectTab("editor"); }}
-                >
-                    <Icon icon="material-symbols:edit-document-outline" class="text-lg" />
-                    <span>撰写新文章</span>
-                </button>
-                <button
-                    type="button"
-                    class="px-5 py-2.5 rounded-full card-base liquid-glass border border-black/5 dark:border-white/10 font-bold text-xs sm:text-sm hover:border-(--primary)/50 transition-all cursor-pointer flex items-center gap-2 text-neutral-700 dark:text-neutral-200"
+                />
+                <Button
+                    variant="secondary"
+                    size="lg"
+                    icon="material-symbols:article-outline"
+                    label="文章列表"
+                    title="打开文章管理"
                     onclick={() => onSelectTab("posts")}
-                >
-                    <Icon icon="material-symbols:article-outline" class="text-lg text-(--primary)" />
-                    <span>文章列表</span>
-                </button>
+                />
             </div>
         </div>
     </section>
@@ -471,24 +472,24 @@ const recentPosts = $derived(blogStore.posts.slice(0, 5));
                 </div>
 
                 <!-- 尺度切换胶囊选择器 (年 / 月 / 日) -->
-                <div class="flex items-center gap-1 p-1 rounded-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 self-start sm:self-auto">
+                <div class="flex items-center gap-1 p-1 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 self-start sm:self-auto">
                     <button
                         type="button"
-                        class="px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer {timeScale === 'year' ? 'bg-(--primary) text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}"
+                        class="console-chip {timeScale === 'year' ? 'is-active' : ''}"
                         onclick={() => { timeScale = "year"; }}
                     >
                         按年
                     </button>
                     <button
                         type="button"
-                        class="px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer {timeScale === 'month' ? 'bg-(--primary) text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}"
+                        class="console-chip {timeScale === 'month' ? 'is-active' : ''}"
                         onclick={() => { timeScale = "month"; }}
                     >
                         按月
                     </button>
                     <button
                         type="button"
-                        class="px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer {timeScale === 'day' ? 'bg-(--primary) text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}"
+                        class="console-chip {timeScale === 'day' ? 'is-active' : ''}"
                         onclick={() => { timeScale = "day"; }}
                     >
                         按日
@@ -553,14 +554,15 @@ const recentPosts = $derived(blogStore.posts.slice(0, 5));
                     <h3 class="text-base font-bold text-neutral-900 dark:text-white">最近文章动态</h3>
                     <p class="text-xs text-neutral-400">已收录的真实博文清单与元数据</p>
                 </div>
-                <button
-                    type="button"
-                    class="text-xs text-(--primary) font-bold hover:underline cursor-pointer flex items-center gap-1"
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    icon="material-symbols:arrow-forward"
+                    iconClass="text-sm order-2"
+                    label="查看全部"
+                    title="查看全部文章"
                     onclick={() => onSelectTab("posts")}
-                >
-                    <span>查看全部</span>
-                    <span>→</span>
-                </button>
+                />
             </div>
 
             <div class="overflow-x-auto">
@@ -610,13 +612,13 @@ const recentPosts = $derived(blogStore.posts.slice(0, 5));
                                     </span>
                                 </td>
                                 <td class="py-3 text-right">
-                                    <button
-                                        type="button"
-                                        class="text-(--primary) hover:underline font-bold cursor-pointer"
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        label="编辑"
+                                        title="编辑此文章"
                                         onclick={() => { blogStore.startEditing(post.id); onSelectTab("editor"); }}
-                                    >
-                                        编辑
-                                    </button>
+                                    />
                                 </td>
                             </tr>
                         {/each}
@@ -636,7 +638,7 @@ const recentPosts = $derived(blogStore.posts.slice(0, 5));
                 <div class="grid grid-cols-2 gap-3">
                     <button
                         type="button"
-                        class="p-3.5 rounded-2xl bg-black/2 dark:bg-white/4 border border-black/5 dark:border-white/5 hover:border-(--primary)/50 text-left transition-all cursor-pointer group"
+                        class="p-3.5 rounded-2xl bg-black/2 dark:bg-white/4 border border-black/5 dark:border-white/5 hover:bg-(--btn-plain-bg-hover) hover:border-(--primary)/40 text-left transition-all cursor-pointer group"
                         onclick={() => { blogStore.startEditing(null); onSelectTab("editor"); }}
                     >
                         <Icon icon="material-symbols:edit-document-outline" class="text-2xl text-(--primary) mb-1.5 group-hover:scale-110 transition-transform" />
@@ -646,30 +648,30 @@ const recentPosts = $derived(blogStore.posts.slice(0, 5));
 
                     <button
                         type="button"
-                        class="p-3.5 rounded-2xl bg-black/2 dark:bg-white/4 border border-black/5 dark:border-white/5 hover:border-(--primary)/50 text-left transition-all cursor-pointer group"
+                        class="p-3.5 rounded-2xl bg-black/2 dark:bg-white/4 border border-black/5 dark:border-white/5 hover:bg-(--btn-plain-bg-hover) hover:border-(--primary)/40 text-left transition-all cursor-pointer group"
                         onclick={() => onSelectTab("categories")}
                     >
-                        <Icon icon="material-symbols:folder-outline" class="text-2xl text-orange-500 mb-1.5 group-hover:scale-110 transition-transform" />
+                        <Icon icon="material-symbols:folder-outline" class="text-2xl text-(--primary) mb-1.5 group-hover:scale-110 transition-transform" />
                         <div class="font-bold text-xs text-neutral-800 dark:text-neutral-200">分类与标签</div>
                         <div class="text-[10px] text-neutral-400">分类目录体系管理</div>
                     </button>
 
                     <button
                         type="button"
-                        class="p-3.5 rounded-2xl bg-black/2 dark:bg-white/4 border border-black/5 dark:border-white/5 hover:border-(--primary)/50 text-left transition-all cursor-pointer group"
+                        class="p-3.5 rounded-2xl bg-black/2 dark:bg-white/4 border border-black/5 dark:border-white/5 hover:bg-(--btn-plain-bg-hover) hover:border-(--primary)/40 text-left transition-all cursor-pointer group"
                         onclick={() => onSelectTab("attachments")}
                     >
-                        <Icon icon="material-symbols:photo-library-outline" class="text-2xl text-purple-500 mb-1.5 group-hover:scale-110 transition-transform" />
+                        <Icon icon="material-symbols:photo-library-outline" class="text-2xl text-(--primary) mb-1.5 group-hover:scale-110 transition-transform" />
                         <div class="font-bold text-xs text-neutral-800 dark:text-neutral-200">媒体图库</div>
                         <div class="text-[10px] text-neutral-400">封面与插图管理</div>
                     </button>
 
                     <button
                         type="button"
-                        class="p-3.5 rounded-2xl bg-black/2 dark:bg-white/4 border border-black/5 dark:border-white/5 hover:border-(--primary)/50 text-left transition-all cursor-pointer group"
+                        class="p-3.5 rounded-2xl bg-black/2 dark:bg-white/4 border border-black/5 dark:border-white/5 hover:bg-(--btn-plain-bg-hover) hover:border-(--primary)/40 text-left transition-all cursor-pointer group"
                         onclick={() => onSelectTab("settings")}
                     >
-                        <Icon icon="material-symbols:settings-outline" class="text-2xl text-cyan-500 mb-1.5 group-hover:scale-110 transition-transform" />
+                        <Icon icon="material-symbols:settings-outline" class="text-2xl text-(--primary) mb-1.5 group-hover:scale-110 transition-transform" />
                         <div class="font-bold text-xs text-neutral-800 dark:text-neutral-200">站点设置</div>
                         <div class="text-[10px] text-neutral-400">全站标题与全局配置</div>
                     </button>

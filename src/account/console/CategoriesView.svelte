@@ -2,6 +2,7 @@
 import { blogStore } from "../store.svelte";
 import { authStore } from "../auth.svelte";
 import Icon from "@components/common/icon.svelte";
+import Button from "./Button.svelte";
 
 let newCatName = $state("");
 let newCatSlug = $state("");
@@ -43,7 +44,7 @@ function handleDelete(id: string) {
                 <input
                     type="text"
                     placeholder="例如: 技术架构"
-                    class="w-full px-3.5 py-2 text-xs card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-(--primary)/50"
+                    class="console-field w-full"
                     bind:value={newCatName}
                 />
             </div>
@@ -53,7 +54,7 @@ function handleDelete(id: string) {
                 <input
                     type="text"
                     placeholder="例如: architecture"
-                    class="w-full px-3.5 py-2 text-xs font-mono card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-(--primary)/50"
+                    class="console-field w-full font-mono"
                     bind:value={newCatSlug}
                 />
             </div>
@@ -62,7 +63,8 @@ function handleDelete(id: string) {
                 <label class="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">分类描述</label>
                 <textarea
                     placeholder="简述该分类收纳的内容方向..."
-                    class="w-full px-3.5 py-2 text-xs h-20 resize-none leading-relaxed card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-(--primary)/50"
+                    class="console-field w-full h-20 resize-none leading-relaxed"
+                    style="border-radius: 1rem;"
                     bind:value={newCatDesc}
                 ></textarea>
             </div>
@@ -72,20 +74,21 @@ function handleDelete(id: string) {
                 <div class="flex items-center gap-3">
                     <input
                         type="color"
-                        class="w-10 h-10 rounded-xl cursor-pointer bg-transparent border-0 p-0"
+                        class="w-10 h-10 rounded-2xl cursor-pointer bg-transparent border-0 p-0"
                         bind:value={newCatColor}
                     />
                     <span class="font-mono text-xs text-(--primary) font-bold">{newCatColor}</span>
                 </div>
             </div>
 
-            <button
-                type="button"
-                class="w-full py-2.5 rounded-xl bg-(--primary) hover:brightness-110 text-white font-bold text-xs shadow-md transition-all active:scale-98 cursor-pointer"
+            <Button
+                variant="primary"
+                size="md"
+                block
+                label="保存并创建分类"
+                title="创建新分类"
                 onclick={handleCreate}
-            >
-                保存并创建分类
-            </button>
+            />
         </div>
     {/if}
 
@@ -116,8 +119,9 @@ function handleDelete(id: string) {
                                         {cat.name}
                                     </h4>
                                 </div>
-                                <span class="text-[10px] px-2 py-0.5 rounded-full font-mono font-bold bg-black/5 dark:bg-white/5 text-neutral-500 dark:text-neutral-400 border border-black/5 dark:border-white/8">
-                                    {cat.postCount || 0} 篇文章
+                                <span class="flex items-center gap-1.5 shrink-0">
+                                    <span class="console-count-badge h-6 min-w-7 px-2 text-[11px]">{cat.postCount || 0}</span>
+                                    <span class="text-[10px] font-medium text-neutral-500 dark:text-neutral-400">篇文章</span>
                                 </span>
                             </div>
 
@@ -132,15 +136,14 @@ function handleDelete(id: string) {
 
                         {#if authStore.can("categories:*")}
                             <div class="flex items-center justify-end pt-2 border-t border-black/5 dark:border-white/5">
-                                <button
-                                    type="button"
-                                    class="p-1.5 rounded-lg text-neutral-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors text-xs flex items-center gap-1 cursor-pointer"
-                                    onclick={() => handleDelete(cat.id)}
+                                <Button
+                                    variant="danger"
+                                    size="sm"
+                                    icon="material-symbols:delete-outline"
+                                    label="删除"
                                     title="删除此分类"
-                                >
-                                    <Icon icon="material-symbols:delete-outline" />
-                                    <span>删除</span>
-                                </button>
+                                    onclick={() => handleDelete(cat.id)}
+                                />
                             </div>
                         {/if}
                     </div>

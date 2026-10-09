@@ -146,7 +146,7 @@ async function handleLogout() {
         <!-- 移动端侧边栏汉堡按钮 -->
         <button
             type="button"
-            class="md:hidden w-9 h-9 rounded-full card-base liquid-glass text-neutral-700 dark:text-neutral-300 border border-black/10 dark:border-white/10 flex items-center justify-center hover:text-(--primary) shadow-xl cursor-pointer"
+            class="console-btn console-btn--secondary console-btn--icon md:hidden"
             onclick={onOpenMobileMenu}
             title="打开导航抽屉"
             aria-label="打开导航抽屉"
@@ -173,7 +173,7 @@ async function handleLogout() {
             <!-- 1. 刷新按钮 -->
             <button
                 type="button"
-                class="p-1.5 rounded-full hover:text-(--primary) hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer relative"
+                class="console-btn console-btn--ghost console-btn--icon-sm"
                 onclick={handleRefresh}
                 title="刷新与同步数据"
                 aria-label="刷新数据"
@@ -187,7 +187,7 @@ async function handleLogout() {
             <!-- 2. 访问博客前台 -->
             <button
                 type="button"
-                class="p-1.5 rounded-full hover:text-(--primary) hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer relative"
+                class="console-btn console-btn--ghost console-btn--icon-sm"
                 onclick={handleOpenBlog}
                 title="新标签页打开博客首页"
                 aria-label="访问博客首页"
@@ -201,7 +201,7 @@ async function handleLogout() {
             <!-- 3. 玻璃材质切换 (液态玻璃 / 毛玻璃) -->
             <button
                 type="button"
-                class="p-1.5 rounded-full hover:text-(--primary) hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer relative"
+                class="console-btn console-btn--ghost console-btn--icon-sm"
                 onclick={toggleGlassMode}
                 title={glassMode === 'liquid' ? "当前: 液态玻璃 (点击切换毛玻璃)" : "当前: 毛玻璃 (点击切换液态玻璃)"}
                 aria-label="切换玻璃材质"
@@ -216,7 +216,7 @@ async function handleLogout() {
             <!-- 4. 主题模式切换 -->
             <button
                 type="button"
-                class="p-1.5 rounded-full hover:text-amber-500 dark:hover:text-amber-400 hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
+                class="console-btn console-btn--ghost console-btn--icon-sm"
                 onclick={toggleTheme}
                 title={isDark ? "切换至浅色日间模式" : "切换至深色暗夜模式"}
                 aria-label="切换主题模式"
@@ -234,7 +234,7 @@ async function handleLogout() {
             <!-- 5. 退出控制台 -->
             <button
                 type="button"
-                class="p-1.5 rounded-full hover:text-rose-500 dark:hover:text-rose-400 hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
+                class="console-btn console-btn--danger console-btn--icon-sm"
                 onclick={handleLogout}
                 title="退出控制台账号"
                 aria-label="退出控制台"
@@ -251,7 +251,7 @@ async function handleLogout() {
         <button
             id="console-user-avatar-trigger"
             type="button"
-            class="w-10 h-10 rounded-full overflow-hidden p-0.5 card-base liquid-glass border border-black/10 dark:border-white/20 shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer ring-2 ring-(--primary)/30 flex items-center justify-center backdrop-blur-xl"
+            class="console-btn console-btn--secondary console-btn--icon relative w-10 h-10 overflow-hidden ring-2 ring-(--primary)/30"
             onclick={() => showUserMenu = !showUserMenu}
             title="个人账号快捷菜单"
             aria-label="个人账号快捷菜单"
@@ -295,7 +295,7 @@ async function handleLogout() {
                 <div class="space-y-1">
                     <button
                         type="button"
-                        class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-neutral-700 dark:text-neutral-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer text-left"
+                        class="console-btn console-btn--ghost console-btn--sm block justify-start"
                         onclick={() => {
                             showUserMenu = false;
                             onSelectTab("uc");
@@ -306,7 +306,7 @@ async function handleLogout() {
                     </button>
                     <button
                         type="button"
-                        class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-neutral-700 dark:text-neutral-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer text-left"
+                        class="console-btn console-btn--ghost console-btn--sm block justify-start"
                         onclick={() => {
                             showUserMenu = false;
                             onSelectTab("settings");
@@ -317,7 +317,7 @@ async function handleLogout() {
                     </button>
                     <button
                         type="button"
-                        class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-neutral-700 dark:text-neutral-200 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer text-left"
+                        class="console-btn console-btn--ghost console-btn--sm block justify-start"
                         onclick={() => {
                             showUserMenu = false;
                             onSelectTab("keeper");
@@ -332,7 +332,7 @@ async function handleLogout() {
                     <span class="text-[10px] text-neutral-400">状态: 活跃</span>
                     <button
                         type="button"
-                        class="text-rose-500 hover:text-rose-600 font-bold text-[11px] cursor-pointer"
+                        class="console-btn console-btn--danger console-btn--sm"
                         onclick={handleLogout}
                     >
                         退出登录

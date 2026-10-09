@@ -1,6 +1,7 @@
 <script lang="ts">
 import { authStore } from "../auth.svelte";
 import Icon from "@components/common/icon.svelte";
+import Button from "./Button.svelte";
 
 let { onLoginSuccess, onSwitchToRegister } = $props<{
     onLoginSuccess?: () => void;
@@ -81,21 +82,17 @@ async function handleSubmit(e: SubmitEvent) {
 
     <!-- 醒目推荐：一键免密进入工作台 -->
     <div class="mb-5">
-        <button
-            type="button"
+        <Button
+            variant="primary"
+            size="lg"
+            block
+            icon={isQuickLoading ? "eos-icons:loading" : "material-symbols:bolt"}
+            iconClass={isQuickLoading ? "text-base animate-spin" : "text-lg"}
+            label={isQuickLoading ? "正在一键直达工作台..." : "一键免密直接进入工作台 (推荐)"}
+            title="以系统超级管理员身份免密进入"
             disabled={isQuickLoading || isLoading}
-            class="console-glass-btn console-glass-btn-primary w-full py-3 px-4 text-xs font-bold shadow-lg flex items-center justify-center gap-2.5 cursor-pointer relative overflow-hidden group"
             onclick={handleQuickLogin}
-        >
-            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-            {#if isQuickLoading}
-                <Icon icon="eos-icons:loading" class="text-base animate-spin" />
-                <span>正在一键直达工作台...</span>
-            {:else}
-                <Icon icon="material-symbols:bolt" class="text-lg text-amber-300" />
-                <span class="tracking-wide">一键免密直接进入工作台 (推荐)</span>
-            {/if}
-        </button>
+        />
         <p class="text-center text-[11px] text-neutral-400 mt-1.5 font-mono">
             * 自动以系统超级管理员 (admin) 身份免密进入
         </p>
@@ -119,10 +116,10 @@ async function handleSubmit(e: SubmitEvent) {
                     required
                     autocomplete="username"
                     placeholder="默认管理员: admin"
-                    class="console-glass-input w-full pl-9 pr-3 py-2.5 font-mono text-xs"
+                    class="console-field w-full pl-9 pr-3 font-mono"
                     bind:value={username}
                 />
-                <Icon icon="material-symbols:person-outline" class="absolute left-3 top-3 text-neutral-400 text-base pointer-events-none" />
+                <Icon icon="material-symbols:person-outline" class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 text-base pointer-events-none" />
             </div>
         </div>
 
@@ -137,54 +134,53 @@ async function handleSubmit(e: SubmitEvent) {
                     required
                     autocomplete="current-password"
                     placeholder="默认密码: admin"
-                    class="console-glass-input w-full pl-9 pr-10 py-2.5 font-mono text-xs"
+                    class="console-field w-full pl-9 pr-10 font-mono"
                     bind:value={password}
                 />
-                <Icon icon="material-symbols:lock-outline" class="absolute left-3 top-3 text-neutral-400 text-base pointer-events-none" />
+                <Icon icon="material-symbols:lock-outline" class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 text-base pointer-events-none" />
                 <button
                     type="button"
-                    class="absolute right-3 top-2.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors cursor-pointer"
+                    class="console-btn console-btn--ghost console-btn--icon-sm absolute right-1.5 top-1/2 -translate-y-1/2"
                     onclick={() => (showPassword = !showPassword)}
                     title={showPassword ? "隐藏密码" : "显示密码"}
+                    aria-label={showPassword ? "隐藏密码" : "显示密码"}
                 >
                     <Icon icon={showPassword ? "material-symbols:visibility-off-outline" : "material-symbols:visibility-outline"} class="text-base" />
                 </button>
             </div>
         </div>
 
-        <button
+        <Button
+            variant="secondary"
+            size="md"
+            block
             type="submit"
+            icon={isLoading ? "eos-icons:loading" : "material-symbols:login"}
+            iconClass={isLoading ? "text-base animate-spin" : "text-base"}
+            label={isLoading ? "正在验证凭证..." : "凭据登录控制台"}
+            title="登录控制台"
             disabled={isLoading || isQuickLoading}
-            class="console-glass-btn w-full py-2.5 px-4 text-xs font-semibold shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
-        >
-            {#if isLoading}
-                <Icon icon="eos-icons:loading" class="text-base animate-spin" />
-                <span>正在验证凭证...</span>
-            {:else}
-                <Icon icon="material-symbols:login" class="text-base" />
-                <span>凭据登录控制台</span>
-            {/if}
-        </button>
+        />
     </form>
 
     <!-- 底部操作与引导 -->
-    <div class="mt-6 pt-4 border-t border-black/5 dark:border-white/10 flex items-center justify-between text-neutral-500 dark:text-neutral-400">
-        <button
-            type="button"
-            class="hover:text-primary transition-colors text-xs font-semibold cursor-pointer"
+    <div class="mt-6 pt-4 border-t border-black/5 dark:border-white/10 flex items-center justify-between">
+        <Button
+            variant="ghost"
+            size="sm"
+            label="注册新账号"
+            title="切换到注册"
             onclick={onSwitchToRegister}
-        >
-            注册新账号
-        </button>
-
-        <a
+        />
+        <Button
+            variant="ghost"
+            size="sm"
+            icon="material-symbols:arrow-back"
+            label="返回博客主页"
+            title="返回博客主页"
             href="/"
-            data-no-swup
-            class="hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors flex items-center gap-1"
-        >
-            <Icon icon="material-symbols:arrow-back" class="text-xs" />
-            <span>返回博客主页</span>
-        </a>
+            target="_self"
+        />
     </div>
 
     <!-- 默认凭据指引 -->

@@ -1,6 +1,7 @@
 <script lang="ts">
 import { authStore } from "../auth.svelte";
 import Icon from "@components/common/icon.svelte";
+import Button from "./Button.svelte";
 
 let { onSwitchToLogin } = $props<{
     onSwitchToLogin?: () => void;
@@ -110,10 +111,10 @@ async function handleSubmit(e: SubmitEvent) {
                     required
                     autocomplete="username"
                     placeholder="字母数字组合 (如 reader_zhang)"
-                    class="console-glass-input w-full pl-9 pr-3 py-2 font-mono text-xs"
+                    class="console-field w-full pl-9 pr-3 font-mono"
                     bind:value={username}
                 />
-                <Icon icon="material-symbols:alternate-email" class="absolute left-3 top-2.5 text-neutral-400 text-base pointer-events-none" />
+                <Icon icon="material-symbols:alternate-email" class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 text-base pointer-events-none" />
             </div>
         </div>
 
@@ -126,10 +127,10 @@ async function handleSubmit(e: SubmitEvent) {
                     id="reg-name"
                     type="text"
                     placeholder="例如: 阳光小读者"
-                    class="console-glass-input w-full pl-9 pr-3 py-2 text-xs"
+                    class="console-field w-full pl-9 pr-3"
                     bind:value={name}
                 />
-                <Icon icon="material-symbols:badge-outline" class="absolute left-3 top-2.5 text-neutral-400 text-base pointer-events-none" />
+                <Icon icon="material-symbols:badge-outline" class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 text-base pointer-events-none" />
             </div>
         </div>
 
@@ -144,10 +145,10 @@ async function handleSubmit(e: SubmitEvent) {
                     required
                     autocomplete="email"
                     placeholder="your-name@example.com"
-                    class="console-glass-input w-full pl-9 pr-3 py-2 font-mono text-xs"
+                    class="console-field w-full pl-9 pr-3 font-mono"
                     bind:value={email}
                 />
-                <Icon icon="material-symbols:mail-outline" class="absolute left-3 top-2.5 text-neutral-400 text-base pointer-events-none" />
+                <Icon icon="material-symbols:mail-outline" class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 text-base pointer-events-none" />
             </div>
         </div>
 
@@ -162,15 +163,16 @@ async function handleSubmit(e: SubmitEvent) {
                     required
                     autocomplete="new-password"
                     placeholder="至少 5 个字符"
-                    class="console-glass-input w-full pl-9 pr-10 py-2 font-mono text-xs"
+                    class="console-field w-full pl-9 pr-10 font-mono"
                     bind:value={password}
                 />
-                <Icon icon="material-symbols:lock-outline" class="absolute left-3 top-2.5 text-neutral-400 text-base pointer-events-none" />
+                <Icon icon="material-symbols:lock-outline" class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 text-base pointer-events-none" />
                 <button
                     type="button"
-                    class="absolute right-3 top-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors cursor-pointer"
+                    class="console-btn console-btn--ghost console-btn--icon-sm absolute right-1.5 top-1/2 -translate-y-1/2"
                     onclick={() => (showPassword = !showPassword)}
                     title={showPassword ? "隐藏密码" : "显示密码"}
+                    aria-label={showPassword ? "隐藏密码" : "显示密码"}
                 >
                     <Icon icon={showPassword ? "material-symbols:visibility-off-outline" : "material-symbols:visibility-outline"} class="text-base" />
                 </button>
@@ -188,45 +190,45 @@ async function handleSubmit(e: SubmitEvent) {
                     required
                     autocomplete="new-password"
                     placeholder="再次输入密码以确认"
-                    class="console-glass-input w-full pl-9 pr-3 py-2 font-mono text-xs"
+                    class="console-field w-full pl-9 pr-3 font-mono"
                     bind:value={confirmPassword}
                 />
-                <Icon icon="material-symbols:lock-outline" class="absolute left-3 top-2.5 text-neutral-400 text-base pointer-events-none" />
+                <Icon icon="material-symbols:lock-outline" class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 text-base pointer-events-none" />
             </div>
         </div>
 
-        <button
-            type="submit"
-            disabled={isLoading}
-            class="console-glass-btn console-glass-btn-primary w-full py-2.5 px-4 text-xs font-semibold shadow-md flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
-        >
-            {#if isLoading}
-                <Icon icon="eos-icons:loading" class="text-base animate-spin" />
-                <span>正在注册账号...</span>
-            {:else}
-                <Icon icon="material-symbols:how-to-reg" class="text-base" />
-                <span>提交并注册账号</span>
-            {/if}
-        </button>
+        <div class="pt-2">
+            <Button
+                variant="primary"
+                size="md"
+                block
+                type="submit"
+                icon={isLoading ? "eos-icons:loading" : "material-symbols:how-to-reg"}
+                iconClass={isLoading ? "text-base animate-spin" : "text-base"}
+                label={isLoading ? "正在注册账号..." : "提交并注册账号"}
+                title="提交注册"
+                disabled={isLoading}
+            />
+        </div>
     </form>
 
     <!-- 底部操作与引导 -->
-    <div class="mt-6 pt-4 border-t border-black/5 dark:border-white/10 flex items-center justify-between text-neutral-500 dark:text-neutral-400">
-        <button
-            type="button"
-            class="hover:text-primary transition-colors text-xs font-semibold cursor-pointer"
+    <div class="mt-6 pt-4 border-t border-black/5 dark:border-white/10 flex items-center justify-between">
+        <Button
+            variant="ghost"
+            size="sm"
+            label="已有账号？立即登录"
+            title="切换到登录"
             onclick={onSwitchToLogin}
-        >
-            已有账号？立即登录
-        </button>
-
-        <a
+        />
+        <Button
+            variant="ghost"
+            size="sm"
+            icon="material-symbols:arrow-back"
+            label="返回博客主页"
+            title="返回博客主页"
             href="/"
-            data-no-swup
-            class="hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors flex items-center gap-1"
-        >
-            <Icon icon="material-symbols:arrow-back" class="text-xs" />
-            <span>返回博客主页</span>
-        </a>
+            target="_self"
+        />
     </div>
 </div>

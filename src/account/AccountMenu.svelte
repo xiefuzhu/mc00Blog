@@ -5,6 +5,7 @@ import { blogStore } from "./store.svelte";
 import { ROLE_INFO } from "./mockData";
 import { onClickOutside } from "@utils/widget";
 import Icon from "@components/common/icon.svelte";
+import Button from "./console/Button.svelte";
 
 function handleClickOutside(event: MouseEvent) {
     if (!authStore.isMenuOpen) return;
@@ -74,38 +75,41 @@ onDestroy(() => {
             <!-- 控制台入口与快捷操作 -->
             <div class="mt-3 flex flex-col gap-1.5">
                 {#if authStore.canAccessConsole()}
-                    <button
-                        type="button"
-                        class="w-full py-2.5 px-3 rounded-xl bg-(--primary) text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-sm hover:opacity-95 active:scale-98 transition-all cursor-pointer"
+                    <Button
+                        variant="primary"
+                        size="md"
+                        block
+                        icon="material-symbols:dashboard-outline"
+                        label="进入 Halo 管理控制台"
+                        title="打开控制台"
                         onclick={() => handleNavigate('/console/')}
-                    >
-                        <Icon icon="material-symbols:dashboard-outline" class="text-base" />
-                        <span>进入 Halo 管理控制台</span>
-                    </button>
+                    />
 
                     {#if authStore.can("posts:create")}
-                        <button
-                            type="button"
-                            class="w-full py-2 px-3 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-neutral-800 dark:text-neutral-200 font-medium text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                        <Button
+                            variant="secondary"
+                            size="md"
+                            block
+                            icon="material-symbols:edit-document-outline"
+                            label="撰写新文章 (Editor)"
+                            title="打开快速创作"
                             onclick={() => handleNavigate('/console/?tab=editor')}
-                        >
-                            <Icon icon="material-symbols:edit-document-outline" class="text-base text-primary" />
-                            <span>撰写新文章 (Editor)</span>
-                        </button>
+                        />
                     {/if}
                 {:else}
                     <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-300">
                         <span class="font-semibold block mb-0.5">[普通读者身份]</span>
                         当前身份仅具备前台互动权限，未授权访问后台管理控制台。
                     </div>
-                    <button
-                        type="button"
-                        class="w-full py-2 px-3 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 text-neutral-800 dark:text-neutral-200 font-medium text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                    <Button
+                        variant="secondary"
+                        size="md"
+                        block
+                        icon="material-symbols:account-circle-outline"
+                        label="个人资料中心 (User Center)"
+                        title="打开个人中心"
                         onclick={() => handleNavigate('/console/?tab=uc')}
-                    >
-                        <Icon icon="material-symbols:account-circle-outline" class="text-base text-primary" />
-                        <span>个人资料中心 (User Center)</span>
-                    </button>
+                    />
                 {/if}
             </div>
 
@@ -128,14 +132,15 @@ onDestroy(() => {
             <div class="border-t border-black/5 dark:border-white/10 my-2"></div>
 
             <!-- 注销登录 -->
-            <button
-                type="button"
-                class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl hover:bg-rose-500/10 text-neutral-500 hover:text-rose-600 transition-colors text-xs font-semibold cursor-pointer"
+            <Button
+                variant="danger"
+                size="md"
+                block
+                icon="material-symbols:logout"
+                label="退出登录"
+                title="退出当前账号"
                 onclick={handleLogout}
-            >
-                <Icon icon="material-symbols:logout" class="text-base" />
-                <span>退出登录</span>
-            </button>
+            />
         {:else}
             <!-- 未登录状态卡片 -->
             <div class="text-center py-4 px-2 space-y-3">
@@ -152,23 +157,25 @@ onDestroy(() => {
                 </div>
 
                 <div class="pt-2 flex flex-col gap-2">
-                    <button
-                        type="button"
-                        class="w-full py-2.5 px-3 rounded-xl bg-(--primary) text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-sm hover:opacity-95 active:scale-98 transition-all cursor-pointer"
+                    <Button
+                        variant="primary"
+                        size="md"
+                        block
+                        icon="material-symbols:login"
+                        label="登录管理控制台"
+                        title="登录控制台"
                         onclick={() => handleNavigate('/console/')}
-                    >
-                        <Icon icon="material-symbols:login" class="text-base" />
-                        <span>登录管理控制台</span>
-                    </button>
+                    />
 
-                    <button
-                        type="button"
-                        class="w-full py-2 px-3 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 text-neutral-800 dark:text-neutral-200 font-medium text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                    <Button
+                        variant="secondary"
+                        size="md"
+                        block
+                        icon="material-symbols:person-add-outline"
+                        label="注册读者账号"
+                        title="注册读者账号"
                         onclick={() => handleNavigate('/console/?tab=register')}
-                    >
-                        <Icon icon="material-symbols:person-add-outline" class="text-base" />
-                        <span>注册读者账号</span>
-                    </button>
+                    />
                 </div>
             </div>
         {/if}

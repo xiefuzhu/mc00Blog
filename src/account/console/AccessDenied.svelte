@@ -1,6 +1,7 @@
 <script lang="ts">
 import { authStore } from "../auth.svelte";
 import Icon from "@components/common/icon.svelte";
+import Button from "./Button.svelte";
 import { ROLE_INFO } from "../mockData";
 
 async function handleLogoutAndRelogin() {
@@ -32,21 +33,21 @@ async function handleLogoutAndRelogin() {
     </div>
 
     <div class="flex flex-col sm:flex-row gap-3 justify-center">
-        <button
-            type="button"
-            class="console-glass-btn console-glass-btn-primary py-2.5 px-5 text-xs font-semibold shadow-sm flex items-center justify-center gap-1.5"
+        <Button
+            variant="primary"
+            size="md"
+            icon="material-symbols:switch-account-outline"
+            label="退出当前账号，以管理员身份登录"
+            title="退出并重新登录"
             onclick={handleLogoutAndRelogin}
-        >
-            <Icon icon="material-symbols:switch-account-outline" class="text-sm" />
-            <span>退出当前账号，以管理员身份登录</span>
-        </button>
-        <a
+        />
+        <Button
+            variant="secondary"
+            size="md"
+            icon="material-symbols:arrow-back"
+            label="返回博客前台主页"
             href="/"
-            data-no-swup
-            class="console-glass-btn py-2.5 px-5 text-xs font-medium flex items-center justify-center gap-1"
-        >
-            <Icon icon="material-symbols:arrow-back" class="text-xs" />
-            <span>返回博客前台主页</span>
-        </a>
+            target="_self"
+        />
     </div>
 </div>

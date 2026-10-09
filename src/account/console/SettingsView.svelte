@@ -3,6 +3,7 @@ import { blogStore } from "../store.svelte";
 import { authStore } from "../auth.svelte";
 import { downloadTextFile } from "../markdown";
 import Icon from "@components/common/icon.svelte";
+import Button from "./Button.svelte";
 import type { FullBackupBundle } from "../types";
 
 let siteName = $state(blogStore.settings.siteName);
@@ -42,11 +43,14 @@ function handleExportFullBackup() {
         tags: blogStore.tags,
         posts: blogStore.posts,
         attachments: blogStore.attachments,
+        folders: blogStore.folders,
         users: authStore.users.map(({ password, ...rest }) => rest),
     };
 
     const jsonString = JSON.stringify(bundle, null, 2);
     downloadTextFile(`blog-backup-${Date.now()}.json`, jsonString);
+    importMessage = "备份包已生成，包含文章文件夹树与全部内容";
+    setTimeout(() => { importMessage = null; }, 3000);
 }
 
 function handleImportFile(e: Event) {
@@ -59,15 +63,19 @@ function handleImportFile(e: Event) {
             const raw = event.target?.result as string;
             const parsed = JSON.parse(raw);
             if (parsed && (parsed.posts || parsed.categories || parsed.settings)) {
-                if (parsed.settings) blogStore.updateSettings(parsed.settings);
-                importMessage = "数据包解析校验通过，已成功恢复导入";
-                setTimeout(() => { importMessage = null; }, 3000);
+                const ok = blogStore.restoreFromBackup(parsed as FullBackupBundle);
+                importMessage = ok
+                    ? "数据包解析校验通过，已成功恢复导入"
+                    : "数据包结构不符合规范";
             } else {
                 importMessage = "数据包结构不符合规范";
             }
         } catch {
             importMessage = "文件格式解析失败，请确保为标准 JSON 备份包";
         }
+        // 允许重复选择同一个文件
+        (e.target as HTMLInputElement).value = "";
+        setTimeout(() => { importMessage = null; }, 3000);
     };
     reader.readAsText(file);
 }
@@ -96,7 +104,7 @@ function handleImportFile(e: Event) {
                 <label class="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">站点主标题</label>
                 <input
                     type="text"
-                    class="w-full px-3.5 py-2.5 text-xs card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white focus:outline-none focus:border-(--primary)/50"
+                    class="console-field w-full"
                     bind:value={siteName}
                 />
             </div>
@@ -105,7 +113,7 @@ function handleImportFile(e: Event) {
                 <label class="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">站点副标题 / Slogan</label>
                 <input
                     type="text"
-                    class="w-full px-3.5 py-2.5 text-xs card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white focus:outline-none focus:border-(--primary)/50"
+                    class="console-field w-full"
                     bind:value={siteSubtitle}
                 />
             </div>
@@ -113,7 +121,8 @@ function handleImportFile(e: Event) {
             <div>
                 <label class="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">全站公告标语</label>
                 <textarea
-                    class="w-full px-3.5 py-2.5 text-xs h-20 resize-none leading-relaxed card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-(--primary)/50"
+                    class="console-field w-full h-20 resize-none leading-relaxed"
+                    style="border-radius: 1rem;"
                     placeholder="输入全站顶部跑马灯或弹窗公告..."
                     bind:value={announcement}
                 ></textarea>
@@ -123,7 +132,7 @@ function handleImportFile(e: Event) {
                 <label class="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">页脚自定义版权说明</label>
                 <input
                     type="text"
-                    class="w-full px-3.5 py-2.5 text-xs font-mono card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white focus:outline-none focus:border-(--primary)/50"
+                    class="console-field w-full font-mono"
                     bind:value={footerText}
                 />
             </div>
@@ -155,13 +164,13 @@ function handleImportFile(e: Event) {
             </div>
 
             <div class="pt-4 flex justify-end">
-                <button
-                    type="button"
-                    class="px-6 py-2.5 rounded-full bg-(--primary) hover:brightness-110 text-white font-bold text-xs shadow-md transition-all hover:scale-102 active:scale-98 cursor-pointer"
+                <Button
+                    variant="primary"
+                    size="md"
+                    label="保存系统设置并全站生效"
+                    title="保存并立即生效"
                     onclick={handleSaveSettings}
-                >
-                    保存系统设置并全站生效
-                </button>
+                />
             </div>
         </div>
     </div>
@@ -184,16 +193,16 @@ function handleImportFile(e: Event) {
         {/if}
 
         <div class="flex items-center gap-3 pt-2 flex-wrap">
-            <button
-                type="button"
-                class="px-5 py-2.5 rounded-full bg-(--primary)/10 text-(--primary) hover:bg-(--primary)/20 font-semibold text-xs border border-(--primary)/30 transition-colors flex items-center gap-2 cursor-pointer"
+            <Button
+                variant="secondary"
+                size="md"
+                icon="material-symbols:download"
+                label="立即下载全量备份文件 (.json)"
+                title="导出包含文件夹树的全站备份"
                 onclick={handleExportFullBackup}
-            >
-                <Icon icon="material-symbols:download" class="text-base" />
-                <span>立即下载全量备份文件 (.json)</span>
-            </button>
+            />
 
-            <label class="px-5 py-2.5 rounded-full card-base liquid-glass border border-black/8 dark:border-white/10 hover:border-(--primary)/40 text-neutral-700 dark:text-neutral-300 font-semibold text-xs transition-colors flex items-center gap-2 cursor-pointer">
+            <label class="console-btn console-btn--secondary console-btn--md cursor-pointer">
                 <Icon icon="material-symbols:upload" class="text-base" />
                 <span>从备份文件恢复</span>
                 <input type="file" accept=".json" class="hidden" onchange={handleImportFile} />

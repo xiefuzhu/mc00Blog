@@ -1,8 +1,22 @@
 <script lang="ts">
 import { blogStore } from "../store.svelte";
 import { authStore } from "../auth.svelte";
-import { renderMarkdown, insertFormatting, exportAstroMarkdown, downloadTextFile, countWords, getReadingTime } from "../markdown";
+import {
+    insertFormatting,
+    exportPostFile,
+    downloadTextFile,
+    countWords,
+    getReadingTime,
+    normalizeContentFormat,
+    CONTENT_FORMAT_LABEL,
+    CONTENT_FORMAT_EXTENSION,
+    MANAGED_FRONTMATTER_KEYS,
+} from "../markdown";
+import { openConsolePreview } from "../preview";
 import Icon from "@components/common/icon.svelte";
+import Button from "./Button.svelte";
+import PreviewPane from "./PreviewPane.svelte";
+import type { ContentFormat } from "../types";
 
 let { onBack } = $props<{
     onBack: () => void;
@@ -16,17 +30,85 @@ let summary = $state(blogStore.currentEditingPost?.summary || "");
 let cover = $state(blogStore.currentEditingPost?.cover || "");
 let selectedCategories = $state<string[]>([...(blogStore.currentEditingPost?.categories || [])]);
 let selectedTags = $state<string[]>([...(blogStore.currentEditingPost?.tags || [])]);
+/**
+ * 打开编辑器时的标签/分类快照。
+ * 若用户没有改动它们, 写回时就不覆盖文件里的原值 —— 控制台的标签/分类词表
+ * 与仓库文件里的写法可能不同 (例如「加密」vs「Encryption」), 不应因为保存被改写。
+ */
+const initialCategories = [...(blogStore.currentEditingPost?.categories || [])];
+const initialTags = [...(blogStore.currentEditingPost?.tags || [])];
 let customTagInput = $state("");
 let customCategoryInput = $state("");
 let pinned = $state(blogStore.currentEditingPost?.pinned || false);
 let allowComment = $state(blogStore.currentEditingPost?.allowComment ?? true);
 let visibility = $state<"public" | "private">(blogStore.currentEditingPost?.visibility || "public");
+let contentFormat = $state<ContentFormat>(normalizeContentFormat(blogStore.currentEditingPost?.contentFormat));
+let postFolderPath = $state<string>(blogStore.currentEditingPost?.folderPath ?? blogStore.composerFolderPath ?? "");
 
 // 界面控制
 let showDrawer = $state(false);
 let editorMode = $state<"split" | "edit" | "preview">("split");
 let textareaRef = $state<HTMLTextAreaElement | null>(null);
 let toastMessage = $state<string | null>(null);
+let loadingContent = $state(false);
+let contentUnavailable = $state(false);
+let writebackError = $state<string | null>(null);
+/** 已经按需加载过正文的文章路径, 避免 effect 反复触发拉取 */
+let loadedContentFor = $state<string | null>(null);
+
+/** 去掉 Markdown/MDX/HTML 文章顶部的 frontmatter, 只保留正文 */
+function stripFrontmatter(text: string): string {
+    const match = text.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/);
+    return match ? text.slice(match[0].length) : text;
+}
+
+/** 由文章记录推导其在 src/content/posts 下的相对路径 */
+function postRelPath(post: { filePath?: string } | null | undefined): string | null {
+    if (!post?.filePath) return null;
+    const match = post.filePath.replace(/\\/g, "/").match(/content\/posts\/(.+)$/);
+    return match ? match[1] : null;
+}
+
+/**
+ * 真实文章在控制台里只保存元数据, 正文按需从仓库文件拉取。
+ * 只要文章有真实文件 (filePath), 正文就以仓库文件为准, 不使用内存里的 content
+ * (内存里的 content 可能只是 mock/摘要镜像, 一旦保存会覆盖真实文件)。
+ */
+$effect(() => {
+    const post = blogStore.currentEditingPost;
+    if (!post) return;
+    const relPath = postRelPath(post);
+    if (!relPath) return;
+    if (loadedContentFor === relPath || loadingContent) return;
+
+    loadedContentFor = relPath;
+    loadingContent = true;
+    void (async () => {
+        const loaded = await blogStore.loadEntryContent("posts", relPath);
+        if (loaded.ok && typeof loaded.content === "string") {
+            content = stripFrontmatter(loaded.content);
+            contentUnavailable = false;
+        } else {
+            contentUnavailable = true;
+        }
+        loadingContent = false;
+    })();
+});
+
+const FORMAT_OPTIONS: { value: ContentFormat; label: string; icon: string }[] = [
+    { value: "markdown", label: "Markdown", icon: "material-symbols:markdown" },
+    { value: "mdx", label: "MDX", icon: "material-symbols:code-blocks" },
+    { value: "html", label: "HTML", icon: "material-symbols:html" },
+];
+
+/** 正文输入框占位提示随格式变化, 避免在 HTML / MDX 模式下误导为 Markdown 语法 */
+const contentPlaceholder = $derived(
+    contentFormat === "html"
+        ? "在此编写 HTML 文章正文 (可写片段或完整文档, 顶部可用 --- frontmatter ---)..."
+        : contentFormat === "mdx"
+          ? "在此编写 MDX 文章正文 (支持 Markdown 与 JSX 组件)..."
+          : "在此编写 Markdown 文章正文...",
+);
 
 function showToast(msg: string) {
     toastMessage = msg;
@@ -35,8 +117,7 @@ function showToast(msg: string) {
     }, 2500);
 }
 
-// 实时派生渲染与统计
-let renderedHtml = $derived(renderMarkdown(content));
+// 实时派生统计
 let currentWordCount = $derived(countWords(content));
 let currentReadingTime = $derived(getReadingTime(content));
 
@@ -123,7 +204,11 @@ function savePost(status: "published" | "draft") {
         status,
         wordCount: currentWordCount,
         readingTime: currentReadingTime,
+        folderPath: postFolderPath,
+        contentFormat,
     };
+
+    const previousRelPath = postRelPath(blogStore.currentEditingPost);
 
     if (blogStore.editingPostId) {
         blogStore.updatePost(blogStore.editingPostId, postPayload);
@@ -134,18 +219,72 @@ function savePost(status: "published" | "draft") {
         blogStore.editingPostId = created.id;
     }
 
+    void writeBackPost(status, previousRelPath);
     onBack();
 }
 
-function handleExportAstro() {
-    const currentPost = blogStore.currentEditingPost || {
-        id: "temp",
-        title: title || "未命名文章",
-        slug: slug || "untitled",
+/**
+ * 本次写回需要覆盖的 frontmatter 字段。
+ * 标签/分类只有被用户改动过才写回, 否则保留仓库文件里的原值。
+ */
+function managedFrontmatterKeys(): string[] {
+    const same = (a: string[], b: string[]) =>
+        a.length === b.length && [...a].sort().join("\u0000") === [...b].sort().join("\u0000");
+    return MANAGED_FRONTMATTER_KEYS.filter((key) => {
+        if (key === "tags") return !same(selectedTags, initialTags);
+        if (key === "category") return !same(selectedCategories, initialCategories);
+        return true;
+    });
+}
+
+/** 可写环境下把文章真实写回 src/content/posts, 否则仅提示导出 */
+async function writeBackPost(status: "published" | "draft", previousRelPath: string | null) {
+    const post = blogStore.currentEditingPost;
+    if (!post) return;
+
+    if (!blogStore.contentWritable) {
+        showToast("当前为只读模式, 已保存到控制台本地; 如需写回仓库请使用「导出」或本地开发环境");
+        return;
+    }
+
+    const file = exportPostFile(
+        { ...post, content, status, slug: post.slug, folderPath: postFolderPath } as any,
+        contentFormat,
+        blogStore.categoriesMap,
+        blogStore.tagsMap,
+    );
+
+    const result = await blogStore.saveEntry("posts", file.path, {
+        content: file.content,
+        // 声明编辑器真正改动的 frontmatter 字段: 服务端据此保留其余字段
+        // (copyProtection / encrypted / password / coverInContent 等) 与原值。
+        frontmatterKeys: managedFrontmatterKeys(),
+    });
+    if (!result.ok) {
+        writebackError = result.error || "写回失败";
+        showToast(`写回失败: ${writebackError}`);
+        return;
+    }
+
+    // 路径发生变化时移除旧文件, 避免仓库里留下重复文章
+    if (previousRelPath && previousRelPath !== file.path) {
+        await blogStore.deleteEntry("posts", previousRelPath);
+    }
+
+    writebackError = null;
+    showToast(`已写入 src/content/posts/${file.path}`);
+}
+
+/** 当前编辑器内的稿件快照 (用于导出与整页预览) */
+function currentPayload() {
+    const base = blogStore.currentEditingPost;
+    return {
+        title: title.trim() || "未命名文章",
+        slug: slug.trim() || "untitled",
         content,
-        summary,
-        cover,
-        status: "published" as const,
+        summary: summary.trim() || base?.summary || "",
+        cover: cover.trim() || base?.cover || "",
+        status: (base?.status || "draft") as "published" | "draft" | "recycle",
         visibility,
         pinned,
         allowComment,
@@ -153,16 +292,48 @@ function handleExportAstro() {
         tags: selectedTags,
         authorId: authStore.currentUser?.id || "u-admin",
         authorName: authStore.currentUser?.name || "Halo 管理员",
-        views: 0,
+        views: base?.views || 0,
         wordCount: currentWordCount,
         readingTime: currentReadingTime,
-        createdAt: new Date().toISOString(),
+        createdAt: base?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        folderPath: postFolderPath,
+        contentFormat,
     };
+}
 
-    const mdString = exportAstroMarkdown(currentPost, blogStore.categoriesMap, blogStore.tagsMap);
-    downloadTextFile(`${slug || "article"}.md`, mdString);
-    showToast(`已导出 ${slug || "article"}.md`);
+function handleExportAstro() {
+    const file = exportPostFile(
+        currentPayload() as any,
+        contentFormat,
+        blogStore.categoriesMap,
+        blogStore.tagsMap,
+    );
+    downloadTextFile(file.filename, file.content);
+    showToast(`已导出 ${file.filename} → 目标路径 src/content/posts/${file.path}`);
+}
+
+/** 整页预览 (前台真实排版) */
+function handleOpenFullPreview() {
+    const payload = currentPayload();
+    openConsolePreview({
+        title: payload.title,
+        slug: payload.slug,
+        format: contentFormat,
+        content: payload.content,
+        summary: payload.summary,
+        cover: payload.cover,
+        status: payload.status,
+        categories: payload.categories.map((id) => blogStore.categoriesMap.get(id) || id),
+        tags: payload.tags.map((id) => blogStore.tagsMap.get(id) || id),
+        author: payload.authorName,
+        createdAt: payload.createdAt,
+        updatedAt: payload.updatedAt,
+        wordCount: payload.wordCount,
+        readingTime: payload.readingTime,
+        folderPath: payload.folderPath,
+    });
+    showToast("已在新标签页打开整页预览");
 }
 </script>
 
@@ -177,77 +348,91 @@ function handleExportAstro() {
     <!-- 顶栏操作区 -->
     <div class="card-base liquid-glass p-3.5 sm:p-4 rounded-3xl border border-black/5 dark:border-white/8 flex items-center justify-between gap-3 shadow-xl">
         <div class="flex items-center gap-3 flex-1 min-w-0">
-            <button
-                type="button"
-                class="p-2 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white border border-black/5 dark:border-white/10 transition-colors shrink-0 cursor-pointer"
-                onclick={onBack}
+            <Button
+                variant="secondary"
+                size="icon"
+                icon="material-symbols:arrow-back"
                 title="返回文章列表"
-                aria-label="返回文章列表"
-            >
-                <Icon icon="material-symbols:arrow-back" class="text-lg" />
-            </button>
-            <input
-                type="text"
-                placeholder="在此输入博文标题..."
-                class="bg-transparent text-sm sm:text-base lg:text-lg font-bold text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none w-full"
-                bind:value={title}
+                onclick={onBack}
             />
+            <div class="min-w-0 flex-1">
+                <input
+                    type="text"
+                    placeholder="在此输入博文标题..."
+                    class="bg-transparent text-sm sm:text-base lg:text-lg font-bold text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none w-full"
+                    bind:value={title}
+                />
+                <div class="flex items-center gap-2 text-[10.5px] font-mono text-neutral-400 truncate">
+                    <Icon icon="material-symbols:folder-outline" class="text-xs" />
+                    <span class="text-(--primary)">{postFolderPath || "文章根目录"}</span>
+                    <span>/</span>
+                    <span class="truncate">{slug || "untitled"}.{CONTENT_FORMAT_EXTENSION[contentFormat]}</span>
+                </div>
+            </div>
         </div>
 
         <div class="flex items-center gap-2 shrink-0">
+            <!-- 正文格式选择 (markdown / mdx / html) -->
+            <div class="hidden sm:flex p-1 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
+                {#each FORMAT_OPTIONS as option}
+                    <button
+                        type="button"
+                        class="console-chip px-2.5 py-1 {contentFormat === option.value ? 'is-active' : ''}"
+                        onclick={() => (contentFormat = option.value)}
+                        title={`正文格式: ${option.label}`}
+                    >
+                        {option.label}
+                    </button>
+                {/each}
+            </div>
+
             <!-- 视图模式切换胶囊 (分屏 / 仅编辑 / 仅预览) -->
-            <div class="hidden md:flex p-1 rounded-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
+            <div class="hidden md:flex p-1 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
                 <button
                     type="button"
-                    class="px-2.5 py-1 rounded-lg text-xs font-medium transition-all {editorMode === 'edit' ? 'bg-white dark:bg-white/15 text-neutral-900 dark:text-white shadow-xs' : 'text-neutral-500 dark:text-neutral-400'}"
+                    class="console-chip px-2.5 py-1 {editorMode === 'edit' ? 'is-active' : ''}"
                     onclick={() => editorMode = "edit"}
                 >
                     编辑
                 </button>
                 <button
                     type="button"
-                    class="px-2.5 py-1 rounded-lg text-xs font-medium transition-all {editorMode === 'split' ? 'bg-white dark:bg-white/15 text-neutral-900 dark:text-white shadow-xs' : 'text-neutral-500 dark:text-neutral-400'}"
+                    class="console-chip px-2.5 py-1 {editorMode === 'split' ? 'is-active' : ''}"
                     onclick={() => editorMode = "split"}
                 >
                     分屏
                 </button>
                 <button
                     type="button"
-                    class="px-2.5 py-1 rounded-lg text-xs font-medium transition-all {editorMode === 'preview' ? 'bg-white dark:bg-white/15 text-neutral-900 dark:text-white shadow-xs' : 'text-neutral-500 dark:text-neutral-400'}"
+                    class="console-chip px-2.5 py-1 {editorMode === 'preview' ? 'is-active' : ''}"
                     onclick={() => editorMode = "preview"}
                 >
                     预览
                 </button>
             </div>
 
-            <button
-                type="button"
-                class="px-3 py-1.5 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 border border-black/5 dark:border-white/10 text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
-                onclick={() => showDrawer = !showDrawer}
-                title="文章属性与分类标签配置"
-            >
-                <Icon icon="material-symbols:tune" class="text-base text-(--primary)" />
-                <span class="hidden sm:inline">属性配置</span>
-                {#if selectedCategories.length > 0 || selectedTags.length > 0}
-                    <span class="w-2 h-2 rounded-full bg-(--primary)"></span>
-                {/if}
-            </button>
+            <Button
+                variant="secondary"
+                size="sm"
+                icon="material-symbols:tune"
+                label="属性配置"
+                title="文章属性、文件夹与分类标签配置"
+                onclick={() => (showDrawer = !showDrawer)}
+            />
 
-            <button
-                type="button"
-                class="px-3.5 py-1.5 rounded-xl bg-black/5 dark:bg-white/8 hover:bg-black/10 dark:hover:bg-white/15 text-neutral-700 dark:text-neutral-200 text-xs font-semibold border border-black/5 dark:border-white/10 transition-colors cursor-pointer"
+            <Button
+                variant="secondary"
+                size="sm"
+                label="存草稿"
                 onclick={handleSaveDraft}
-            >
-                存草稿
-            </button>
+            />
 
-            <button
-                type="button"
-                class="px-4 py-1.5 rounded-xl bg-(--primary) hover:brightness-110 text-white text-xs font-bold shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            <Button
+                variant="primary"
+                size="sm"
+                label="发布博文"
                 onclick={handlePublish}
-            >
-                发布博文
-            </button>
+            />
         </div>
     </div>
 
@@ -263,7 +448,7 @@ function handleExportAstro() {
                     {@const isSelected = selectedCategories.includes(cat.id)}
                     <button
                         type="button"
-                        class="px-2 py-0.5 rounded-lg text-xs transition-all cursor-pointer flex items-center gap-1 {isSelected ? 'bg-orange-500/20 text-orange-600 dark:text-orange-400 font-bold border border-orange-500/30' : 'bg-black/4 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white border border-transparent'}"
+                        class="console-chip px-2.5 py-1 {isSelected ? 'is-active' : ''}"
                         onclick={() => toggleCategory(cat.id)}
                     >
                         {#if isSelected}
@@ -285,7 +470,7 @@ function handleExportAstro() {
                     {@const isSelected = selectedTags.includes(tag.id) || selectedTags.includes(tag.name)}
                     <button
                         type="button"
-                        class="px-2 py-0.5 rounded-lg text-xs transition-all cursor-pointer flex items-center gap-1 {isSelected ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/30' : 'bg-black/4 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white border border-transparent'}"
+                        class="console-chip px-2.5 py-1 {isSelected ? 'is-active' : ''}"
                         onclick={() => toggleTag(tag.id)}
                     >
                         {#if isSelected}
@@ -298,50 +483,63 @@ function handleExportAstro() {
         </div>
 
         <div class="flex items-center gap-3 text-[11px] font-mono text-neutral-500 dark:text-neutral-400">
+            <span>文件夹: <span class="text-(--primary)">{postFolderPath || "根目录"}</span></span>
             <span>{currentWordCount} 字</span>
             <span>约 {currentReadingTime} 分钟阅读</span>
         </div>
     </div>
 
-    <!-- Markdown 快捷格式化工具栏 -->
+    <!-- 快捷格式化工具栏 (按钮与全站控制台同族: 药丸 + 首页悬停语言) -->
     <div class="card-base liquid-glass px-3 py-2 rounded-2xl border border-black/5 dark:border-white/8 flex items-center justify-between gap-2 overflow-x-auto text-xs shadow-sm">
         <div class="flex items-center gap-1 overflow-x-auto">
-            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 font-bold cursor-pointer" onclick={() => handleFormat("## ", "", "二级标题")}>
+            <button type="button" class="console-btn console-btn--ghost console-btn--sm" onclick={() => handleFormat("## ", "", "二级标题")}>
                 H2
             </button>
-            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 font-bold cursor-pointer" onclick={() => handleFormat("### ", "", "三级标题")}>
+            <button type="button" class="console-btn console-btn--ghost console-btn--sm" onclick={() => handleFormat("### ", "", "三级标题")}>
                 H3
             </button>
-            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 font-bold cursor-pointer" onclick={() => handleFormat("**", "**", "粗体文字")}>
+            <button type="button" class="console-btn console-btn--ghost console-btn--sm" onclick={() => handleFormat("**", "**", "粗体文字")}>
                 B
             </button>
-            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 italic cursor-pointer" onclick={() => handleFormat("*", "*", "斜体文字")}>
+            <button type="button" class="console-btn console-btn--ghost console-btn--sm italic" onclick={() => handleFormat("*", "*", "斜体文字")}>
                 I
             </button>
-            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 cursor-pointer" onclick={() => handleFormat("> ", "", "引用文案")}>
-                Quote
+            <button type="button" class="console-btn console-btn--ghost console-btn--sm" onclick={() => handleFormat("> ", "", "引用文案")}>
+                引用
             </button>
-            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-(--primary) font-mono cursor-pointer" onclick={() => handleFormat("```typescript\n", "\n```", "// 示例代码")}>
-                Code
+            <button type="button" class="console-btn console-btn--ghost console-btn--sm font-mono" onclick={() => handleFormat("```typescript\n", "\n```", "// 示例代码")}>
+                代码
             </button>
-            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 cursor-pointer" onclick={() => handleFormat("- ", "", "无序列表项")}>
-                List
+            <button type="button" class="console-btn console-btn--ghost console-btn--sm" onclick={() => handleFormat("- ", "", "无序列表项")}>
+                列表
             </button>
-            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 cursor-pointer" onclick={() => handleFormat("[链接描述](", ")", "https://")}>
-                Link
+            <button type="button" class="console-btn console-btn--ghost console-btn--sm" onclick={() => handleFormat("[链接描述](", ")", "https://")}>
+                链接
             </button>
-            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 cursor-pointer" onclick={() => handleFormat("![图片描述](", ")", "https://")}>
-                Image
+            <button type="button" class="console-btn console-btn--ghost console-btn--sm" onclick={() => handleFormat("![图片描述](", ")", "https://")}>
+                图片
             </button>
-            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-amber-500 cursor-pointer" onclick={() => handleFormat(":::tip\n", "\n:::", "提示内容")}>
-                Tip
+            <button type="button" class="console-btn console-btn--ghost console-btn--sm" onclick={() => handleFormat(":::tip\n", "\n:::", "提示内容")}>
+                提示块
             </button>
             <div class="w-px h-3.5 bg-black/10 dark:bg-white/10 mx-1"></div>
-            <button type="button" class="px-2 py-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white cursor-pointer text-[11px]" onclick={handleExportAstro}>
-                导出 .md
+            <button type="button" class="console-btn console-btn--ghost console-btn--sm" onclick={handleExportAstro}>
+                导出 .{CONTENT_FORMAT_EXTENSION[contentFormat]}
             </button>
         </div>
     </div>
+
+    {#if loadingContent}
+        <div class="card-base liquid-glass rounded-2xl px-3 py-2 border border-black/5 dark:border-white/8 text-[11px] text-neutral-500 flex items-center gap-2">
+            <Icon icon="material-symbols:sync" class="text-base text-(--primary) animate-spin" />
+            <span>正在从 src/content/posts 读取正文...</span>
+        </div>
+    {:else if contentUnavailable}
+        <div class="card-base liquid-glass rounded-2xl px-3 py-2 border border-amber-500/25 bg-amber-500/8 text-[11px] text-amber-700 dark:text-amber-300 flex items-center gap-2">
+            <Icon icon="material-symbols:info-outline" class="text-base" />
+            <span>当前环境无法读取仓库正文, 正文区域为空; 请在本地开发环境编辑, 或使用「导出」获取稿件文件。</span>
+        </div>
+    {/if}
 
     <!-- 编辑与排版对比区 -->
     <div class="grid {editorMode === 'split' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'} gap-4 min-h-[620px]">
@@ -358,32 +556,19 @@ function handleExportAstro() {
                 <textarea
                     bind:this={textareaRef}
                     class="w-full flex-1 min-h-[540px] bg-transparent text-xs sm:text-sm font-mono leading-relaxed text-neutral-900 dark:text-neutral-100 focus:outline-none resize-none p-2 border-none selection:bg-(--primary)/30"
-                    placeholder="在此编写 Markdown 文章正文..."
+                    placeholder={contentPlaceholder}
                     bind:value={content}
                 ></textarea>
             </div>
         {/if}
 
-        <!-- 实时排版预览 -->
+        <!-- 实时排版预览 (与站点前台同款渲染管线: markdown-it + katex + mermaid + 代码高亮) -->
         {#if editorMode !== "edit"}
-            <div class="card-base liquid-glass rounded-3xl p-5 border border-black/5 dark:border-white/8 shadow-xl flex flex-col">
-                <div class="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400 mb-2 px-1 pb-2 border-b border-black/5 dark:border-white/5">
-                    <span class="font-bold text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5">
-                        <Icon icon="material-symbols:preview" class="text-(--primary)" />
-                        <span>实时排版预览</span>
-                    </span>
-                    <span class="text-(--primary) font-mono text-[11px] font-bold">同步预览</span>
-                </div>
-                <div class="w-full flex-1 min-h-[540px] overflow-y-auto p-4 text-xs sm:text-sm leading-relaxed text-neutral-900 dark:text-neutral-100 border border-black/5 dark:border-white/5 rounded-2xl bg-black/2 dark:bg-black/20 prose dark:prose-invert prose-emerald max-w-none">
-                    {#if content.trim()}
-                        {@html renderedHtml}
-                    {:else}
-                        <div class="h-full flex items-center justify-center text-neutral-400 text-xs italic">
-                            在左侧输入 Markdown 源码后在此实时排版预览
-                        </div>
-                    {/if}
-                </div>
-            </div>
+            <PreviewPane
+                content={content}
+                format={contentFormat}
+                onOpenFull={handleOpenFullPreview}
+            />
         {/if}
     </div>
 
@@ -400,11 +585,32 @@ function handleExportAstro() {
                         </div>
                         <button
                             type="button"
-                            class="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white cursor-pointer"
+                            class="console-btn console-btn--ghost console-btn--icon-sm"
                             onclick={() => showDrawer = false}
+                            title="关闭属性配置"
+                            aria-label="关闭属性配置"
                         >
                             <Icon icon="material-symbols:close" class="text-base" />
                         </button>
+                    </div>
+
+                    <!-- 所属文件夹 (与首页「目录」面板同源) -->
+                    <div>
+                        <label class="block font-semibold text-neutral-700 dark:text-neutral-300 text-xs mb-1.5">所属文件夹</label>
+                        <select
+                            class="console-field w-full"
+                            bind:value={postFolderPath}
+                        >
+                            <option value="">文章根目录 (src/content/posts)</option>
+                            {#each blogStore.postsFolderOptions as option}
+                                <option value={option.folder.path}>
+                                    {"\u00A0".repeat(option.depth * 2)}{option.depth > 0 ? "└ " : ""}{option.folder.name}
+                                </option>
+                            {/each}
+                        </select>
+                        <p class="text-[10px] text-neutral-400 mt-1">
+                            导出目标: src/content/posts/{postFolderPath ? `${postFolderPath}/` : ""}{slug || "untitled"}.{CONTENT_FORMAT_EXTENSION[contentFormat]}
+                        </p>
                     </div>
 
                     <!-- 访问别名 (Slug) -->
@@ -413,7 +619,7 @@ function handleExportAstro() {
                         <input
                             type="text"
                             placeholder="my-awesome-post"
-                            class="w-full px-3.5 py-2 text-xs font-mono card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white focus:outline-none focus:border-(--primary)/50"
+                            class="console-field w-full font-mono"
                             bind:value={slug}
                         />
                         <p class="text-[10px] text-neutral-400 mt-1">用于文章 URL 路由后缀 (/posts/{slug})</p>
@@ -425,7 +631,7 @@ function handleExportAstro() {
                         <input
                             type="text"
                             placeholder="https://... 或本地素材路径"
-                            class="w-full px-3.5 py-2 text-xs font-mono card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white focus:outline-none focus:border-(--primary)/50"
+                            class="console-field w-full font-mono"
                             bind:value={cover}
                         />
                         {#if cover.trim()}
@@ -440,7 +646,8 @@ function handleExportAstro() {
                         <label class="block font-semibold text-neutral-700 dark:text-neutral-300 text-xs mb-1.5">自定义文章摘要</label>
                         <textarea
                             placeholder="若留空则自动截取文章前 100 字..."
-                            class="w-full px-3.5 py-2 text-xs h-20 resize-none leading-relaxed card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white focus:outline-none focus:border-(--primary)/50"
+                            class="console-field w-full h-20 resize-none leading-relaxed"
+                            style="border-radius: 1rem;"
                             bind:value={summary}
                         ></textarea>
                     </div>
@@ -453,11 +660,11 @@ function handleExportAstro() {
                                 {@const isSelected = selectedCategories.includes(cat.id)}
                                 <button
                                     type="button"
-                                    class="px-2.5 py-1 rounded-lg text-xs font-medium border transition-all cursor-pointer flex items-center gap-1 {isSelected ? 'bg-orange-500/20 text-orange-600 dark:text-orange-400 font-bold border-orange-500/40 shadow-xs' : 'bg-black/5 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 border-black/5 dark:border-white/10 hover:text-neutral-900 dark:hover:text-white'}"
+                                    class="console-chip {isSelected ? 'is-active' : ''}"
                                     onclick={() => toggleCategory(cat.id)}
                                 >
                                     {#if isSelected}
-                                        <Icon icon="material-symbols:check" class="text-xs text-orange-500" />
+                                        <Icon icon="material-symbols:check" class="text-xs" />
                                     {/if}
                                     <span>{cat.name}</span>
                                 </button>
@@ -467,17 +674,17 @@ function handleExportAstro() {
                             <input
                                 type="text"
                                 placeholder="输入新分类名称..."
-                                class="flex-1 px-3 py-1.5 text-xs card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white focus:outline-none focus:border-(--primary)/50"
+                                class="console-field flex-1"
                                 bind:value={customCategoryInput}
                                 onkeydown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomCategory(); } }}
                             />
-                            <button
-                                type="button"
-                                class="px-3 py-1.5 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 text-xs font-bold hover:bg-orange-500/20 cursor-pointer"
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                label="添加"
+                                title="新建并选中该分类"
                                 onclick={addCustomCategory}
-                            >
-                                添加
-                            </button>
+                            />
                         </div>
                     </div>
 
@@ -490,11 +697,11 @@ function handleExportAstro() {
                                 {@const isSelected = selectedTags.includes(tag.id) || selectedTags.includes(tag.name)}
                                 <button
                                     type="button"
-                                    class="px-2.5 py-1 rounded-lg text-xs font-medium border transition-all cursor-pointer flex items-center gap-1 {isSelected ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold border-emerald-500/40 shadow-xs' : 'bg-black/5 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 border-black/5 dark:border-white/10 hover:text-neutral-900 dark:hover:text-white'}"
+                                    class="console-chip {isSelected ? 'is-active' : ''}"
                                     onclick={() => toggleTag(tag.id)}
                                 >
                                     {#if isSelected}
-                                        <Icon icon="material-symbols:check" class="text-xs text-emerald-500" />
+                                        <Icon icon="material-symbols:check" class="text-xs" />
                                     {/if}
                                     <span>#{tag.name}</span>
                                 </button>
@@ -503,17 +710,18 @@ function handleExportAstro() {
 
                         <!-- 当前选中的自定义或所有标签可删除预览 -->
                         {#if selectedTags.length > 0}
-                            <div class="p-2.5 rounded-xl bg-black/2 dark:bg-white/3 border border-black/5 dark:border-white/5 mb-2.5 flex flex-wrap gap-1.5 items-center">
+                            <div class="p-2.5 rounded-2xl bg-black/2 dark:bg-white/3 border border-black/5 dark:border-white/5 mb-2.5 flex flex-wrap gap-1.5 items-center">
                                 <span class="text-[10px] text-neutral-400">已选中:</span>
                                 {#each selectedTags as tagId}
                                     {@const tagName = blogStore.tagsMap.get(tagId) || tagId}
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[11px] font-mono">
+                                    <span class="inline-flex items-center gap-1 pl-2.5 pr-1 py-0.5 rounded-full bg-(--primary)/12 text-(--primary) text-[11px] font-mono">
                                         <span>#{tagName}</span>
                                         <button
                                             type="button"
-                                            class="hover:text-rose-500 cursor-pointer text-xs"
+                                            class="console-btn console-btn--ghost console-btn--icon-sm !w-4 !h-4 !text-[11px]"
                                             onclick={() => removeTag(tagId)}
                                             title="移除标签"
+                                            aria-label="移除标签"
                                         >
                                             ×
                                         </button>
@@ -526,17 +734,17 @@ function handleExportAstro() {
                             <input
                                 type="text"
                                 placeholder="输入新标签并回车..."
-                                class="flex-1 px-3 py-1.5 text-xs card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white focus:outline-none focus:border-(--primary)/50"
+                                class="console-field flex-1"
                                 bind:value={customTagInput}
                                 onkeydown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomTag(); } }}
                             />
-                            <button
-                                type="button"
-                                class="px-3 py-1.5 rounded-xl bg-(--primary)/10 text-(--primary) border border-(--primary)/20 text-xs font-bold hover:bg-(--primary)/20 cursor-pointer"
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                label="添加"
+                                title="添加该标签"
                                 onclick={addCustomTag}
-                            >
-                                添加
-                            </button>
+                            />
                         </div>
                     </div>
 
@@ -552,7 +760,7 @@ function handleExportAstro() {
                         </label>
                         <div class="flex items-center justify-between text-xs text-neutral-700 dark:text-neutral-300">
                             <span>可见性范围</span>
-                            <select class="card-base liquid-glass border border-black/10 dark:border-white/10 rounded-lg px-2 py-1 text-xs text-neutral-800 dark:text-neutral-200" bind:value={visibility}>
+                            <select class="console-field" bind:value={visibility}>
                                 <option value="public">公开可见</option>
                                 <option value="private">仅自己可见</option>
                             </select>
@@ -560,14 +768,15 @@ function handleExportAstro() {
                     </div>
                 </div>
 
-                <div class="pt-6 border-t border-black/5 dark:border-white/10 flex items-center gap-3">
-                    <button
-                        type="button"
-                        class="flex-1 py-2 rounded-xl bg-(--primary) hover:brightness-110 text-white text-xs font-bold transition-all cursor-pointer shadow-md"
+                <div class="pt-6 border-t border-black/5 dark:border-white/10">
+                    <Button
+                        variant="primary"
+                        size="md"
+                        block
+                        label="完成设置"
+                        title="保存属性配置并关闭抽屉"
                         onclick={() => showDrawer = false}
-                    >
-                        完成设置
-                    </button>
+                    />
                 </div>
             </div>
         </div>

@@ -1,11 +1,5 @@
-import { getSortedPosts } from "./post";
-import { sortedAlbums } from "./albums";
-import { sortedMoments } from "./diary";
-import { projectsData } from "./projects";
-import { skillsData } from "./skills";
-import { timelineData } from "./timeline";
-import { i18n } from "../i18n/translation";
-import I18nKey from "../i18n/i18nKey";
+import { buildSiteTree } from "./contentTree";
+import type { SiteDirectoryNode } from "./contentCollections";
 
 
 export interface DirectoryNode {
@@ -15,100 +9,61 @@ export interface DirectoryNode {
     children?: DirectoryNode[];
 }
 
+/**
+ * 首页「目录」面板可见性规则:
+ *  - 文章: draft 条目不在首页面板中展示
+ *  - 相册: visible === false 的条目不在首页面板中展示
+ * 其余集合全部展示。
+ */
+function isVisibleOnHomepage(node: SiteDirectoryNode): boolean {
+    if (node.type !== "entry") return true;
+    const meta = node.meta || {};
+    if (node.collection === "posts" && meta.draft === true) return false;
+    if (node.collection === "albums" && meta.visible === false) return false;
+    return true;
+}
+
+/**
+ * 与旧实现保持一致的层级归并: 同级同名节点后者覆盖前者 (Map 保留首次出现的位置),
+ * 随后按「文件夹优先 + 名称字母序」排序。
+ */
+function mergeAndSort(nodes: DirectoryNode[]): DirectoryNode[] {
+    const map = new Map<string, DirectoryNode>();
+    for (const node of nodes) map.set(node.name, node);
+    const list = [...map.values()];
+    list.sort((a, b) => {
+        if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
+        return a.name.localeCompare(b.name);
+    });
+    return list;
+}
+
+/** 转换为首页节点; 不含任何可见内容的文件夹返回 null (与旧实现一致, 不会凭空出现空目录) */
+function toDirectoryNode(node: SiteDirectoryNode): DirectoryNode | null {
+    if (node.type === "entry") {
+        if (!isVisibleOnHomepage(node)) return null;
+        return { name: node.name, type: 'file', url: node.url };
+    }
+
+    const children = mergeAndSort(
+        (node.children || [])
+            .map(toDirectoryNode)
+            .filter((child): child is DirectoryNode => child !== null),
+    );
+    if (children.length === 0) return null;
+    return { name: node.name, type: 'folder', children };
+}
+
+/**
+ * 首页「目录」面板的目录树。
+ * 结构与内容完全由 contentCollections/contentTree 的集合注册表派生, 因此与
+ * 控制台的文件夹树同源; 不含可见内容的集合不展示, 以保持首页历史表现不变。
+ */
 export async function getDirectoryTree(): Promise<DirectoryNode[]> {
-    const rootMap = {
-        posts: i18n(I18nKey.posts),
-        albums: i18n(I18nKey.albums),
-        diary: i18n(I18nKey.diary),
-        projects: i18n(I18nKey.projects),
-        skills: i18n(I18nKey.skills),
-        timeline: i18n(I18nKey.timeline),
-    };
-
-    const tree: Record<string, any> = {};
-
-    function addNode(paths: string[], name: string, url: string) {
-        let current = tree;
-        for (const part of paths) {
-            if (!current[part]) {
-                current[part] = { name: part, type: 'folder', children: {} };
-            }
-            current = current[part].children;
-        }
-        current[name] = { name, type: 'file', url };
-    }
-
-    const posts = await getSortedPosts();
-    for (const post of posts) {
-        if (post.data.draft) continue;
-        const parts = post.id.split('/');
-        const fileName = parts.pop()!;
-        const paths = [rootMap.posts, ...parts];
-        addNode(paths, post.data.directoryTitle || post.data.title || fileName, `/posts/${post.id}/`);
-    }
-
-    for (const album of sortedAlbums) {
-        if (!album.visible) continue;
-        const basePathParts = album.basePath?.split('/') || [];
-        if (basePathParts[0] === 'content') basePathParts.shift();
-        if (basePathParts[0] === 'albums') basePathParts[0] = rootMap.albums;
-        addNode(basePathParts, album.title || album.id, `/albums/${album.id}/`);
-    }
-
-    for (const moment of sortedMoments) {
-        const basePathParts = moment.basePath?.split('/') || [];
-        if (basePathParts[0] === 'content') basePathParts.shift();
-        if (basePathParts[0] === 'diary') basePathParts[0] = rootMap.diary;
-        addNode(basePathParts, moment.title || moment.id, `/diary/`);
-    }
-
-    for (const project of projectsData) {
-        const basePathParts = project.basePath?.split('/') || [];
-        if (basePathParts[0] === 'content') basePathParts.shift();
-        if (basePathParts[0] === 'projects') basePathParts[0] = rootMap.projects;
-        addNode(basePathParts, project.title || project.id, `/projects/`);
-    }
-
-    for (const skill of skillsData) {
-        const basePathParts = skill.basePath?.split('/') || [];
-        if (basePathParts[0] === 'content') basePathParts.shift();
-        if (basePathParts[0] === 'skills') basePathParts[0] = rootMap.skills;
-        addNode(basePathParts, skill.name || skill.id, `/skills/`);
-    }
-
-    for (const item of timelineData) {
-        const basePathParts = item.basePath?.split('/') || [];
-        if (basePathParts[0] === 'content') basePathParts.shift();
-        if (basePathParts[0] === 'timeline') basePathParts[0] = rootMap.timeline;
-        addNode(basePathParts, item.title || item.id, `/timeline/`);
-    }
-
-    function toArray(obj: Record<string, any>): DirectoryNode[] {
-        const arr = Object.values(obj).map(node => {
-            if (node.type === 'folder') {
-                return {
-                    name: node.name,
-                    type: 'folder',
-                    children: toArray(node.children)
-                } as DirectoryNode;
-            }
-            return {
-                name: node.name,
-                type: 'file',
-                url: node.url
-            } as DirectoryNode;
-        });
-        
-        // Sort: folders first, then files, both alphabetically
-        arr.sort((a, b) => {
-            if (a.type !== b.type) {
-                return a.type === 'folder' ? -1 : 1;
-            }
-            return a.name.localeCompare(b.name);
-        });
-        
-        return arr;
-    }
-
-    return toArray(tree);
+    const tree = await buildSiteTree();
+    return mergeAndSort(
+        tree
+            .map(toDirectoryNode)
+            .filter((node): node is DirectoryNode => node !== null),
+    );
 }

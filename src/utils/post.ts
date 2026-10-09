@@ -2,6 +2,7 @@ import { type CollectionEntry, getCollection } from "astro:content";
 import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { parse as parseHtml } from "node-html-parser";
 
 import { CATEGORY_SEPARATOR, type CategoryPath, getCategoryPathParts } from "@utils/category";
 import { parseTags, type Tag } from "@utils/tag";
@@ -100,6 +101,40 @@ export async function getSortedPostsList(): Promise<PostForList[]> {
     }));
 
     return sortedPostsList;
+}
+
+/** 内容条目里可能存在的预渲染结果（HTML 文章由自定义 loader 写入） */
+type PreRenderedEntry = {
+    rendered?: { html?: string };
+    body?: string;
+};
+
+/**
+ * 取条目正文的 HTML 字符串。
+ * - 由自定义 loader 预渲染的条目（HTML 文章）直接复用 loader 写入的 HTML
+ * - 其余条目（Markdown / MDX）交给传入的 Markdown 渲染器处理
+ */
+export function getEntryHtml(
+    entry: CollectionEntry<"posts">,
+    renderMarkdown: (content: string) => string,
+): string {
+    const preRendered = (entry as unknown as PreRenderedEntry).rendered?.html;
+    if (typeof preRendered === "string") {
+        return preRendered;
+    }
+    return renderMarkdown(String((entry as unknown as PreRenderedEntry).body ?? ""));
+}
+
+/**
+ * 取条目正文的纯文本（去标签），用于摘要、搜索索引等场景。
+ * HTML 文章取预渲染 HTML 的文本内容，Markdown 文章取原始正文。
+ */
+export function getEntryText(entry: CollectionEntry<"posts">): string {
+    const preRendered = (entry as unknown as PreRenderedEntry).rendered?.html;
+    if (typeof preRendered === "string") {
+        return parseHtml(preRendered).textContent.replace(/\s+/g, " ").trim();
+    }
+    return String((entry as unknown as PreRenderedEntry).body ?? "");
 }
 export async function getTagList(): Promise<Tag[]> {
     const allBlogPosts = await getCollection<"posts">("posts", ({ data }) => {

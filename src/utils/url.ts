@@ -17,7 +17,8 @@ function joinUrl(...parts: string[]): string {
 }
 
 export function removeFileExtension(id: string): string {
-    return id.replace(/\.(md|mdx|markdown)$/i, "");
+    // 支持 Markdown / MDX / HTML 三种文章扩展名（HTML 文章由自定义 loader 提供）
+    return id.replace(/\.(md|mdx|markdown|html|htm)$/i, "");
 }
 
 export function getPostUrlBySlug(slug: string): string {

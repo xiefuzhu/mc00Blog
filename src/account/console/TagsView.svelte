@@ -2,6 +2,7 @@
 import { blogStore } from "../store.svelte";
 import { authStore } from "../auth.svelte";
 import Icon from "@components/common/icon.svelte";
+import Button from "./Button.svelte";
 
 let newTagName = $state("");
 let newTagSlug = $state("");
@@ -40,7 +41,7 @@ function handleDeleteTag(id: string) {
                 <input
                     type="text"
                     placeholder="例如: Svelte 5"
-                    class="w-full px-3.5 py-2 text-xs card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-(--primary)/50"
+                    class="console-field w-full"
                     bind:value={newTagName}
                 />
             </div>
@@ -50,7 +51,7 @@ function handleDeleteTag(id: string) {
                 <input
                     type="text"
                     placeholder="例如: svelte-5"
-                    class="w-full px-3.5 py-2 text-xs font-mono card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-(--primary)/50"
+                    class="console-field w-full font-mono"
                     bind:value={newTagSlug}
                 />
             </div>
@@ -60,20 +61,21 @@ function handleDeleteTag(id: string) {
                 <div class="flex items-center gap-3">
                     <input
                         type="color"
-                        class="w-10 h-10 rounded-xl cursor-pointer bg-transparent border-0 p-0"
+                        class="w-10 h-10 rounded-2xl cursor-pointer bg-transparent border-0 p-0"
                         bind:value={newTagColor}
                     />
                     <span class="font-mono text-xs text-(--primary) font-bold">{newTagColor}</span>
                 </div>
             </div>
 
-            <button
-                type="button"
-                class="w-full py-2.5 rounded-xl bg-(--primary) hover:brightness-110 text-white font-bold text-xs shadow-md transition-all active:scale-98 cursor-pointer"
+            <Button
+                variant="primary"
+                size="md"
+                block
+                label="保存并创建标签"
+                title="创建新标签"
                 onclick={handleCreateTag}
-            >
-                保存并创建标签
-            </button>
+            />
         </div>
     {/if}
 
@@ -93,18 +95,18 @@ function handleDeleteTag(id: string) {
             <!-- 标签云胶囊展示 -->
             <div class="flex flex-wrap gap-2.5">
                 {#each blogStore.tags as tag}
-                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-black/2 dark:bg-white/4 border border-black/5 dark:border-white/8 hover:border-(--primary)/40 text-xs transition-all group">
+                    <div class="inline-flex items-center gap-2 pl-3 pr-1.5 py-1 rounded-full bg-black/2 dark:bg-white/4 border border-black/5 dark:border-white/8 hover:border-(--primary)/40 text-xs transition-all group">
                         <span
                             class="w-2 h-2 rounded-full shrink-0"
                             style="background-color: {tag.color || '#10b981'};"
                         ></span>
                         <span class="font-medium text-neutral-800 dark:text-neutral-200 group-hover:text-(--primary)">{tag.name}</span>
-                        <span class="font-mono text-[10px] text-neutral-400">({tag.postCount || 0})</span>
+                        <span class="console-count-badge h-6 min-w-7 px-2 text-[11px]">({tag.postCount || 0})</span>
 
                         {#if authStore.can("tags:*")}
                             <button
                                 type="button"
-                                class="text-neutral-400 hover:text-rose-500 ml-1 cursor-pointer transition-colors"
+                                class="console-btn console-btn--ghost console-btn--icon-sm hover:!text-rose-500"
                                 onclick={() => handleDeleteTag(tag.id)}
                                 title="删除此标签"
                                 aria-label="删除标签"

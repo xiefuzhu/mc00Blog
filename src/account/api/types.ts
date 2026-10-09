@@ -37,6 +37,10 @@ export interface PostItem {
     wordCount: number;
     createdAt: string;
     updatedAt: string;
+    /** 所属文章文件夹路径 (空串 = 文章根目录), 与站点 src/content/posts 目录一致 */
+    folder?: string;
+    /** 正文格式: markdown / mdx / html */
+    format?: string;
 }
 
 export interface CategoryItem {

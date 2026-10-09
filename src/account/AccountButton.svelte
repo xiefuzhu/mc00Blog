@@ -26,7 +26,7 @@ const roleDotClass = $derived.by(() => {
         type="button"
         id="account-menu-button"
         aria-label="Halo 账户与管理系统"
-        class="btn-plain scale-animation rounded-full h-10 w-10 active:scale-95 flex items-center justify-center transition-colors relative"
+        class="console-btn console-btn--ghost console-btn--icon rounded-full active:scale-95 relative"
         onclick={(e) => { e.stopPropagation(); authStore.toggleMenu(); }}
         title={authStore.currentUser ? `当前用户: ${authStore.currentUser.name} (${authStore.currentUser.role})` : "访客状态"}
     >

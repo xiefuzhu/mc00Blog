@@ -3,6 +3,7 @@ import { onMount } from "svelte";
 import { blogStore } from "../store.svelte";
 import { pingBackend } from "../api/client";
 import Icon from "@components/common/icon.svelte";
+import Button from "./Button.svelte";
 
 let isChecking = $state(false);
 let backendStatus = $state<{ online: boolean; latency: number; message: string }>({
@@ -111,15 +112,16 @@ onMount(() => {
             </div>
         </div>
 
-        <button
-            type="button"
-            class="px-5 py-2.5 rounded-xl bg-(--primary) hover:brightness-110 text-white font-bold text-xs shadow-md flex items-center gap-2 transition-all active:scale-98 cursor-pointer shrink-0"
-            onclick={checkHealth}
+        <Button
+            variant="primary"
+            size="md"
+            icon="material-symbols:refresh"
+            iconClass={isChecking ? "animate-spin text-base" : "text-base"}
+            label={isChecking ? "诊断中..." : "立即体检"}
+            title="立即执行系统体检"
             disabled={isChecking}
-        >
-            <Icon icon="material-symbols:refresh" class={isChecking ? "animate-spin" : ""} />
-            <span>{isChecking ? "诊断中..." : "立即体检"}</span>
-        </button>
+            onclick={checkHealth}
+        />
     </div>
 
     <!-- 3 个状态卡片网格 -->
@@ -200,13 +202,14 @@ onMount(() => {
                         遍历所有博文重新计算净字数与预估阅读分钟数，修复遗漏的元数据。
                     </p>
                 </div>
-                <button
-                    type="button"
-                    class="w-full py-2 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-(--primary) hover:text-white font-semibold text-xs text-neutral-700 dark:text-neutral-200 transition-all cursor-pointer"
+                <Button
+                    variant="secondary"
+                    size="md"
+                    block
+                    label="执行重新核算"
+                    title="重算全站文章字数与阅读时间"
                     onclick={handleRecalculateStats}
-                >
-                    执行重新核算
-                </button>
+                />
             </div>
 
             <div class="p-4 rounded-2xl bg-black/2 dark:bg-white/4 border border-black/5 dark:border-white/5 space-y-3 flex flex-col justify-between">
@@ -216,13 +219,14 @@ onMount(() => {
                         一键扫描并剔除未被任何文章引用的无用标签，保持索引整洁。
                     </p>
                 </div>
-                <button
-                    type="button"
-                    class="w-full py-2 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-(--primary) hover:text-white font-semibold text-xs text-neutral-700 dark:text-neutral-200 transition-all cursor-pointer"
+                <Button
+                    variant="secondary"
+                    size="md"
+                    block
+                    label="清理冗余空标签"
+                    title="清理无归属标签"
                     onclick={handleCleanEmptyTags}
-                >
-                    清理冗余空标签
-                </button>
+                />
             </div>
 
             <div class="p-4 rounded-2xl bg-black/2 dark:bg-white/4 border border-black/5 dark:border-white/5 space-y-3 flex flex-col justify-between">
@@ -232,13 +236,14 @@ onMount(() => {
                         重置本地无用临时键值，回收浏览器沙箱存储配额空间。
                     </p>
                 </div>
-                <button
-                    type="button"
-                    class="w-full py-2 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-rose-500 hover:text-white font-semibold text-xs text-neutral-700 dark:text-neutral-200 transition-all cursor-pointer"
+                <Button
+                    variant="danger"
+                    size="md"
+                    block
+                    label="安全释放缓存"
+                    title="清除会话与临时缓存"
                     onclick={handleClearCache}
-                >
-                    安全释放缓存
-                </button>
+                />
             </div>
         </div>
     </div>

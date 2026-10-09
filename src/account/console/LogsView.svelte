@@ -3,6 +3,7 @@ import { blogStore } from "../store.svelte";
 import { authStore } from "../auth.svelte";
 import { downloadTextFile } from "../markdown";
 import Icon from "@components/common/icon.svelte";
+import Button from "./Button.svelte";
 import type { AuditLog } from "../types";
 
 let searchKeyword = $state("");
@@ -91,38 +92,38 @@ function formatTime(iso: string) {
     <div class="card-base liquid-glass p-5 sm:p-6 rounded-3xl border border-black/5 dark:border-white/8 shadow-xl space-y-5">
         <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
             <!-- 统计胶囊指示条 -->
-            <div class="flex items-center gap-1.5 overflow-x-auto p-1 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 shrink-0">
+            <div class="flex items-center gap-1 overflow-x-auto p-1 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 shrink-0">
                 <button
                     type="button"
-                    class="px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer {selectedLevel === 'all' ? 'bg-(--primary) text-white shadow-xs' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}"
+                    class="console-chip {selectedLevel === 'all' ? 'is-active' : ''}"
                     onclick={() => selectedLevel = 'all'}
                 >
                     全部 ({statsCount.total})
                 </button>
                 <button
                     type="button"
-                    class="px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer {selectedLevel === 'success' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}"
+                    class="console-chip {selectedLevel === 'success' ? 'is-active' : ''}"
                     onclick={() => selectedLevel = 'success'}
                 >
                     成功 ({statsCount.success})
                 </button>
                 <button
                     type="button"
-                    class="px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer {selectedLevel === 'info' ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/30' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}"
+                    class="console-chip {selectedLevel === 'info' ? 'is-active' : ''}"
                     onclick={() => selectedLevel = 'info'}
                 >
                     信息 ({statsCount.info})
                 </button>
                 <button
                     type="button"
-                    class="px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer {selectedLevel === 'warn' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}"
+                    class="console-chip {selectedLevel === 'warn' ? 'is-active' : ''}"
                     onclick={() => selectedLevel = 'warn'}
                 >
                     警告 ({statsCount.warn})
                 </button>
                 <button
                     type="button"
-                    class="px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer {selectedLevel === 'error' ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'}"
+                    class="console-chip {selectedLevel === 'error' ? 'is-active' : ''}"
                     onclick={() => selectedLevel = 'error'}
                 >
                     异常 ({statsCount.error})
@@ -135,42 +136,40 @@ function formatTime(iso: string) {
                     <input
                         type="text"
                         placeholder="检索动作 / 详情 / 操作人 / IP..."
-                        class="w-full sm:w-56 pl-8 pr-3 py-1.5 text-xs card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-(--primary)/50"
+                        class="console-field w-full sm:w-56 pl-8 pr-3"
                         bind:value={searchKeyword}
                     />
-                    <Icon icon="material-symbols:search" class="absolute left-2.5 top-2 text-neutral-400 text-sm pointer-events-none" />
+                    <Icon icon="material-symbols:search" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-400 text-sm pointer-events-none" />
                 </div>
 
-                <button
-                    type="button"
-                    class="p-2 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 border border-black/5 dark:border-white/10 transition-colors cursor-pointer"
-                    onclick={handleRefresh}
+                <Button
+                    variant="secondary"
+                    size="icon"
+                    icon="material-symbols:refresh"
+                    iconClass={isRefreshing ? "text-base animate-spin" : "text-base"}
                     title="刷新审计流"
-                    aria-label="刷新审计流"
-                >
-                    <Icon icon="material-symbols:refresh" class="text-base {isRefreshing ? 'animate-spin text-(--primary)' : ''}" />
-                </button>
+                    disabled={isRefreshing}
+                    onclick={handleRefresh}
+                />
 
-                <button
-                    type="button"
-                    class="px-3 py-1.5 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-neutral-700 dark:text-neutral-300 text-xs font-medium border border-black/5 dark:border-white/10 transition-colors flex items-center gap-1.5 cursor-pointer"
-                    onclick={handleExportLogs}
+                <Button
+                    variant="secondary"
+                    size="sm"
+                    icon="material-symbols:download"
+                    label="导出"
                     title="导出全部日志为 JSON"
-                >
-                    <Icon icon="material-symbols:download" class="text-sm" />
-                    <span>导出</span>
-                </button>
+                    onclick={handleExportLogs}
+                />
 
                 {#if authStore.can("logs:*")}
-                    <button
-                        type="button"
-                        class="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-medium border border-rose-500/20 transition-colors flex items-center gap-1.5 cursor-pointer"
-                        onclick={handleClearLogs}
+                    <Button
+                        variant="danger"
+                        size="sm"
+                        icon="material-symbols:delete-sweep-outline"
+                        label="清空"
                         title="清空历史记录"
-                    >
-                        <Icon icon="material-symbols:delete-sweep-outline" class="text-sm" />
-                        <span>清空</span>
-                    </button>
+                        onclick={handleClearLogs}
+                    />
                 {/if}
             </div>
         </div>

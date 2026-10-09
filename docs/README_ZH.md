@@ -45,6 +45,7 @@
 
 ### 内容页面
 - **博客文章**: 完整的 Markdown 博客系统，支持标签和分类
+- **HTML 文章**: 内容目录里的 `.html` 文件同样可以作为文章发布（见下文）
 - **项目与技能展柜**: 可视化的个人作品集展示
 - **历程时间线**: 教育、工作、成就、技能等生平展示
 - **日记**: 短形式的社交风格随笔
@@ -59,6 +60,40 @@
 - **代码块增强**: 复制按钮、折叠、行号、语言标签
 - **Mermaid 图表**: 渲染 ` ```mermaid ` 代码块为图表
 - **KaTeX 数学公式**: 支持 `$...$` 和 `$$...$$` 公式渲染
+
+### HTML 文章
+内容目录 `src/content/posts/` 下的 `.html` / `.htm` 文件会被当作文章处理，与
+Markdown 文章拥有相同的能力：出现在首页列表、归档、分类与标签、文章详情页、
+RSS / Atom / sitemap 以及首页侧栏的「目录」面板中。
+
+```html
+---
+title: "用 HTML 写一篇文章"
+published: 2026-01-01
+description: "摘要"
+tags:
+  - "HTML"
+category:
+  - "示例"
+---
+
+<h2>小节标题</h2>
+<p>正文内容。</p>
+```
+
+- frontmatter 与 Markdown 文章完全一致（`title`、`published`、`tags`、`category`、
+  `cover`、`draft`、`encrypted` 等字段通用）。
+- 正文可以是一段 HTML 片段，也可以是一份完整文档（含 `<!doctype>` / `<html>` /
+  `<body>`）；完整文档只会取 `<body>` 里的内容。
+- 标题（`<h1>`–`<h6>`）会自动注入 `id`，因此右侧「目录」面板可以正常跳转；已经
+  写好 `id` 的标题会保留原值。
+- 文件名会按与 Markdown 相同的规则生成 URL：`guide/Getting Started.html` →
+  `/posts/guide/getting-started/`。
+- 以 `_` 开头的文件会被忽略，可用于存放草稿。
+
+> 说明：HTML 文章的渲染完全在构建期完成，因此不能在 HTML 里使用 MDX 组件或
+> 站点特有的 remark / rehype 语法（例如 `:::tip` 提示块）。需要这些能力时请使用
+> Markdown / MDX。
 
 ### UI 组件
 - **加载遮罩**: 可配置的启动加载页与动画

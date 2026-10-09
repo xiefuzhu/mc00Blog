@@ -3,6 +3,8 @@
  * Decoupled Account & RBAC Management System Types
  */
 
+import type { SiteCollectionKey } from "@utils/contentCollections";
+
 export type UserRole = "admin" | "editor" | "author" | "contributor" | "reader";
 
 export interface Role {
@@ -72,6 +74,34 @@ export interface Tag {
     postCount?: number;
 }
 
+/** 文章正文格式 (与站点内容集合支持的扩展名对齐) */
+export type ContentFormat = "markdown" | "mdx" | "html";
+
+/**
+ * 文章文件夹
+ * path 与 src/content/posts 下的真实目录一致, 因此与博客首页「目录」面板的文件夹同源
+ * 根目录不建实体 (由空串表示), 这里只存放用户创建的文件夹
+ */
+export interface ArticleFolder {
+    id: string;
+    name: string;
+    /** 相对集合根目录的 POSIX 路径, 例如 guide 或 guide/advanced */
+    path: string;
+    parentId: string | null;
+    /** 所属内容集合 (posts/albums/diary/projects/skills/timeline) */
+    collection: SiteCollectionKey;
+    createdAt?: string;
+}
+
+/** 带层级与统计的文件夹树节点 (派生数据, 不落库) */
+export interface ArticleFolderNode extends ArticleFolder {
+    children: ArticleFolderNode[];
+    /** 本文件夹及所有子文件夹的文章数 */
+    count: number;
+    /** 本文件夹直属文章数 */
+    selfCount: number;
+}
+
 export interface Post {
     id: string;
     title: string;
@@ -96,6 +126,12 @@ export interface Post {
     createdAt: string;
     updatedAt: string;
     filePath?: string;
+    /** 所属文件夹路径, 空串表示位于文章根目录 */
+    folderPath?: string;
+    /** 正文格式: markdown (默认) / mdx / html */
+    contentFormat?: ContentFormat;
+    /** 对应站点真实内容条目的 id (例如 guide/Getting Started), 用于解析前台真实 URL */
+    contentId?: string;
 }
 
 // 兼容旧 Article 别名
@@ -186,5 +222,7 @@ export interface FullBackupBundle {
     tags: Tag[];
     posts: Post[];
     attachments: Attachment[];
+    /** 文章文件夹树 (与首页「目录」面板同源) */
+    folders?: ArticleFolder[];
     users?: Omit<User, "password">[];
 }

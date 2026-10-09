@@ -2,6 +2,7 @@
 import { blogStore } from "../store.svelte";
 import { authStore } from "../auth.svelte";
 import Icon from "@components/common/icon.svelte";
+import Button from "./Button.svelte";
 import type { Attachment } from "../types";
 
 let newAttName = $state("");
@@ -61,25 +62,25 @@ function handleDeleteAttachment(id: string) {
                 <input
                     type="text"
                     placeholder="文件名称 (例如: banner-wallpaper.webp)"
-                    class="w-full px-3.5 py-2 text-xs card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-(--primary)/50"
+                    class="console-field w-full"
                     bind:value={newAttName}
                 />
                 <input
                     type="text"
                     placeholder="素材在线 URL 地址 (https://...)"
-                    class="w-full px-3.5 py-2 text-xs font-mono card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-(--primary)/50"
+                    class="console-field w-full font-mono"
                     bind:value={newAttUrl}
                 />
             </div>
 
             <div class="flex justify-end">
-                <button
-                    type="button"
-                    class="px-5 py-2 rounded-xl bg-(--primary) hover:brightness-110 text-white font-bold text-xs shadow-md transition-all active:scale-98 cursor-pointer"
+                <Button
+                    variant="primary"
+                    size="md"
+                    label="确认录入附件库"
+                    title="录入媒体附件"
                     onclick={handleAddAttachment}
-                >
-                    确认录入附件库
-                </button>
+                />
             </div>
         </div>
     {/if}
@@ -131,25 +132,24 @@ function handleDeleteAttachment(id: string) {
                         </div>
 
                         <div class="flex items-center justify-between pt-2 border-t border-black/5 dark:border-white/5 gap-2">
-                            <button
-                                type="button"
-                                class="flex-1 py-1.5 px-2 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-(--primary)/20 text-neutral-700 dark:text-neutral-300 hover:text-(--primary) text-xs font-medium border border-black/5 dark:border-white/8 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                                onclick={() => handleCopyMarkdown(att.name, att.url)}
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                icon="material-symbols:content-copy-outline"
+                                label="复制 MD"
                                 title="复制 Markdown 插入语法"
-                            >
-                                <Icon icon="material-symbols:content-copy-outline" class="text-sm" />
-                                <span>复制 MD</span>
-                            </button>
+                                class="flex-1"
+                                onclick={() => handleCopyMarkdown(att.name, att.url)}
+                            />
 
                             {#if authStore.can("attachments:*")}
-                                <button
-                                    type="button"
-                                    class="p-1.5 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-rose-500/20 text-neutral-400 hover:text-rose-500 border border-black/5 dark:border-white/8 transition-colors cursor-pointer"
-                                    onclick={() => handleDeleteAttachment(att.id)}
+                                <Button
+                                    variant="danger"
+                                    size="icon-sm"
+                                    icon="material-symbols:delete-outline"
                                     title="删除此资源"
-                                >
-                                    <Icon icon="material-symbols:delete-outline" class="text-sm" />
-                                </button>
+                                    onclick={() => handleDeleteAttachment(att.id)}
+                                />
                             {/if}
                         </div>
                     </div>
@@ -171,13 +171,13 @@ function handleDeleteAttachment(id: string) {
                 <img src={previewImage.url} alt={previewImage.name} class="max-h-[80vh] w-auto object-contain rounded-2xl mx-auto" />
                 <div class="p-3 flex items-center justify-between text-xs text-neutral-800 dark:text-neutral-200">
                     <span class="font-bold truncate">{previewImage.name}</span>
-                    <button
-                        type="button"
-                        class="px-3 py-1 rounded-xl bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 text-neutral-900 dark:text-white cursor-pointer"
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        label="关闭预览"
+                        title="关闭大图预览"
                         onclick={() => previewImage = null}
-                    >
-                        关闭预览
-                    </button>
+                    />
                 </div>
             </div>
         </div>

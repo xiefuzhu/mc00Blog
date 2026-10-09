@@ -2,6 +2,7 @@
 import { authStore } from "../auth.svelte";
 import { ROLE_INFO } from "../mockData";
 import Icon from "@components/common/icon.svelte";
+import Button from "./Button.svelte";
 import type { UserRole } from "../types";
 
 let newUsername = $state("");
@@ -50,7 +51,7 @@ function handleDeleteUser(userId: string) {
             <input
                 type="text"
                 placeholder="例如: developer_zhang"
-                class="w-full px-3.5 py-2 text-xs font-mono card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-(--primary)/50"
+                class="console-field w-full font-mono"
                 bind:value={newUsername}
             />
         </div>
@@ -60,7 +61,7 @@ function handleDeleteUser(userId: string) {
             <input
                 type="text"
                 placeholder="例如: 张工"
-                class="w-full px-3.5 py-2 text-xs card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-(--primary)/50"
+                class="console-field w-full"
                 bind:value={newName}
             />
         </div>
@@ -70,7 +71,7 @@ function handleDeleteUser(userId: string) {
             <input
                 type="email"
                 placeholder="user@example.com"
-                class="w-full px-3.5 py-2 text-xs font-mono card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-(--primary)/50"
+                class="console-field w-full font-mono"
                 bind:value={newEmail}
             />
         </div>
@@ -78,7 +79,7 @@ function handleDeleteUser(userId: string) {
         <div>
             <label class="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">分配初始角色</label>
             <select
-                class="w-full px-3.5 py-2 text-xs font-semibold card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-800 dark:text-neutral-200 cursor-pointer"
+                class="console-field w-full font-semibold"
                 bind:value={newRole}
             >
                 <option value="admin">超级管理员 (admin)</option>
@@ -93,18 +94,20 @@ function handleDeleteUser(userId: string) {
             <label class="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">个性签名 / 简介</label>
             <textarea
                 placeholder="简短用户自我介绍..."
-                class="w-full px-3.5 py-2 text-xs h-18 resize-none leading-relaxed card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-(--primary)/50"
+                class="console-field w-full h-18 resize-none leading-relaxed"
+                style="border-radius: 1rem;"
                 bind:value={newBio}
             ></textarea>
         </div>
 
-        <button
-            type="button"
-            class="w-full py-2.5 rounded-xl bg-(--primary) hover:brightness-110 text-white font-bold text-xs shadow-md transition-all active:scale-98 cursor-pointer"
+        <Button
+            variant="primary"
+            size="md"
+            block
+            label="确认创建用户"
+            title="创建新账户"
             onclick={handleCreateUser}
-        >
-            确认创建用户
-        </button>
+        />
     </div>
 
     <!-- 用户列表展示区 -->
@@ -146,7 +149,7 @@ function handleDeleteUser(userId: string) {
                     <!-- 角色选择与删除按钮 -->
                     <div class="flex items-center gap-2.5 shrink-0 self-end sm:self-auto">
                         <select
-                            class="px-2.5 py-1 text-xs font-semibold card-base liquid-glass border border-black/8 dark:border-white/10 rounded-xl text-neutral-800 dark:text-neutral-200 cursor-pointer"
+                            class="console-field font-semibold"
                             value={user.role}
                             onchange={(e) => handleRoleChange(user.id, (e.target as HTMLSelectElement).value as UserRole)}
                             disabled={user.id === 'u-admin'}
@@ -159,14 +162,13 @@ function handleDeleteUser(userId: string) {
                         </select>
 
                         {#if user.id !== 'u-admin' && user.id !== authStore.currentUser?.id}
-                            <button
-                                type="button"
-                                class="p-1.5 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-rose-500/20 text-neutral-400 hover:text-rose-500 border border-black/5 dark:border-white/8 transition-colors cursor-pointer"
-                                onclick={() => handleDeleteUser(user.id)}
+                            <Button
+                                variant="danger"
+                                size="icon-sm"
+                                icon="material-symbols:delete-outline"
                                 title="删除用户"
-                            >
-                                <Icon icon="material-symbols:delete-outline" class="text-sm" />
-                            </button>
+                                onclick={() => handleDeleteUser(user.id)}
+                            />
                         {/if}
                     </div>
                 </div>
