@@ -25,7 +25,7 @@ import {
     DEFAULT_SETTINGS,
 } from "./mockData";
 import { countWords, getReadingTime } from "./markdown";
-import { postsApi, categoriesApi, tagsApi, attachmentsApi, statsApi, logsApi, settingsApi } from "./api";
+import { categoriesApi, tagsApi, attachmentsApi, statsApi, logsApi, settingsApi } from "./api";
 import {
     loadContentIndex,
     markSiteIndexSynced,
@@ -503,11 +503,9 @@ class BlogStore {
     }
 
     private loadFromStorage() {
+        // 文章/分类/标签/媒体一律从后端获取, 本地只保留站点设置等 UI 偏好。
+        // 后端不可达时保持为空 (不显示任何本地种子内容)。
         if (typeof window === "undefined") {
-            this.posts = [...DEFAULT_POSTS];
-            this.categories = [...DEFAULT_CATEGORIES];
-            this.tags = [...DEFAULT_TAGS];
-            this.attachments = [...DEFAULT_ATTACHMENTS];
             this.settings = { ...DEFAULT_SETTINGS };
             this.logs = [...INITIAL_LOGS];
             return;
@@ -517,126 +515,66 @@ class BlogStore {
             const raw = localStorage.getItem(BLOG_STORAGE_KEY);
             if (raw) {
                 const parsed = JSON.parse(raw);
-                this.posts = Array.isArray(parsed.posts) && parsed.posts.length > 0 ? parsed.posts : [...DEFAULT_POSTS];
-                this.categories = Array.isArray(parsed.categories) && parsed.categories.length > 0 ? parsed.categories : [...DEFAULT_CATEGORIES];
-                this.tags = Array.isArray(parsed.tags) && parsed.tags.length > 0 ? parsed.tags : [...DEFAULT_TAGS];
-                this.attachments = Array.isArray(parsed.attachments) && parsed.attachments.length > 0 ? parsed.attachments : [...DEFAULT_ATTACHMENTS];
-                this.settings = parsed.settings || { ...DEFAULT_SETTINGS };
-                this.folders = Array.isArray(parsed.folders)
-                    ? parsed.folders.map((folder: ArticleFolder) => ({
-                          ...folder,
-                          collection: folder.collection || "posts",
-                      }))
-                    : [];
-            } else {
-                this.resetAllData();
+                if (parsed.settings) this.settings = { ...DEFAULT_SETTINGS, ...parsed.settings };
             }
 
             const rawLogs = localStorage.getItem(BLOG_LOGS_STORAGE_KEY);
             if (rawLogs) {
                 const parsedLogs = JSON.parse(rawLogs);
-                this.logs = Array.isArray(parsedLogs) && parsedLogs.length > 0 ? parsedLogs : [...INITIAL_LOGS];
-            } else {
-                this.logs = [...INITIAL_LOGS];
+                this.logs = Array.isArray(parsedLogs) ? parsedLogs : [];
             }
 
             localStorage.setItem("blog_site_settings", JSON.stringify(this.settings));
         } catch {
-            this.resetAllData();
+            // 忽略本地存储异常
         }
     }
 
+    /**
+     * 从后端同步业务数据 (分类 / 标签 / 媒体 / 设置 / 统计 / 日志)。
+     * 文章由内容目录树 (ensureSiteIndex) 提供; 后端不可达时全部保持为空。
+     */
     async syncFromBackendApi() {
         if (typeof window === "undefined") return;
-        try {
-            const [remotePosts, stats, remoteLogs] = await Promise.all([
-                postsApi.list().catch(() => null),
-                statsApi.get().catch(() => null),
-                logsApi.list().catch(() => null),
-            ]);
 
-            if (remotePosts && remotePosts.length > 0) {
-                // 站点真实内容索引是「文件型文章」的唯一来源:
-                // 后端/mock 数据只用于补充沙箱文章, 不能覆盖真实文章的 filePath / contentId,
-                // 也不能用 mock 里截断的正文覆盖真实正文 (正文始终以仓库文件为准)。
-                const normalizeKey = (value: string) =>
-                    (value || "").trim().toLowerCase().replace(/[\s/]+/g, "");
-                const fileBacked = this.posts.filter((post) => post.filePath);
-                const fileBackedKeys = new Set(
-                    fileBacked
-                        .flatMap((post) => [
-                            normalizeKey(post.contentId || ""),
-                            normalizeKey(post.slug),
-                            normalizeKey(post.title),
-                        ])
-                        .filter(Boolean),
-                );
+        const [categories, tags, attachments, settings, stats, remoteLogs] = await Promise.all([
+            categoriesApi.list().catch(() => null),
+            tagsApi.list().catch(() => null),
+            attachmentsApi.list().catch(() => null),
+            settingsApi.get().catch(() => null),
+            statsApi.get().catch(() => null),
+            logsApi.list().catch(() => null),
+        ]);
 
-                const sandboxPosts: Post[] = remotePosts
-                    .filter((p) => {
-                        const keys = [normalizeKey(p.slug), normalizeKey(p.title)].filter(Boolean);
-                        return !keys.some((key) => fileBackedKeys.has(key));
-                    })
-                    .map((p) => ({
-                        id: p.id,
-                        title: p.title,
-                        slug: p.slug,
-                        content: p.content,
-                        summary: p.excerpt || (p.content ? p.content.slice(0, 120) : ""),
-                        cover: "",
-                        status: (p.status || "published") as any,
-                        visibility: "public",
-                        pinned: !!p.pinned,
-                        allowComment: true,
-                        categories: p.categories || [],
-                        tags: p.tags || [],
-                        authorId: p.authorId || "admin",
-                        authorName: p.author || "Halo 管理员",
-                        views: p.views || 0,
-                        wordCount: p.wordCount || 0,
-                        readingTime: Math.ceil((p.wordCount || 0) / 300),
-                        createdAt: p.createdAt,
-                        updatedAt: p.updatedAt,
-                        folderPath: p.folder || "",
-                        contentFormat: (p.format === "html" || p.format === "mdx" ? p.format : "markdown"),
-                        contentId: p.slug,
-                    }));
+        this.categories = categories ?? [];
+        this.tags = tags ?? [];
+        this.attachments = (attachments ?? []).map((item) => ({
+            id: item.id,
+            name: item.name,
+            url: item.url,
+            size: item.size,
+            type: item.type,
+            uploadTime: item.uploadedAt || new Date().toISOString(),
+            uploaderId: "admin",
+        }));
 
-                this.posts = [...fileBacked, ...sandboxPosts];
-
-                // 索引已就绪时立刻重新对齐, 保证文件型文章始终带有 filePath
-                if (this.siteEntries.length > 0) {
-                    this.reconcilePostsWithSiteIndex(this.siteEntries);
-                }
-                this.recalculateCounts();
-                this.saveToStorage();
+        if (settings) {
+            this.settings = { ...this.settings, ...settings };
+            if (typeof window !== "undefined") {
+                localStorage.setItem("blog_site_settings", JSON.stringify(this.settings));
             }
-
-            if (stats && stats.throughput) {
-                this.throughput = stats.throughput;
-            }
-
-            if (remoteLogs && Array.isArray(remoteLogs) && remoteLogs.length > 0) {
-                this.logs = remoteLogs as AuditLog[];
-                this.saveLogsToStorage();
-            }
-        } catch {
-            // 离线或后端未启动时维持本地沙箱数据
         }
+        if (stats && stats.throughput) this.throughput = stats.throughput;
+        this.logs = remoteLogs ?? [];
+
+        this.saveToStorage();
     }
 
     private saveToStorage() {
         if (typeof window === "undefined") return;
         try {
-            const payload = {
-                posts: this.posts,
-                categories: this.categories,
-                tags: this.tags,
-                attachments: this.attachments,
-                settings: this.settings,
-                folders: this.folders,
-            };
-            localStorage.setItem(BLOG_STORAGE_KEY, JSON.stringify(payload));
+            // 只持久化站点设置; 文章/分类/标签/媒体均由后端持有, 不做本地缓存。
+            localStorage.setItem(BLOG_STORAGE_KEY, JSON.stringify({ settings: this.settings }));
         } catch {
             // 忽略存储异常
         }
@@ -731,17 +669,6 @@ class BlogStore {
         this.recalculateCounts();
         this.saveToStorage();
         this.recordLog("创建文章", `创建文章《${newPost.title}》(${newPost.status === 'published' ? '公开发布' : '存为草稿'})`, "success", authorName);
-        postsApi.create({
-            title: newPost.title,
-            content: newPost.content,
-            slug: newPost.slug,
-            status: newPost.status as any,
-            categories: newPost.categories,
-            tags: newPost.tags,
-            pinned: newPost.pinned,
-            folder: newPost.folderPath || "",
-            format: newPost.contentFormat || "markdown",
-        }).catch(() => {});
         return newPost;
     }
 
@@ -766,7 +693,6 @@ class BlogStore {
         this.recalculateCounts();
         this.saveToStorage();
         this.recordLog("更新文章", `更新文章《${targetTitle || id}》内容或元数据`, "info");
-        postsApi.update(id, updates as any).catch(() => {});
     }
 
     moveToRecycle(id: string) {
@@ -788,7 +714,6 @@ class BlogStore {
         this.recalculateCounts();
         this.saveToStorage();
         this.recordLog("彻底删除文章", `彻底删除文章《${post?.title || id}》`, "warn");
-        postsApi.delete(id).catch(() => {});
     }
 
     publishPost(id: string) {
@@ -1336,7 +1261,7 @@ class BlogStore {
         payload: { content?: string; data?: Record<string, unknown>; frontmatterKeys?: string[] },
     ): Promise<{ ok: boolean; created?: boolean; error?: string }> {
         if (!this.contentWritable) {
-            return { ok: false, error: "当前环境不支持写回文件, 已降级为浏览与导出" };
+            return { ok: false, error: "后端未连接, 无法写入内容" };
         }
         const result = await putEntry(collection, relPath, payload, true);
         if (!result.ok) return { ok: false, error: result.error };
@@ -1355,7 +1280,7 @@ class BlogStore {
         relPath: string,
     ): Promise<{ ok: boolean; error?: string }> {
         if (!this.contentWritable) {
-            return { ok: false, error: "当前环境不支持写回文件, 已降级为浏览与导出" };
+            return { ok: false, error: "后端未连接, 无法删除内容" };
         }
         const result = await deleteEntryApi(collection, relPath);
         if (!result.ok) return { ok: false, error: result.error };
@@ -1375,7 +1300,7 @@ class BlogStore {
         const to = target ? `${target}/${filename}` : filename;
         if (to === relPath) return { ok: true, path: to };
         if (!this.contentWritable) {
-            return { ok: false, error: "当前环境不支持写回文件, 已降级为浏览与导出" };
+            return { ok: false, error: "后端未连接, 无法移动内容" };
         }
         const result = await moveEntryApi(collection, relPath, to);
         if (!result.ok) return { ok: false, error: result.error };
@@ -1520,7 +1445,7 @@ class BlogStore {
             this.contentWriteReason = capabilities.data.reason;
         } else {
             this.contentWritable = false;
-            this.contentWriteReason = "内容服务不可达, 已降级为浏览与导出";
+            this.contentWriteReason = "后端未连接, 内容服务不可达";
         }
 
         const before = this.folders.length;
@@ -1624,21 +1549,19 @@ class BlogStore {
         }
     }
 
-    // 重置恢复默认数据
+    // 重置恢复默认数据 (仅重置本地偏好; 后端内容不受影响)
     resetAllData() {
-        this.posts = [...DEFAULT_POSTS];
-        this.categories = [...DEFAULT_CATEGORIES];
-        this.tags = [...DEFAULT_TAGS];
-        this.attachments = [...DEFAULT_ATTACHMENTS];
+        this.posts = [];
+        this.categories = [];
+        this.tags = [];
+        this.attachments = [];
         this.settings = { ...DEFAULT_SETTINGS };
-        this.logs = [...INITIAL_LOGS];
+        this.logs = [];
         this.folders = [];
         this.selectedFolderPath = null;
         this.composerFolderPath = "";
-        this.recalculateCounts();
         this.saveToStorage();
-        this.saveLogsToStorage();
-        this.recordLog("重置系统数据", "已重置并恢复初始示例数据", "warn");
+        this.recordLog("重置系统数据", "已重置本地控制台偏好 (后端内容不受影响)", "warn");
     }
 }
 

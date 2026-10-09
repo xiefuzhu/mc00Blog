@@ -1,6 +1,7 @@
 <script lang="ts">
 import { blogStore, RECYCLE_PATH } from "../store.svelte";
 import { authStore } from "../auth.svelte";
+import { backendStatusStore } from "../backendStatus.svelte";
 import {
     exportPostFile,
     downloadTextFile,
@@ -641,8 +642,13 @@ const entrySchema = $derived(entryEditor ? getCollectionSchema(entryEditor.colle
                 {#if blogStore.filteredPosts.length === 0}
                     <div class="card-base liquid-glass rounded-3xl p-16 text-center text-neutral-400 text-xs border border-black/5 dark:border-white/8 shadow-xl">
                         <Icon icon="material-symbols:inbox-outline" class="text-4xl mx-auto mb-3 opacity-40 text-(--primary)" />
-                        <p class="font-medium text-sm text-neutral-700 dark:text-neutral-300">暂无符合筛选条件的文章</p>
-                        <p class="text-neutral-400 text-[11px] mt-1">尝试切换状态过滤条件、切换文件夹或搜索其他关键词</p>
+                        {#if backendStatusStore.checked && !backendStatusStore.online}
+                            <p class="font-medium text-sm text-rose-600 dark:text-rose-400">后端未连接，无法获取文章</p>
+                            <p class="text-neutral-400 text-[11px] mt-1">请先启动 PHP 后端（php/start.bat）后刷新页面</p>
+                        {:else}
+                            <p class="font-medium text-sm text-neutral-700 dark:text-neutral-300">暂无符合筛选条件的文章</p>
+                            <p class="text-neutral-400 text-[11px] mt-1">尝试切换状态过滤条件、切换文件夹或搜索其他关键词</p>
+                        {/if}
                         {#if authStore.can("posts:create")}
                             <div class="mt-4 flex justify-center">
                                 <Button

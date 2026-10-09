@@ -2,7 +2,7 @@
 import { onMount } from "svelte";
 import { authStore } from "../auth.svelte";
 import { blogStore } from "../store.svelte";
-import { pingBackend } from "../api/client";
+import { backendStatusStore } from "../backendStatus.svelte";
 import { setTheme } from "@utils/theme";
 import Icon from "@components/common/icon.svelte";
 import type { ConsoleTab } from "../types";
@@ -18,12 +18,6 @@ let isRefreshing = $state(false);
 let glassMode = $state<"liquid" | "frosted">("frosted");
 let showUserMenu = $state(false);
 let toastMessage = $state<string | null>(null);
-
-let backendStatus = $state<{ online: boolean; latency: number; message: string }>({
-    online: false,
-    latency: 0,
-    message: "检测中...",
-});
 
 const tabTitleMap: Record<ConsoleTab, { group: string; title: string }> = {
     dashboard: { group: "运行", title: "仪表盘大盘" },
@@ -59,9 +53,7 @@ onMount(() => {
         glassMode = currentMode;
     }
 
-    pingBackend().then(res => {
-        backendStatus = res;
-    });
+    void backendStatusStore.refresh();
 
     const handleGlassChanged = (e: CustomEvent<{ mode: "liquid" | "frosted" }>) => {
         if (e.detail?.mode) {
@@ -110,7 +102,7 @@ function toggleGlassMode() {
 function handleRefresh() {
     isRefreshing = true;
     blogStore.syncFromBackendApi().finally(() => {
-        pingBackend().then(res => { backendStatus = res; });
+        void backendStatusStore.refresh();
         setTimeout(() => {
             isRefreshing = false;
             showToast("数据与指标同步完毕");
@@ -161,9 +153,9 @@ async function handleLogout() {
         </div>
 
         <!-- 后端连通性徽章 -->
-        <div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono border {backendStatus.online ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25'}">
-            <span class="w-1.5 h-1.5 rounded-full {backendStatus.online ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}"></span>
-            <span>{backendStatus.online ? `在线 (${backendStatus.latency}ms)` : '本地沙箱'}</span>
+        <div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono border {backendStatusStore.online ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25'}">
+            <span class="w-1.5 h-1.5 rounded-full {backendStatusStore.online ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}"></span>
+            <span>{backendStatusStore.online ? `在线 (${backendStatusStore.latency}ms)` : '后端未连接'}</span>
         </div>
     </div>
 
@@ -245,7 +237,8 @@ async function handleLogout() {
     </div>
 </header>
 
-<!-- 右下角常驻悬浮头像胶囊 -->
+<!-- 右下角常驻悬浮头像胶囊 (后端未连接时不显示账号信息) -->
+{#if backendStatusStore.online && authStore.currentUser}
 <div class="fixed bottom-5 right-5 sm:right-7 z-40 select-none">
     <div class="relative">
         <button
@@ -342,3 +335,11 @@ async function handleLogout() {
         {/if}
     </div>
 </div>
+{/if}
+
+<!-- 后端未连接提示条 -->
+{#if backendStatusStore.checked && !backendStatusStore.online}
+    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 px-4 py-2 rounded-full text-[11px] font-semibold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 shadow-lg backdrop-blur">
+        后端未连接 (php/start.bat)，文章与账号信息暂不可用
+    </div>
+{/if}

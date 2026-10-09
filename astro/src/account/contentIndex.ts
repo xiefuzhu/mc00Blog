@@ -1,11 +1,14 @@
 /**
  * 站点真实内容索引客户端
- * 拉取构建时生成的 /console/content-index.json, 并提供:
- *  - 6 个内容集合的完整目录树 (与首页「目录」面板同源)
- *  - 各集合的真实条目列表 (含原始 JSON 数据, 供只读环境下的查看与导出)
- *  - 控制台文章 -> 前台真实路由 的解析
+ *
+ * 运行时从 PHP 后端拉取:
+ *  - GET /api/content/capabilities  6 个集合元信息
+ *  - GET /api/content/tree          6 个集合的完整目录树 (与首页「目录」面板同源)
+ *
+ * 不再缓存到 localStorage: 后端不可达时返回 null, 由上层显示空内容。
  */
 
+import { fetchCapabilities, fetchContentTree } from "./contentApi";
 import type { ContentFormat, Post } from "./types";
 import type {
     SiteCollectionKey,
@@ -65,62 +68,127 @@ export interface ContentIndex {
     siteEntryCount?: number;
 }
 
-const INDEX_URL = "/console/content-index.json";
-const CACHE_KEY = "mc00_content_index_v2";
-const SYNCED_FLAG = "mc00_content_index_synced_v2";
-
 let cached: ContentIndex | null = null;
 
 function normalize(value: string): string {
     return (value || "").trim().toLowerCase().replace(/[\s/]+/g, "");
 }
 
-/** 读取内容索引 (优先实时拉取, 失败时退回本地缓存) */
-export async function loadContentIndex(force = false): Promise<ContentIndex | null> {
-    if (cached && !force) return cached;
-    if (typeof window === "undefined") return null;
-
-    try {
-        const response = await fetch(INDEX_URL, { headers: { accept: "application/json" } });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = (await response.json()) as ContentIndex;
-        if (!data || !Array.isArray(data.posts) || !Array.isArray(data.entries)) {
-            throw new Error("索引结构异常");
+function walkEntries(nodes: SiteDirectoryNode[]): SiteDirectoryNode[] {
+    const result: SiteDirectoryNode[] = [];
+    const walk = (list: SiteDirectoryNode[]) => {
+        for (const node of list) {
+            if (node.type === "entry") result.push(node);
+            if (node.children?.length) walk(node.children);
         }
-        cached = data;
-        try {
-            localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-        } catch {
-            // 忽略存储异常
-        }
-        return cached;
-    } catch {
-        try {
-            const raw = localStorage.getItem(CACHE_KEY);
-            if (raw) {
-                cached = JSON.parse(raw) as ContentIndex;
-                return cached;
-            }
-        } catch {
-            // 忽略解析异常
-        }
-        return null;
-    }
+    };
+    walk(nodes);
+    return result;
 }
 
-/** 是否已经自动同步过一次站点目录 */
+function walkFolders(nodes: SiteDirectoryNode[]): string[] {
+    const result: string[] = [];
+    const walk = (list: SiteDirectoryNode[]) => {
+        for (const node of list) {
+            if (node.type === "folder") result.push(node.folderPath);
+            if (node.children?.length) walk(node.children);
+        }
+    };
+    walk(nodes);
+    return result;
+}
+
+function toIndexEntry(node: SiteDirectoryNode): SiteIndexEntry {
+    const meta = (node.meta || {}) as Record<string, unknown>;
+    return {
+        collection: node.collection,
+        id: node.entryId || node.name,
+        name: node.name,
+        folderPath: node.folderPath,
+        relPath: node.path.slice(node.collection.length + 1),
+        filePath: node.file || "",
+        url: node.url || "",
+        format: (node.format as SiteEntryFormat) || "json",
+        meta,
+    };
+}
+
+function toPostEntry(entry: SiteIndexEntry): ContentIndexEntry {
+    const meta = entry.meta || {};
+    return {
+        id: entry.id,
+        slug: entry.id,
+        url: entry.url,
+        title: typeof meta.title === "string" ? meta.title : entry.name,
+        directoryTitle: typeof meta.directoryTitle === "string" ? meta.directoryTitle : "",
+        folderPath: entry.folderPath,
+        category: (meta.category as string | string[] | null) ?? null,
+        tags: Array.isArray(meta.tags) ? (meta.tags as string[]) : [],
+        format: (entry.format === "html" || entry.format === "mdx" ? entry.format : "markdown") as ContentFormat,
+        draft: meta.draft === true,
+        pinned: meta.pinned === true,
+        published: typeof meta.published === "string" ? meta.published : null,
+        description: typeof meta.description === "string" ? meta.description : "",
+        cover: typeof meta.cover === "string" ? meta.cover : "",
+    };
+}
+
+/**
+ * 拉取站点内容索引。
+ * 后端不可达时返回 null (不退回缓存), 调用方据此显示空内容。
+ */
+export async function loadContentIndex(force = false): Promise<ContentIndex | null> {
+    if (cached && !force) return cached;
+
+    const [treeResult, capabilities] = await Promise.all([fetchContentTree(), fetchCapabilities()]);
+    if (!treeResult.ok) return null;
+
+    const tree = treeResult.data.tree || [];
+    const entries = walkEntries(tree).map(toIndexEntry);
+    const folderPaths = walkFolders(tree);
+
+    const collections: SiteCollectionInfo[] = (capabilities.ok ? capabilities.data.collections : []).map((def) => {
+        const collectionEntries = entries.filter((entry) => entry.collection === def.key);
+        return {
+            key: def.key,
+            label: def.label,
+            root: def.root,
+            relRoot: def.relRoot,
+            listUrl: def.listUrl,
+            entryKind: def.entryKind,
+            extensions: def.extensions,
+            entryCount: collectionEntries.length,
+            folderPaths: folderPaths.filter((path) => path.startsWith(def.relRoot + "/")),
+        };
+    });
+
+    const posts = entries.filter((entry) => entry.collection === "posts").map(toPostEntry);
+
+    cached = {
+        generatedAt: new Date().toISOString(),
+        collections,
+        tree,
+        entries,
+        posts,
+        folderPaths,
+        postEntryCount: posts.length,
+        siteEntryCount: entries.length,
+    };
+    return cached;
+}
+
+/** 清空内存缓存 (手动刷新时使用) */
+export function clearContentIndexCache(): void {
+    cached = null;
+}
+
+/** 兼容旧接口: 索引不再持久化, 恒为未同步 */
 export function hasSyncedSiteIndex(): boolean {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem(SYNCED_FLAG) === "1";
+    return false;
 }
 
 export function markSiteIndexSynced(): void {
-    if (typeof window === "undefined") return;
-    try {
-        localStorage.setItem(SYNCED_FLAG, "1");
-    } catch {
-        // 忽略
-    }
+    // 索引不再缓存, 无需标记
 }
 
 /** 在索引中定位某篇文章 (依次用 contentId / slug / 标题匹配) */

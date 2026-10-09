@@ -3,8 +3,10 @@
  * 规范：绝对禁止输出任何 Emoji 表情符号
  */
 
-import type { User, Role, Permission } from "./types";
+import type { User, Role, Permission, UserRole } from "./types";
 import { DEFAULT_USERS, DEFAULT_ROLES } from "./mockData";
+import { authApi } from "./api/client";
+import { getAuthToken, setAuthToken } from "@/lib/backend";
 
 const AUTH_STORAGE_KEY = "twilight_halo_auth_v2";
 const AUTH_TOKEN_KEY = "twilight_halo_auth_token";
@@ -129,174 +131,123 @@ class AuthStore {
         }
     }
 
-    // 正规登录逻辑（优先 API 验证，本地兜底）
+    /** 把后端返回的用户写入本地用户表并建立会话 */
+    private applySession(
+        profile: { id?: string; username: string; name?: string; email?: string; role?: string; avatar?: string; bio?: string },
+        token: string,
+    ): void {
+        const existing = this.users.find((u) => u.username === profile.username);
+        let user: User;
+        if (existing) {
+            user = {
+                ...existing,
+                name: profile.name || existing.name,
+                displayName: profile.name || existing.displayName,
+                email: profile.email || existing.email,
+                role: (profile.role as UserRole) || existing.role,
+                avatar: profile.avatar || existing.avatar,
+                bio: profile.bio || existing.bio,
+            };
+            this.users = this.users.map((u) => (u.id === user.id ? user : u));
+        } else {
+            user = {
+                id: profile.id || `u-${Date.now()}`,
+                username: profile.username,
+                name: profile.name || profile.username,
+                displayName: profile.name || profile.username,
+                email: profile.email || `${profile.username}@example.com`,
+                role: (profile.role as UserRole) || "admin",
+                avatar: profile.avatar || "",
+                bio: profile.bio || "",
+                status: "active",
+                createdAt: new Date().toISOString(),
+            };
+            this.users = [...this.users, user];
+        }
+        this.currentUser = user;
+        this.authToken = token;
+        setAuthToken(token);
+        this.saveToStorage();
+    }
+
+    // 正规登录逻辑 (只走后端; 后端不可达时明确报错)
     async login(username: string, password: string): Promise<{ success: boolean; message?: string }> {
-        const uname = username.trim().toLowerCase();
+        const uname = username.trim();
         const pwd = password.trim();
 
         if (!uname || !pwd) {
             return { success: false, message: "请输入用户名与密码" };
         }
 
-        // 尝试调用服务端 API
         try {
-            const res = await fetch("/api/auth/login/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username: uname, password: pwd }),
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                if (data.success && data.user) {
-                    const localUser = this.users.find((u) => u.username === data.user.username);
-                    if (localUser) {
-                        this.currentUser = localUser;
-                    } else {
-                        const fallbackUser: User = {
-                            id: data.user.id || `u-${Date.now()}`,
-                            username: data.user.username,
-                            name: data.user.name || data.user.username,
-                            email: data.user.email || `${data.user.username}@example.com`,
-                            role: data.user.role || "admin",
-                            avatar: data.user.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-                            createdAt: new Date().toISOString(),
-                        };
-                        this.users.push(fallbackUser);
-                        this.currentUser = fallbackUser;
-                    }
-                    this.authToken = data.token || `token_${Date.now()}`;
-                    this.saveToStorage();
-                    return { success: true };
-                }
-            }
-        } catch {
-            // 网络异常或静态无服务端环境，执行本地安全沙箱比对
+            const res = await authApi.login(uname, pwd);
+            this.applySession(res.user, res.token);
+            return { success: true };
+        } catch (error) {
+            return { success: false, message: error instanceof Error ? error.message : "登录失败" };
         }
-
-        // 本地环境核实
-        this.ensureDefaultAdmin();
-        const matched = this.users.find(
-            (u) => (u.username.toLowerCase() === uname || u.email.toLowerCase() === uname)
-        );
-
-        if (matched) {
-            // 特殊判断管理员默认密码 admin，或其他用户的密码
-            const expectedPassword = matched.password || (matched.username === "admin" ? "admin" : "123456");
-            if (pwd === expectedPassword) {
-                this.currentUser = matched;
-                this.authToken = `local_token_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-                this.saveToStorage();
-                return { success: true };
-            }
-        }
-
-        return { success: false, message: "用户名或密码错误，请核对后重试" };
     }
 
-    // 一键免密登入超级管理员 (零阻碍进入控制台工作台)
+    // 一键免密登入超级管理员 (由后端签发令牌)
     async quickLogin(): Promise<{ success: boolean; message?: string }> {
-        this.ensureDefaultAdmin();
-        const adminUser = this.users.find((u) => u.username === "admin");
-        if (adminUser) {
-            this.currentUser = adminUser;
-            this.authToken = `token_admin_quick_${Date.now()}`;
-            this.saveToStorage();
+        try {
+            const res = await authApi.quickLogin();
+            this.applySession(res.user, res.token);
             return { success: true, message: "一键免密进入成功" };
+        } catch (error) {
+            return { success: false, message: error instanceof Error ? error.message : "一键免密进入失败" };
         }
-        return { success: false, message: "未找到管理员预设凭证" };
     }
 
-    // 正规注册逻辑
+    // 正规注册逻辑 (只走后端)
     async register(params: {
         username: string;
         name?: string;
         email: string;
         password: string;
     }): Promise<{ success: boolean; message?: string }> {
-        const uname = params.username.trim().toLowerCase();
+        const uname = params.username.trim();
         const pwd = params.password.trim();
         const email = params.email.trim();
 
         if (!uname || !pwd || !email) {
             return { success: false, message: "用户名、邮箱与密码不能为空" };
         }
-
         if (pwd.length < 5) {
             return { success: false, message: "密码长度不得少于 5 位" };
         }
 
-        if (uname === "admin") {
-            return { success: false, message: "用户名 admin 为保留账号，不可注册" };
-        }
-
-        // 检查重名
-        const exists = this.users.some(
-            (u) => u.username.toLowerCase() === uname || u.email.toLowerCase() === email.toLowerCase()
-        );
-        if (exists) {
-            return { success: false, message: "用户名或电子邮箱已存在" };
-        }
-
         try {
-            const res = await fetch("/api/auth/register/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    username: uname,
-                    name: params.name || uname,
-                    email,
-                    password: pwd,
-                }),
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                if (data.success && data.user) {
-                    const newUser: User = {
-                        id: data.user.id || `u-${Date.now()}`,
+            const res = await authApi.register({ username: uname, name: params.name || uname, email, password: pwd });
+            const existing = this.users.find((u) => u.username === uname);
+            if (!existing) {
+                this.users = [
+                    ...this.users,
+                    {
+                        id: res.user.id || `u-${Date.now()}`,
                         username: uname,
                         name: params.name || uname,
+                        displayName: params.name || uname,
                         email,
-                        password: pwd,
-                        role: "reader",
-                        avatar: data.user.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${uname}`,
+                        role: (res.user.role as UserRole) || "reader",
+                        avatar: res.user.avatar || "",
+                        status: "active",
                         createdAt: new Date().toISOString(),
-                    };
-                    this.users.push(newUser);
-                    this.saveToStorage();
-                    return { success: true, message: "注册成功，请使用新账号登录" };
-                }
+                    },
+                ];
+                this.saveToStorage();
             }
-        } catch {
-            // 本地 fallback
+            return { success: true, message: "注册成功，请使用新账号登录" };
+        } catch (error) {
+            return { success: false, message: error instanceof Error ? error.message : "注册失败" };
         }
-
-        // 本地写入
-        const newUser: User = {
-            id: `u-${Date.now()}`,
-            username: uname,
-            name: params.name || uname,
-            email,
-            password: pwd,
-            role: "reader",
-            avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${uname}`,
-            createdAt: new Date().toISOString(),
-        };
-        this.users.push(newUser);
-        this.saveToStorage();
-        return { success: true, message: "注册成功，请使用新账号登录" };
     }
 
     // 真正退出登录
     async logout(): Promise<void> {
-        try {
-            await fetch("/api/auth/logout/", { method: "POST" });
-        } catch {
-            // ignore
-        }
         this.currentUser = null;
         this.authToken = null;
+        setAuthToken(null);
         this.saveToStorage();
     }
 
