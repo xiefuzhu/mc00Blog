@@ -1,7 +1,7 @@
 services:
   twilight-blog:
     build:
-      context: .
+      context: ./astro
       dockerfile: Dockerfile
     container_name: twilight-blog
     ports:
