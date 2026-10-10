@@ -538,7 +538,49 @@
     return document.documentElement.getAttribute('data-glass-mode') === 'frosted';
   }
 
+  // ---- debug overlay (?lgdebug=1) -----------------------------------------
+  // Renders only when the query parameter is present, so it cannot affect the
+  // normal appearance. The counters are collected inside applyLenses(), but the
+  // DOM is only written from a throttled timer: a per-frame write here would
+  // feed the page's mutation-driven visibility observers (e.g. the floating TOC
+  // watches class changes) and spin applyLenses every frame.
+  const lgDebug = new URLSearchParams(location.search).get('lgdebug') === '1';
+  let lgDebugEl: HTMLDivElement | null = null;
+  let lgDebugCost = 0;
+
+  function renderLgDebug() {
+    if (!lgDebug) return;
+    if (!lgDebugEl) {
+      lgDebugEl = document.createElement('div');
+      lgDebugEl.id = 'lg-debug';
+      lgDebugEl.style.cssText =
+        'position:fixed;left:8px;bottom:8px;z-index:2147483647;padding:6px 10px;border-radius:8px;' +
+        'background:rgba(0,0,0,0.72);color:#e2e8f0;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;' +
+        'pointer-events:none;white-space:pre';
+      document.body.appendChild(lgDebugEl);
+    }
+    const lenses = document.querySelectorAll('.liquid-glass').length;
+    const filters = document.querySelectorAll('#liquid-glass-filters filter').length;
+    lgDebugEl.textContent =
+      `lenses   ${lenses}\n` +
+      `maps     ${maps.size}\n` +
+      `filters  ${filters}\n` +
+      `apply    ${lgDebugCost.toFixed(1)}ms`;
+  }
+
+  if (lgDebug) window.setInterval(renderLgDebug, 500);
+
   function applyLenses() {
+    if (!lgDebug) {
+      applyLensesCore();
+      return;
+    }
+    const t0 = performance.now();
+    applyLensesCore();
+    lgDebugCost = performance.now() - t0;
+  }
+
+  function applyLensesCore() {
     if (moving || isScrolling) return;
     lensObserver?.disconnect();
     tagPanels();
@@ -780,7 +822,10 @@
     for (const record of records) {
       const target = record.target;
       if (!(target instanceof Node)) continue;
-      if (target instanceof Element && target.closest('#liquid-glass-defs')) continue;
+      // A textContent write on a single-text-node element mutates the Text node
+      // itself (characterData), so resolve through parentElement before matching.
+      const el = target instanceof Element ? target : target.parentElement;
+      if (el && (el.closest('#liquid-glass-defs') || el.closest('#lg-debug'))) continue;
       schedule();
       return;
     }
