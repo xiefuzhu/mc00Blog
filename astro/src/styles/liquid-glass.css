@@ -4,6 +4,19 @@
   --frosted-blur: 5px; /* 25% blur based on 20px baseline standard */
 }
 
+/* GPU refraction ring injected by LiquidGlass.astro into every glass surface.
+   z-index:-1 keeps it above the element's own background/border and below its
+   content, which is exactly where the backdrop-filter result used to sit. */
+canvas.lg-ring {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+}
+
 :is(.card-base, .btn-card, .album-card, .menu-card, .moment-item, .password-container, .project-card, .skill-card, .timeline-card, .site-footer, .pagination-bar):not([class*="fixed"]):not([class*="absolute"]):not(.float-panel) {
   position: relative;
 }

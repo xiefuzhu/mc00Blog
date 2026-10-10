@@ -43,9 +43,9 @@ let links: NavbarLink[] = navbarConfig.links.map(
             })}
         </div>
         <div class="flex items-center h-full navbar-buttons gap-1" id="navbar-buttons">
-            <NavMenu client:idle links={links}></NavMenu>
-            <SettingsMenu client:idle></SettingsMenu>
-            <Search client:idle></Search>
+            <NavMenu client:load links={links}></NavMenu>
+            <SettingsMenu client:load></SettingsMenu>
+            <Search client:load></Search>
         </div>
     </div>
 </div>

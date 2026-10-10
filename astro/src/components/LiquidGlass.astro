@@ -1,12 +1,13 @@
 ---
 // Runtime liquid-glass lenses.
-// Accelerated by WebGL shader pipeline with CPU fallback,
-// grid-quantized map caching, and 120fps scroll/touch compositor decoupling.
+//
+// The refraction itself is rendered on the GPU. Every glass element gets an
+// `lg-ring` canvas painted behind its content (z-index:-1) which a shared WebGL
+// context fills by sampling the page wallpaper through the same squircle-bezel
+// refraction profile the old SVG `feDisplacementMap` chain used. The element
+// itself only keeps a cheap `backdrop-filter: blur()` so whatever sits behind
+// the glass is still frosted. Nothing is re-rasterised on the CPU per frame.
 ---
-
-<svg id="liquid-glass-defs" width="0" height="0" aria-hidden="true" color-interpolation-filters="sRGB">
-  <defs id="liquid-glass-filters"></defs>
-</svg>
 
 <div class="glass-bg-dock">
   <label class="glass-bg-upload liquid-glass">
@@ -60,17 +61,32 @@
   const GLASS_MODE_KEY = 'glass-mode';
   const FROST = 4;
   const FROSTED_BLUR = 5; // 25% blur standard calibration (5px based on 20px Gaussian standard)
-  const MIX_MS = 200;
 
   // 色散（chromatic dispersion）：R/G/B 三通道使用不同的位移比例，
   // 在折射边缘产生真实的彩色分离（红蓝错位）而非单纯提高饱和度。
   const DISPERSION_R = 0.92;
   const DISPERSION_G = 1;
   const DISPERSION_B = 1.09;
-  const DISPERSION_SATURATE = 6;
+  const DISPERSION_SATURATE = 3;
   const SPECULAR_SLOPE = 0.5;
+  // 环内容在屏幕空间的模糊半径，用来还原旧管线里"先高斯模糊再位移"的柔边。
+  const RING_BLUR = 2.5;
 
-  // 几何计算辅助函数
+  // feDisplacementMap 把贴图的 [0,255] 解码成 [-0.5,0.5] 倍 scale，
+  // 所以实际位移是 profile 值的 127/255 倍（与旧管线保持同一强度）。
+  const MAP_DECODE = 127 / 255;
+  const GLASS_THICKNESS = 96;
+  const PROFILE_SAMPLES = 128;
+  const MIN_BEZEL = 11;
+  const MAX_BEZEL = 34;
+  // 折射环只在 profile 位移足够大的地方可见（位移为 0 的地方与玻璃底座完全一致，
+  // 旧管线里那块区域本来也是“看不见”的）。
+  const RING_FALLOFF_LO = 0.04;
+  const RING_FALLOFF_HI = 0.42;
+  const MAX_TEXTURE_EDGE = 1024;
+  const MAX_RENDER_EDGE = 2048;
+
+  // 几何计算辅助函数（着色器里有等价实现，两边必须保持一致）
   const convexSquircle = (x: number) =>
     Math.pow(1 - Math.pow(Math.min(1, Math.max(0, 1 - x)), 4), 0.25);
 
@@ -83,10 +99,9 @@
 
   function bezelProfile(glassThickness: number, bezelWidth: number) {
     const eta = 1 / 1.5;
-    const samples = 128;
     const out: number[] = [];
-    for (let i = 0; i < samples; i++) {
-      const x = i / samples;
+    for (let i = 0; i < PROFILE_SAMPLES; i++) {
+      const x = i / PROFILE_SAMPLES;
       const y = convexSquircle(x);
       const dx = x < 1 ? 0.0001 : -0.0001;
       const derivative = (convexSquircle(x + dx) - y) / dx;
@@ -101,347 +116,777 @@
     return out;
   }
 
-  // CPU 渲染备选回退实现
-  function paintMapCPU(
-    width: number,
-    height: number,
-    radius: number,
-    bezelWidth: number,
-    profile: number[],
-    maxShift: number,
-    specular: boolean,
-  ): string {
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return '';
-    const image = ctx.createImageData(width, height);
-    const data = image.data;
-    if (!specular) {
-      new Uint32Array(image.data.buffer).fill(0xFF008080);
+  // ---- GPU 玻璃环渲染器 ------------------------------------------------------
+  const VERT_SRC = `
+    attribute vec2 a_position;
+    void main() {
+      gl_Position = vec4(a_position, 0.0, 1.0);
     }
-    const light = [Math.cos(Math.PI / 3), Math.sin(Math.PI / 3)];
-    const rOut2 = (radius + 1) ** 2;
-    const rIn2 = (radius - bezelWidth) ** 2;
-    const midW = width - radius * 2;
-    const midH = height - radius * 2;
-    for (let y1 = 0; y1 < height; y1++) {
-      const inBezelY = y1 < bezelWidth || y1 >= height - bezelWidth;
-      const inCornerY = y1 < radius || y1 >= height - radius;
-      for (let x1 = 0; x1 < width; x1++) {
-        if (!inBezelY) {
-          if (!inCornerY && x1 >= bezelWidth && x1 < width - bezelWidth) {
-            x1 = width - bezelWidth - 1;
-            continue;
-          }
-          if (inCornerY && midW > 0 && x1 >= radius && x1 < width - radius) {
-            x1 = width - radius - 1;
-            continue;
-          }
-        }
-        const x = x1 < radius ? x1 - radius : x1 >= width - radius ? x1 - radius - midW : 0;
-        const y = y1 < radius ? y1 - radius : y1 >= height - radius ? y1 - radius - midH : 0;
-        const dist2 = x * x + y * y;
-        if (dist2 > rOut2 || dist2 < rIn2 || dist2 === 0) continue;
-        const dist = Math.sqrt(dist2);
-        const fromSide = radius - dist;
-        const opacity = dist2 < radius * radius ? 1 : Math.max(0, 1 - (dist - radius));
-        const cos = x / dist;
-        const sin = y / dist;
-        const idx = (y1 * width + x1) * 4;
-        if (specular) {
-          const dot = Math.abs(cos * light[0] + -sin * light[1]);
-          const coefficient = dot * Math.sqrt(Math.max(0, 1 - (1 - fromSide) ** 2));
-          const color = 255 * coefficient;
-          data[idx] = data[idx + 1] = data[idx + 2] = color;
-          data[idx + 3] = color * coefficient * opacity;
-        } else {
-          const index = Math.min(profile.length - 1, Math.max(0, (fromSide / bezelWidth) * profile.length | 0));
-          const shift = profile[index] || 0;
-          data[idx] = 128 + ((-cos * shift) / maxShift) * 127 * opacity;
-          data[idx + 1] = 128 + ((-sin * shift) / maxShift) * 127 * opacity;
-        }
+  `;
+
+  const FRAG_SRC = `
+    #ifdef GL_FRAGMENT_PRECISION_HIGH
+    precision highp float;
+    #else
+    precision mediump float;
+    #endif
+
+    uniform vec2  u_res;        // 画布尺寸（设备像素）
+    uniform float u_dpr;        // 设备像素 / CSS 像素
+    uniform vec2  u_size;       // 元素内框尺寸（CSS 像素）
+    uniform float u_radius;     // 圆角半径（CSS 像素）
+    uniform float u_bezel;      // 折射边带宽度（CSS 像素）
+    uniform float u_shiftRef;   // profile 位移峰值，用于归一化环的可见度
+    uniform float u_lo;
+    uniform float u_hi;
+    uniform sampler2D u_wall;
+    uniform vec2  u_wpInv;      // 1 / 壁纸显示尺寸（CSS 像素）
+    uniform vec2  u_wpOrigin;   // 壁纸显示区域左上角（viewport CSS 像素）
+    uniform vec2  u_origin;     // 当前元素左上角（viewport CSS 像素）
+    uniform vec3  u_tint;
+    uniform float u_tintA;
+    uniform float u_alpha;
+    uniform float u_hasWall;
+    uniform vec3  u_fallback;
+    uniform float u_sat;
+    uniform float u_specSlope;
+    uniform float u_blur;
+    uniform float u_dR;
+    uniform float u_dG;
+    uniform float u_dB;
+
+    float squircle(float x) {
+      float u = clamp(1.0 - x, 0.0, 1.0);
+      float q = u * u;
+      q = q * q;
+      return pow(max(0.0, 1.0 - q), 0.25);
+    }
+
+    // 与 JS 里的 bezelProfile 等价：返回该处沿法线的位移量（像素）
+    float profileShift(float t, float bw) {
+      float dx = 0.0008;
+      float x2 = min(1.0, t + dx);
+      float y1 = squircle(t);
+      float y2 = squircle(x2);
+      float deriv = (y2 - y1) / max(x2 - t, 0.00001);
+      float mag = sqrt(deriv * deriv + 1.0);
+      vec2 n = vec2(-deriv / mag, -1.0 / mag);
+      float eta = 0.6666667;
+      float k = 1.0 - eta * eta * (1.0 - n.y * n.y);
+      float sc = eta * n.y + sqrt(max(k, 0.0));
+      float bx = -sc * n.x;
+      float by = eta - sc * n.y;
+      return (bx * (y1 * bw + 96.0)) / max(by, 0.0001);
+    }
+
+    // 5 抽样十字模糊：半径按屏幕像素给，换算到 UV 时按壁纸显示尺寸缩放，
+    // 这样无论壁纸纹理分辨率如何，环看起来都和被玻璃模糊过的背景一样柔。
+    // vp 是 viewport 坐标（CSS 像素），必须由调用方加上元素自身的屏幕位置，
+    // 否则环会永远采样视口左上角那块壁纸，滚动时也不会跟着动。
+    vec3 wallAt(vec2 vp, vec2 disp) {
+      vec2 uv = (vp + disp - u_wpOrigin) * u_wpInv;
+      vec2 r = u_blur * u_wpInv;
+      vec3 acc = texture2D(u_wall, clamp(uv, 0.0, 1.0)).rgb * 4.0;
+      acc += texture2D(u_wall, clamp(uv + vec2(r.x, 0.0), 0.0, 1.0)).rgb * 3.0;
+      acc += texture2D(u_wall, clamp(uv - vec2(r.x, 0.0), 0.0, 1.0)).rgb * 3.0;
+      acc += texture2D(u_wall, clamp(uv + vec2(0.0, r.y), 0.0, 1.0)).rgb * 3.0;
+      acc += texture2D(u_wall, clamp(uv - vec2(0.0, r.y), 0.0, 1.0)).rgb * 3.0;
+      return acc * 0.0625;
+    }
+
+    void main() {
+      vec2 p = vec2(gl_FragCoord.x, u_res.y - gl_FragCoord.y) / u_dpr;
+      float w = u_size.x;
+      float h = u_size.y;
+      float r = u_radius;
+      float bw = max(u_bezel, 0.001);
+
+      float x = 0.0;
+      if (p.x < r) {
+        x = p.x - r;
+      } else if (p.x >= w - r) {
+        x = p.x - (w - r);
       }
+      float y = 0.0;
+      if (p.y < r) {
+        y = p.y - r;
+      } else if (p.y >= h - r) {
+        y = p.y - (h - r);
+      }
+
+      float d2 = x * x + y * y;
+      float rOut = r;
+      float rIn = r - bw;
+      if (d2 > rOut * rOut || d2 < rIn * rIn || d2 < 0.000001) { discard; }
+
+      float dist = sqrt(d2);
+      float fromSide = r - dist;
+      // 外侧不再做 alpha 淡出：画布自身的 border-radius 会做抗锯齿裁剪，
+      // 手动再淡一圈反而会在边框内侧留下一条暗缝。
+      float edgeFade = 1.0;
+      float c = x / dist;
+      float s = y / dist;
+
+      float shift = profileShift(clamp(fromSide / bw, 0.0, 1.0), bw);
+      float sn = clamp(abs(shift) / max(u_shiftRef, 0.001), 0.0, 1.0);
+      float strength = clamp((sn - u_lo) / max(u_hi - u_lo, 0.0001), 0.0, 1.0);
+      float a = strength * edgeFade * u_alpha;
+      if (a < 0.003) { discard; }
+
+      vec2 dir = vec2(-c, -s) * shift * 0.4980392;
+      vec2 vp = u_origin + p;
+      vec3 col;
+      if (u_hasWall > 0.5) {
+        col = vec3(
+          wallAt(vp, dir * u_dR).r,
+          wallAt(vp, dir * u_dG).g,
+          wallAt(vp, dir * u_dB).b
+        );
+      } else {
+        col = u_fallback;
+      }
+
+      float lum = dot(col, vec3(0.213, 0.715, 0.072));
+      col = clamp(mix(vec3(lum), col, u_sat), 0.0, 1.0);
+
+      float dotv = abs(c * 0.5 - s * 0.86602540378);
+      float term = max(0.0, 1.0 - pow(1.0 - fromSide, 2.0));
+      float coeff = dotv * sqrt(term);
+      float specA = clamp(coeff * coeff * edgeFade * u_specSlope, 0.0, 1.0);
+      col = mix(col, vec3(1.0), specA);
+
+      col = mix(col, u_tint, u_tintA);
+      gl_FragColor = vec4(col * a, a);
     }
-    ctx.putImageData(image, 0, 0);
-    return canvas.toDataURL();
+  `;
+
+  const UNIFORM_NAMES = [
+    'u_res', 'u_dpr', 'u_size', 'u_radius', 'u_bezel', 'u_shiftRef', 'u_lo', 'u_hi',
+    'u_wall', 'u_wpInv', 'u_wpOrigin', 'u_origin', 'u_tint', 'u_tintA', 'u_alpha', 'u_hasWall',
+    'u_fallback', 'u_sat', 'u_specSlope', 'u_blur', 'u_dR', 'u_dG', 'u_dB',
+  ];
+
+  interface RingUniforms {
+    dpr: number;
+    innerW: number;
+    innerH: number;
+    radius: number;
+    bezel: number;
+    maxShift: number;
+    originX: number;
+    originY: number;
+    tint: [number, number, number];
+    tintAlpha: number;
   }
 
-  // WebGL 硬件着色器加速渲染器
-  class WebGLMapRenderer {
+  class RingRenderer {
     private gl: WebGLRenderingContext | null = null;
     private program: WebGLProgram | null = null;
     private canvas: HTMLCanvasElement | null = null;
-    private profileTex: WebGLTexture | null = null;
-
-    private uResolutionLoc: WebGLUniformLocation | null = null;
-    private uRadiusLoc: WebGLUniformLocation | null = null;
-    private uBezelWidthLoc: WebGLUniformLocation | null = null;
-    private uMaxShiftLoc: WebGLUniformLocation | null = null;
-    private uIsSpecularLoc: WebGLUniformLocation | null = null;
-    private uProfileTexLoc: WebGLUniformLocation | null = null;
+    private wallTex: WebGLTexture | null = null;
+    private wallKey = '';
+    private loc: Record<string, WebGLUniformLocation | null> = {};
+    private maxW = 0;
+    private maxH = 0;
 
     constructor() {
       this.init();
     }
 
+    get available(): boolean {
+      return !!(this.gl && this.program && this.canvas);
+    }
+
     private init() {
       if (typeof document === 'undefined') return;
       try {
-        this.canvas = document.createElement('canvas');
-        this.gl = (this.canvas.getContext('webgl', { preserveDrawingBuffer: true, antialias: false, depth: false, stencil: false }) ||
-                    this.canvas.getContext('experimental-webgl', { preserveDrawingBuffer: true, antialias: false, depth: false, stencil: false })) as WebGLRenderingContext | null;
-        if (!this.gl) return;
+        const canvas = document.createElement('canvas');
+        const attrs: WebGLContextAttributes = {
+          preserveDrawingBuffer: true,
+          antialias: false,
+          depth: false,
+          stencil: false,
+          alpha: true,
+          premultipliedAlpha: true,
+        };
+        const gl = (canvas.getContext('webgl', attrs) ||
+          canvas.getContext('experimental-webgl', attrs)) as WebGLRenderingContext | null;
+        if (!gl) return;
 
-        const gl = this.gl;
-        const vsSource = `
-          attribute vec2 a_position;
-          void main() {
-            gl_Position = vec4(a_position, 0.0, 1.0);
-          }
-        `;
-        const fsSource = `
-          precision highp float;
-          uniform vec2 u_resolution;
-          uniform float u_radius;
-          uniform float u_bezelWidth;
-          uniform float u_maxShift;
-          uniform int u_isSpecular;
-          uniform sampler2D u_profileTex;
-
-          const vec2 light = vec2(0.5, 0.86602540378);
-
-          void main() {
-            vec2 coord = gl_FragCoord.xy;
-            float x1 = coord.x;
-            float y1 = u_resolution.y - coord.y;
-            
-            float width = u_resolution.x;
-            float height = u_resolution.y;
-            float radius = u_radius;
-            float bezelWidth = u_bezelWidth;
-            
-            float midW = width - radius * 2.0;
-            float midH = height - radius * 2.0;
-            
-            float x = 0.0;
-            if (x1 < radius) {
-              x = x1 - radius;
-            } else if (x1 >= width - radius) {
-              x = x1 - radius - midW;
-            }
-            
-            float y = 0.0;
-            if (y1 < radius) {
-              y = y1 - radius;
-            } else if (y1 >= height - radius) {
-              y = y1 - radius - midH;
-            }
-            
-            float dist2 = x * x + y * y;
-            float rOut = radius + 1.0;
-            float rIn = radius - bezelWidth;
-            
-            if (dist2 > rOut * rOut || dist2 < rIn * rIn || dist2 <= 0.0001) {
-              if (u_isSpecular == 1) {
-                gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-              } else {
-                gl_FragColor = vec4(0.50196, 0.50196, 0.0, 1.0);
-              }
-              return;
-            }
-            
-            float dist = sqrt(dist2);
-            float fromSide = radius - dist;
-            float opacity = dist2 < radius * radius ? 1.0 : clamp(1.0 - (dist - radius), 0.0, 1.0);
-            float cosVal = x / dist;
-            float sinVal = y / dist;
-            
-            if (u_isSpecular == 1) {
-              float dotVal = abs(cosVal * light.x - sinVal * light.y);
-              float term = max(0.0, 1.0 - pow(1.0 - fromSide, 2.0));
-              float coeff = dotVal * sqrt(term);
-              float color = coeff;
-              gl_FragColor = vec4(color, color, color, color * coeff * opacity);
-            } else {
-              float normSide = clamp(fromSide / bezelWidth, 0.0, 1.0);
-              float sampled = texture2D(u_profileTex, vec2(normSide, 0.5)).r;
-              float shift = (sampled * 2.0 - 1.0) * u_maxShift;
-              float rCol = (128.0 + (-cosVal * shift) / u_maxShift * 127.0 * opacity) / 255.0;
-              float gCol = (128.0 + (-sinVal * shift) / u_maxShift * 127.0 * opacity) / 255.0;
-              gl_FragColor = vec4(rCol, gCol, 0.0, 1.0);
-            }
-          }
-        `;
-
-        const vs = gl.createShader(gl.VERTEX_SHADER)!;
-        gl.shaderSource(vs, vsSource);
+        const vs = gl.createShader(gl.VERTEX_SHADER);
+        if (!vs) return;
+        gl.shaderSource(vs, VERT_SRC);
         gl.compileShader(vs);
-
-        const fs = gl.createShader(gl.FRAGMENT_SHADER)!;
-        gl.shaderSource(fs, fsSource);
-        gl.compileShader(fs);
-
-        const prog = gl.createProgram()!;
-        gl.attachShader(prog, vs);
-        gl.attachShader(prog, fs);
-        gl.linkProgram(prog);
-
-        if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-          console.warn('WebGL LiquidGlass shader link failed:', gl.getProgramInfoLog(prog));
-          this.gl = null;
+        if (!gl.getShaderParameter(vs, gl.COMPILE_STATUS)) {
+          console.warn('[liquid-glass] vertex shader:', gl.getShaderInfoLog(vs));
           return;
         }
 
-        this.program = prog;
+        const fs = gl.createShader(gl.FRAGMENT_SHADER);
+        if (!fs) return;
+        gl.shaderSource(fs, FRAG_SRC);
+        gl.compileShader(fs);
+        if (!gl.getShaderParameter(fs, gl.COMPILE_STATUS)) {
+          console.warn('[liquid-glass] fragment shader:', gl.getShaderInfoLog(fs));
+          return;
+        }
+
+        const prog = gl.createProgram();
+        if (!prog) return;
+        gl.attachShader(prog, vs);
+        gl.attachShader(prog, fs);
+        gl.linkProgram(prog);
+        if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+          console.warn('[liquid-glass] program link:', gl.getProgramInfoLog(prog));
+          return;
+        }
         gl.useProgram(prog);
 
-        this.uResolutionLoc = gl.getUniformLocation(prog, 'u_resolution');
-        this.uRadiusLoc = gl.getUniformLocation(prog, 'u_radius');
-        this.uBezelWidthLoc = gl.getUniformLocation(prog, 'u_bezelWidth');
-        this.uMaxShiftLoc = gl.getUniformLocation(prog, 'u_maxShift');
-        this.uIsSpecularLoc = gl.getUniformLocation(prog, 'u_isSpecular');
-        this.uProfileTexLoc = gl.getUniformLocation(prog, 'u_profileTex');
+        const buf = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.bufferData(
+          gl.ARRAY_BUFFER,
+          new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
+          gl.STATIC_DRAW,
+        );
+        const pos = gl.getAttribLocation(prog, 'a_position');
+        gl.enableVertexAttribArray(pos);
+        gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
 
-        // Full-screen Quad buffer
-        const positionBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-          -1, -1,
-           1, -1,
-          -1,  1,
-          -1,  1,
-           1, -1,
-           1,  1,
-        ]), gl.STATIC_DRAW);
+        gl.disable(gl.DEPTH_TEST);
+        gl.disable(gl.BLEND);
+        gl.disable(gl.CULL_FACE);
+        gl.disable(gl.SCISSOR_TEST);
+        gl.clearColor(0, 0, 0, 0);
 
-        const posAttr = gl.getAttribLocation(prog, 'a_position');
-        gl.enableVertexAttribArray(posAttr);
-        gl.vertexAttribPointer(posAttr, 2, gl.FLOAT, false, 0, 0);
+        for (const name of UNIFORM_NAMES) {
+          this.loc[name] = gl.getUniformLocation(prog, name);
+        }
 
-        this.profileTex = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, this.profileTex);
+        this.canvas = canvas;
+        this.gl = gl;
+        this.program = prog;
+
+        this.wallTex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this.wallTex);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-      } catch {
+      } catch (err) {
+        console.warn('[liquid-glass] WebGL unavailable:', err);
         this.gl = null;
       }
     }
 
-    public render(
-      width: number,
-      height: number,
-      radius: number,
-      bezelWidth: number,
-      profile: number[],
-      maxShift: number,
-      specular: boolean
-    ): string {
-      if (!this.gl || !this.program || !this.canvas) {
-        return paintMapCPU(width, height, radius, bezelWidth, profile, maxShift, specular);
-      }
-
+    /** 壁纸换图时才重新上传纹理。 */
+    setWallpaper(img: HTMLImageElement | null, key: string, fallback: [number, number, number]) {
       const gl = this.gl;
-      this.canvas.width = width;
-      this.canvas.height = height;
-      gl.viewport(0, 0, width, height);
-      gl.useProgram(this.program);
-
-      // 上传折射 profile 纹理 (128x1)
-      const profileBytes = new Uint8Array(profile.length);
-      for (let i = 0; i < profile.length; i++) {
-        const norm = (profile[i] / maxShift) * 0.5 + 0.5;
-        profileBytes[i] = Math.round(Math.max(0, Math.min(255, norm * 255)));
+      if (!gl || !this.wallTex) return;
+      if (key === this.wallKey) return;
+      this.wallKey = key;
+      gl.bindTexture(gl.TEXTURE_2D, this.wallTex);
+      if (!img || !img.naturalWidth || !img.naturalHeight) {
+        const px = new Uint8Array([
+          Math.round(fallback[0] * 255),
+          Math.round(fallback[1] * 255),
+          Math.round(fallback[2] * 255),
+          255,
+        ]);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, px);
+        return;
       }
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, this.profileTex);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, profile.length, 1, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, profileBytes);
+      const nw = img.naturalWidth;
+      const nh = img.naturalHeight;
+      const scale = Math.min(1, MAX_TEXTURE_EDGE / Math.max(nw, nh));
+      const tw = Math.max(1, Math.round(nw * scale));
+      const th = Math.max(1, Math.round(nh * scale));
+      const off = document.createElement('canvas');
+      off.width = tw;
+      off.height = th;
+      const ctx = off.getContext('2d');
+      if (!ctx) return;
+      try {
+        ctx.drawImage(img, 0, 0, tw, th);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, off);
+      } catch (err) {
+        console.warn('[liquid-glass] wallpaper upload failed:', err);
+      }
+    }
 
-      gl.uniform2f(this.uResolutionLoc, width, height);
-      gl.uniform1f(this.uRadiusLoc, radius);
-      gl.uniform1f(this.uBezelWidthLoc, bezelWidth);
-      gl.uniform1f(this.uMaxShiftLoc, maxShift);
-      gl.uniform1i(this.uIsSpecularLoc, specular ? 1 : 0);
-      gl.uniform1i(this.uProfileTexLoc, 0);
+    private ensureSize(w: number, h: number) {
+      if (w <= this.maxW && h <= this.maxH) return;
+      this.maxW = Math.max(this.maxW, w);
+      this.maxH = Math.max(this.maxH, h);
+      if (this.canvas) {
+        this.canvas.width = this.maxW;
+        this.canvas.height = this.maxH;
+      }
+    }
+
+    render(target: HTMLCanvasElement, u: RingUniforms, frame: WallpaperFrame): boolean {
+      const gl = this.gl;
+      const prog = this.program;
+      const shared = this.canvas;
+      if (!gl || !prog || !shared) return false;
+
+      const dw = target.width;
+      const dh = target.height;
+      if (dw < 1 || dh < 1) return false;
+
+      this.ensureSize(dw, dh);
+      gl.viewport(0, 0, dw, dh);
+      gl.useProgram(prog);
+
+      gl.uniform2f(this.loc.u_res, dw, dh);
+      gl.uniform1f(this.loc.u_dpr, u.dpr);
+      gl.uniform2f(this.loc.u_size, u.innerW, u.innerH);
+      gl.uniform1f(this.loc.u_radius, u.radius);
+      gl.uniform1f(this.loc.u_bezel, u.bezel);
+      gl.uniform1f(this.loc.u_shiftRef, u.maxShift);
+      gl.uniform1f(this.loc.u_lo, RING_FALLOFF_LO);
+      gl.uniform1f(this.loc.u_hi, RING_FALLOFF_HI);
+      gl.uniform2f(this.loc.u_wpInv, 1 / Math.max(frame.dispW, 1), 1 / Math.max(frame.dispH, 1));
+      gl.uniform2f(this.loc.u_wpOrigin, frame.originX, frame.originY);
+      gl.uniform2f(this.loc.u_origin, u.originX, u.originY);
+      gl.uniform3f(this.loc.u_tint, u.tint[0], u.tint[1], u.tint[2]);
+      gl.uniform1f(this.loc.u_tintA, u.tintAlpha);
+      gl.uniform1f(this.loc.u_alpha, 1);
+      gl.uniform1f(this.loc.u_hasWall, frame.img ? 1 : 0);
+      gl.uniform3f(this.loc.u_fallback, frame.fallback[0], frame.fallback[1], frame.fallback[2]);
+      gl.uniform1f(this.loc.u_sat, DISPERSION_SATURATE);
+      gl.uniform1f(this.loc.u_specSlope, SPECULAR_SLOPE);
+      gl.uniform1f(this.loc.u_blur, RING_BLUR);
+      gl.uniform1f(this.loc.u_dR, DISPERSION_R * MAP_DECODE);
+      gl.uniform1f(this.loc.u_dG, DISPERSION_G * MAP_DECODE);
+      gl.uniform1f(this.loc.u_dB, DISPERSION_B * MAP_DECODE);
+
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, this.wallTex);
+      gl.uniform1i(this.loc.u_wall, 0);
+
+      gl.enable(gl.SCISSOR_TEST);
+      gl.scissor(0, 0, dw, dh);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.disable(gl.SCISSOR_TEST);
 
       gl.drawArrays(gl.TRIANGLES, 0, 6);
 
-      return this.canvas.toDataURL();
+      const ctx = target.getContext('2d');
+      if (!ctx) return false;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.imageSmoothingEnabled = false;
+      ctx.clearRect(0, 0, dw, dh);
+      ctx.drawImage(shared, 0, 0, dw, dh, 0, 0, dw, dh);
+      return true;
     }
   }
 
-  const gpuRenderer = new WebGLMapRenderer();
+  const ringRenderer = new RingRenderer();
 
-  // 尺寸阶梯网格量化（Grid Quantization），提升 95%+ 缓存命中率
-  function quantize(val: number, step: number): number {
-    return Math.max(step, Math.round(val / step) * step);
+  // ---- 壁纸取样源 -----------------------------------------------------------
+  interface WallpaperFrame {
+    img: HTMLImageElement | null;
+    key: string;
+    originX: number;
+    originY: number;
+    dispW: number;
+    dispH: number;
+    fallback: [number, number, number];
   }
 
-  const maps = new Map<string, { disp: string; spec: string; scale: number }>();
-  let filterSerial = 0;
+  let wallpaperFrame: WallpaperFrame = {
+    img: null,
+    key: '',
+    originX: 0,
+    originY: 0,
+    dispW: 1,
+    dispH: 1,
+    fallback: [0.28, 0.35, 0.48],
+  };
 
-  function mapsFor(width: number, height: number, radius: number) {
-    const key = `${width}x${height}x${radius}`;
-    const hit = maps.get(key);
-    if (hit) return hit;
-    // 更宽的折射边缘（bezel）让弯曲带更明显；更厚的玻璃（thickness）提升位移峰值强度。
-    // bezel 始终小于 radius，避免内圈半径变负。
-    const bezel = Math.min(radius - 1, Math.max(11, Math.min(radius * 0.6, 34)));
-    const profile = bezelProfile(96, bezel);
-    const scale = Math.max(...profile.map((v) => Math.abs(v)), 1);
-    const entry = {
-      disp: gpuRenderer.render(width, height, radius, bezel, profile, scale, false),
-      spec: gpuRenderer.render(width, height, radius, bezel, profile, scale, true),
-      scale,
+  let customBgImage: HTMLImageElement | null = null;
+  let customBgVersion = 0;
+
+  function parseColor(value: string): [number, number, number, number] | null {
+    const m = value.match(/rgba?\(([^)]+)\)/i);
+    if (!m) return null;
+    const parts = m[1].split(/[,\s/]+/).map((v) => parseFloat(v)).filter((v) => Number.isFinite(v));
+    if (parts.length < 3) return null;
+    return [parts[0] / 255, parts[1] / 255, parts[2] / 255, parts.length > 3 ? parts[3] : 1];
+  }
+
+  function parseObjectPosition(value: string): [number, number] {
+    const toFrac = (token: string): number => {
+      if (token === 'center') return 0.5;
+      if (token === 'top' || token === 'left') return 0;
+      if (token === 'bottom' || token === 'right') return 1;
+      const n = parseFloat(token);
+      if (!Number.isFinite(n)) return 0.5;
+      return token.endsWith('%') ? n / 100 : 0.5;
     };
-    maps.set(key, entry);
-    return entry;
+    const parts = value.trim().split(/\s+/);
+    if (parts.length === 0) return [0.5, 0.5];
+    if (parts.length === 1) {
+      const only = parts[0];
+      if (only === 'top' || only === 'bottom') return [0.5, toFrac(only)];
+      if (only === 'left' || only === 'right') return [toFrac(only), 0.5];
+      const f = toFrac(only);
+      return [f, f];
+    }
+    return [toFrac(parts[0]), toFrac(parts[1])];
   }
 
-  function mountFilter(width: number, height: number, radius: number, frost: number, actualW: number, actualH: number) {
-    const map = mapsFor(width, height, radius);
-    const id = `lg-${filterSerial++}`;
-    const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
-    filter.id = id;
-    filter.dataset.size = `${width}x${height}x${radius}`;
-    filter.setAttribute('x', '0%');
-    filter.setAttribute('y', '0%');
-    filter.setAttribute('width', '100%');
-    filter.setAttribute('height', '100%');
-    filter.setAttribute('color-interpolation-filters', 'sRGB');
-    // 三通道色散：同一张位移贴图分别以 R/G/B 三种比例位移后再按通道重组。
-    // feColorMatrix 每路只保留单一颜色通道（同时保留 alpha），
-    // feBlend mode="screen" 在互不重叠的通道间等价于无损相加，重组后 alpha 仍为 1。
-    const scaleR = (map.scale * DISPERSION_R).toFixed(2);
-    const scaleG = (map.scale * DISPERSION_G).toFixed(2);
-    const scaleB = (map.scale * DISPERSION_B).toFixed(2);
-    filter.innerHTML = `
-      <feGaussianBlur in="SourceGraphic" stdDeviation="${frost}" result="blurred"></feGaussianBlur>
-      <feImage href="${map.disp}" x="0" y="0" width="${actualW}" height="${actualH}" preserveAspectRatio="none" result="dispmap"></feImage>
-      <feDisplacementMap in="blurred" in2="dispmap" scale="${scaleR}" xChannelSelector="R" yChannelSelector="G" result="dispR"></feDisplacementMap>
-      <feColorMatrix in="dispR" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="chanR"></feColorMatrix>
-      <feDisplacementMap in="blurred" in2="dispmap" scale="${scaleG}" xChannelSelector="R" yChannelSelector="G" result="dispG"></feDisplacementMap>
-      <feColorMatrix in="dispG" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="chanG"></feColorMatrix>
-      <feDisplacementMap in="blurred" in2="dispmap" scale="${scaleB}" xChannelSelector="R" yChannelSelector="G" result="dispB"></feDisplacementMap>
-      <feColorMatrix in="dispB" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="chanB"></feColorMatrix>
-      <feBlend in="chanR" in2="chanG" mode="screen" result="dispRG"></feBlend>
-      <feBlend in="dispRG" in2="chanB" mode="screen" result="displaced"></feBlend>
-      <feColorMatrix in="displaced" type="saturate" values="${DISPERSION_SATURATE}" result="sat"></feColorMatrix>
-      <feImage href="${map.spec}" x="0" y="0" width="${actualW}" height="${actualH}" preserveAspectRatio="none" result="spec"></feImage>
-      <feComposite in="sat" in2="spec" operator="in" result="specSat"></feComposite>
-      <feComponentTransfer in="spec" result="specFade"><feFuncA type="linear" slope="${SPECULAR_SLOPE}"></feFuncA></feComponentTransfer>
-      <feBlend in="specSat" in2="displaced" mode="normal" result="withSat"></feBlend>
-      <feBlend in="specFade" in2="withSat" mode="normal" result="glass"></feBlend>
-      <feGaussianBlur in="SourceGraphic" stdDeviation="${frost}" result="plain"></feGaussianBlur>
-      <feComposite in="glass" in2="plain" operator="arithmetic" k1="0" k2="1" k3="0" k4="0" data-lg-mix="1"></feComposite>
-    `;
-    document.getElementById('liquid-glass-filters')?.appendChild(filter);
-    return id;
+  function findWallpaperImage(): HTMLImageElement | null {
+    const selectors = [
+      '#fullscreen-wallpaper img',
+      '#fullscreen-wallpaper-carousel .carousel-item.desktop-item.opacity-100 img',
+      '#fullscreen-wallpaper-carousel .carousel-item.mobile-item.opacity-100 img',
+      '#fullscreen-wallpaper-wrapper img',
+    ];
+    for (const selector of selectors) {
+      const node = document.querySelector(selector);
+      if (!(node instanceof HTMLImageElement)) continue;
+      if (!node.naturalWidth || !node.naturalHeight) continue;
+      const box = node.getBoundingClientRect();
+      if (box.width > 0 && box.height > 0) return node;
+    }
+    return null;
   }
 
+  function readFallbackColor(): [number, number, number] {
+    const root = parseColor(getComputedStyle(document.documentElement).backgroundColor);
+    if (root && root[3] > 0.01) return [root[0], root[1], root[2]];
+    const body = parseColor(getComputedStyle(document.body).backgroundColor);
+    if (body && body[3] > 0.01) return [body[0], body[1], body[2]];
+    return [0.28, 0.35, 0.48];
+  }
+
+  function refreshWallpaper() {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const fallback = wallpaperFrame.fallback;
+
+    if (localStorage.getItem(BG_KEY) && customBgImage && customBgImage.naturalWidth > 0) {
+      const nw = customBgImage.naturalWidth;
+      const nh = customBgImage.naturalHeight;
+      const scale = Math.max(vw / nw, vh / nh);
+      const dw = nw * scale;
+      const dh = nh * scale;
+      wallpaperFrame = {
+        img: customBgImage,
+        key: `custom:${customBgVersion}`,
+        originX: (vw - dw) / 2,
+        originY: (vh - dh) / 2,
+        dispW: dw,
+        dispH: dh,
+        fallback,
+      };
+      return;
+    }
+
+    const img = findWallpaperImage();
+    if (img) {
+      const box = img.getBoundingClientRect();
+      const nw = img.naturalWidth;
+      const nh = img.naturalHeight;
+      const scale = Math.max(box.width / nw, box.height / nh);
+      const dw = nw * scale;
+      const dh = nh * scale;
+      const [px, py] = parseObjectPosition(getComputedStyle(img).objectPosition || '50% 50%');
+      wallpaperFrame = {
+        img,
+        key: img.currentSrc || img.src,
+        originX: box.left + (box.width - dw) * px,
+        originY: box.top + (box.height - dh) * py,
+        dispW: dw,
+        dispH: dh,
+        fallback,
+      };
+      return;
+    }
+
+    wallpaperFrame = {
+      img: null,
+      key: 'none',
+      originX: 0,
+      originY: 0,
+      dispW: 1,
+      dispH: 1,
+      fallback: readFallbackColor(),
+    };
+  }
+
+  // ---- 每个玻璃元素的环几何 --------------------------------------------------
+  interface RingGeom {
+    w: number;
+    h: number;
+    innerW: number;
+    innerH: number;
+    radius: number;
+    bezel: number;
+    maxShift: number;
+    border: number;
+    tint: [number, number, number];
+    tintAlpha: number;
+  }
+
+  const geomCache = new WeakMap<HTMLElement, RingGeom>();
+  const ringCache = new WeakMap<HTMLElement, HTMLCanvasElement>();
+
+  function readGeom(node: HTMLElement, box: DOMRect): RingGeom | null {
+    const cw = Math.round(box.width);
+    const ch = Math.round(box.height);
+    if (cw < 48 || ch < 36) return null;
+
+    const cached = geomCache.get(node);
+    if (cached && cached.w === cw && cached.h === ch) return cached;
+
+    const cs = getComputedStyle(node);
+    const border = parseFloat(cs.borderTopWidth) || 0;
+    const rawRadius = parseFloat(cs.borderTopLeftRadius) || 0;
+    const innerW = Math.max(1, cw - border * 2);
+    const innerH = Math.max(1, ch - border * 2);
+    const radius = Math.max(0, Math.min(rawRadius, Math.min(innerW, innerH) / 2) - border);
+    if (radius <= 1) return null;
+
+    // 更宽的折射边缘（bezel）让弯曲带更明显；bezel 始终小于 radius，避免内圈半径变负。
+    const bezel = Math.min(radius - 1, Math.max(MIN_BEZEL, Math.min(radius * 0.6, MAX_BEZEL)));
+    if (bezel <= 0.5) return null;
+
+    const profile = bezelProfile(GLASS_THICKNESS, bezel);
+    let maxShift = 1;
+    for (const value of profile) maxShift = Math.max(maxShift, Math.abs(value));
+
+    const tint = parseColor(cs.backgroundColor) || [0.8, 0.85, 0.92, 0];
+    const geom: RingGeom = {
+      w: cw,
+      h: ch,
+      innerW,
+      innerH,
+      radius,
+      bezel,
+      maxShift,
+      border,
+      tint: [tint[0], tint[1], tint[2]],
+      tintAlpha: tint[3],
+    };
+    geomCache.set(node, geom);
+    return geom;
+  }
+
+  function ensureRing(node: HTMLElement): HTMLCanvasElement | null {
+    const cached = ringCache.get(node);
+    if (cached && cached.isConnected) return cached;
+
+    // transform 同时提供了包含块和层叠上下文，绝大多数玻璃面本来就有；
+    // 只有极少数没有 transform 的元素需要显式补上，否则 z-index:-1 的环会
+    // 被画到元素自身背景的下面（也就是彻底看不见）。
+    const cs = getComputedStyle(node);
+    if (cs.transform === 'none') {
+      if (cs.position === 'static') node.style.position = 'relative';
+      if (cs.isolation !== 'isolate') node.style.isolation = 'isolate';
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.className = 'lg-ring';
+    canvas.setAttribute('aria-hidden', 'true');
+    node.appendChild(canvas);
+    ringCache.set(node, canvas);
+    return canvas;
+  }
+
+  function setRingVisible(canvas: HTMLCanvasElement, visible: boolean) {
+    const next = visible ? '' : 'none';
+    if (canvas.style.display !== next) canvas.style.display = next;
+  }
+
+  function paintFallbackRing(canvas: HTMLCanvasElement, geom: RingGeom, scale: number) {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    const lineWidth = Math.max(1, Math.min(3, 1.6 * scale));
+    const inset = lineWidth / 2;
+    const r = Math.max(0, geom.radius * scale - inset);
+    const gradient = ctx.createLinearGradient(0, 0, w, h);
+    gradient.addColorStop(0, 'rgba(255,255,255,0.45)');
+    gradient.addColorStop(0.45, 'rgba(255,255,255,0.10)');
+    gradient.addColorStop(1, 'rgba(255,255,255,0.32)');
+    ctx.strokeStyle = gradient;
+    ctx.lineWidth = lineWidth;
+    ctx.beginPath();
+    if (typeof ctx.roundRect === 'function') {
+      ctx.roundRect(inset, inset, w - lineWidth, h - lineWidth, r);
+    } else {
+      ctx.rect(inset, inset, w - lineWidth, h - lineWidth);
+    }
+    ctx.stroke();
+  }
+
+  function drawRings() {
+    const t0 = lgDebug ? performance.now() : 0;
+    let drawn = 0;
+
+    if (ringRenderer.available) {
+      ringRenderer.setWallpaper(wallpaperFrame.img, wallpaperFrame.key, wallpaperFrame.fallback);
+    }
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const viewportW = window.innerWidth;
+    const viewportH = window.innerHeight;
+
+    document.querySelectorAll<HTMLElement>(TARGETS).forEach((node) => {
+      const canvas = ensureRing(node);
+      if (!canvas) return;
+
+      if (isFrostedMode() || onScreen.get(node) === false || moving || paging) {
+        setRingVisible(canvas, false);
+        return;
+      }
+
+      const box = node.getBoundingClientRect();
+      if (
+        box.bottom < -200 ||
+        box.top > viewportH + 200 ||
+        box.right < -200 ||
+        box.left > viewportW + 200
+      ) {
+        setRingVisible(canvas, false);
+        return;
+      }
+
+      const geom = readGeom(node, box);
+      if (!geom) {
+        setRingVisible(canvas, false);
+        return;
+      }
+
+      const scale = Math.min(dpr, MAX_RENDER_EDGE / geom.innerW, MAX_RENDER_EDGE / geom.innerH);
+      const dw = Math.max(1, Math.round(geom.innerW * scale));
+      const dh = Math.max(1, Math.round(geom.innerH * scale));
+      if (canvas.width !== dw || canvas.height !== dh) {
+        canvas.width = dw;
+        canvas.height = dh;
+      }
+      if (canvas.style.borderRadius !== `${geom.radius}px`) {
+        canvas.style.borderRadius = `${geom.radius}px`;
+      }
+
+      let ok = false;
+      if (ringRenderer.available) {
+        ok = ringRenderer.render(
+          canvas,
+          {
+            dpr: scale,
+            innerW: geom.innerW,
+            innerH: geom.innerH,
+            radius: geom.radius,
+            bezel: geom.bezel,
+            maxShift: geom.maxShift,
+            originX: box.left + geom.border,
+            originY: box.top + geom.border,
+            tint: geom.tint,
+            tintAlpha: geom.tintAlpha,
+          },
+          wallpaperFrame,
+        );
+      } else {
+        paintFallbackRing(canvas, geom, scale);
+        ok = true;
+      }
+
+      setRingVisible(canvas, ok);
+      if (ok) drawn += 1;
+    });
+
+    if (lgDebug) {
+      lgDebugRingMs = performance.now() - t0;
+      lgDebugRings = drawn;
+    }
+  }
+
+  // ---- debug overlay (?lgdebug=1) -------------------------------------------
+  // Renders only when the query parameter is present, so it cannot affect the
+  // normal appearance. The counters are collected inside the render pass, but the
+  // DOM is only written from a throttled timer: a per-frame write here would
+  // feed the page's mutation-driven visibility observers (e.g. the floating TOC
+  // watches class changes) and spin the whole pass every frame.
+  const lgDebug = new URLSearchParams(location.search).get('lgdebug') === '1';
+  let lgDebugEl: HTMLDivElement | null = null;
+  let lgDebugCost = 0;
+  let lgDebugRingMs = 0;
+  let lgDebugRings = 0;
+
+  function renderLgDebug() {
+    if (!lgDebug) return;
+    if (!lgDebugEl) {
+      lgDebugEl = document.createElement('div');
+      lgDebugEl.id = 'lg-debug';
+      lgDebugEl.style.cssText =
+        'position:fixed;left:8px;bottom:8px;z-index:2147483647;padding:6px 10px;border-radius:8px;' +
+        'background:rgba(0,0,0,0.72);color:#e2e8f0;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;' +
+        'pointer-events:none;white-space:pre';
+      document.body.appendChild(lgDebugEl);
+    }
+    const lenses = document.querySelectorAll('.liquid-glass').length;
+    const gl = ringRenderer.available ? 'webgl' : '2d';
+    lgDebugEl.textContent =
+      `lenses   ${lenses}\n` +
+      `rings    ${lgDebugRings} (${gl})\n` +
+      `wall     ${wallpaperFrame.img ? 'yes' : 'no'}\n` +
+      `apply    ${lgDebugCost.toFixed(1)}ms\n` +
+      `ring     ${lgDebugRingMs.toFixed(1)}ms\n` +
+      `latches  m${moving ? 1 : 0} s${isScrolling ? 1 : 0} p${paging ? 1 : 0}`;
+  }
+
+  if (lgDebug) window.setInterval(renderLgDebug, 500);
+
+  function applyLenses() {
+    if (!lgDebug) {
+      applyLensesCore();
+      return;
+    }
+    const t0 = performance.now();
+    applyLensesCore();
+    lgDebugCost = performance.now() - t0;
+  }
+
+  function applyBlur(node: HTMLElement, frosted: boolean) {
+    const value = frosted
+      ? `blur(${FROSTED_BLUR}px)`
+      : `blur(${node.matches('.liquid-glass-bar') ? 0 : FROST}px)`;
+    if (node.dataset.lgBlur === value) return;
+    node.dataset.lgBlur = value;
+    node.style.setProperty('backdrop-filter', value, 'important');
+    node.style.setProperty('-webkit-backdrop-filter', value, 'important');
+  }
+
+  function applyLensesCore() {
+    if (moving || isScrolling) return;
+    lensObserver?.disconnect();
+    tagPanels();
+    applyBackground();
+    document.querySelectorAll('.glass-frost').forEach((node) => node.remove());
+
+    const frosted = isFrostedMode();
+    document.querySelectorAll<HTMLElement>(TARGETS).forEach((node) => applyBlur(node, frosted));
+
+    if (!frosted) refreshWallpaper();
+    drawRings();
+
+    lensObserver?.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'style', 'hidden'],
+    });
+  }
+
+  // ---- 背景图片 -------------------------------------------------------------
   function clearCustomBackground() {
     document.body.style.backgroundImage = '';
     document.body.style.backgroundSize = '';
@@ -453,9 +898,13 @@
     const fsWrapper = document.getElementById('fullscreen-wallpaper-wrapper');
     if (fsWrapper) {
       fsWrapper.style.display = '';
-      const desktopImg = document.getElementById('fullscreen-wallpaper') as HTMLImageElement | null;
-      if (desktopImg) {
-        desktopImg.src = '/assets/images/defaultWallpaper.jpg';
+      const desktopImg = document.getElementById('fullscreen-wallpaper');
+      // `#fullscreen-wallpaper` is a <div> on some pages and an <img> on others,
+      // so never assume the tag. Re-assigning the same src to an <img> forces a
+      // re-decode, and applyBackground runs on every mutation-driven pass.
+      if (desktopImg instanceof HTMLImageElement) {
+        const fallbackSrc = new URL('/assets/images/defaultWallpaper.jpg', location.href).href;
+        if (desktopImg.src !== fallbackSrc) desktopImg.src = fallbackSrc;
       }
     }
   }
@@ -480,197 +929,17 @@
     if (fsWrapper) {
       fsWrapper.style.display = 'none';
     }
-  }
 
-  const onScreen = new WeakMap<HTMLElement, boolean>();
-  const io = new IntersectionObserver((entries) => {
-    let dirty = false;
-    for (const entry of entries) {
-      const node = entry.target;
-      if (!(node instanceof HTMLElement)) continue;
-      const now = entry.isIntersecting;
-      if (onScreen.get(node) === now) continue;
-      onScreen.set(node, now);
-      dirty = true;
+    if (!customBgImage || customBgImage.src !== image) {
+      const img = new Image();
+      img.onload = () => {
+        customBgImage = img;
+        customBgVersion += 1;
+        refreshWallpaper();
+        drawRings();
+      };
+      img.src = image;
     }
-    if (dirty && !isScrolling && !moving) schedule();
-  }, { rootMargin: '160px 0px' });
-
-  // ResizeObserver 精准监听尺寸真实改变，避免无谓重绘
-  const ro = new ResizeObserver((entries) => {
-    if (isScrolling || moving || paging) return;
-    let anyChanged = false;
-    for (const entry of entries) {
-      const node = entry.target;
-      if (!(node instanceof HTMLElement)) continue;
-      const cr = entry.contentRect;
-      const w = quantize(Math.round(cr.width), 8);
-      const h = quantize(Math.round(cr.height), 8);
-      const prevW = Number(node.dataset.lgQW || 0);
-      const prevH = Number(node.dataset.lgQH || 0);
-      if (w !== prevW || h !== prevH) {
-        anyChanged = true;
-        break;
-      }
-    }
-    if (anyChanged) {
-      schedule();
-    }
-  });
-
-  function tagPanels() {
-    document.querySelectorAll<HTMLElement>(PANELS).forEach((node) => {
-      node.classList.add('liquid-glass');
-      if (node.matches('#navbar > div')) node.classList.add('liquid-glass-bar');
-      if (node.dataset.lgWatch !== '1') {
-        node.dataset.lgWatch = '1';
-        io.observe(node);
-        ro.observe(node);
-      }
-    });
-  }
-
-  function cheapFilter(node?: HTMLElement) {
-    const frost = node?.matches('.liquid-glass-bar') ? 0 : FROST;
-    return `blur(${frost}px)`;
-  }
-
-  function paintFilter(node: HTMLElement, value: string) {
-    node.style.setProperty('backdrop-filter', value, 'important');
-    node.style.setProperty('-webkit-backdrop-filter', value, 'important');
-  }
-
-  function setMix(filterId: string, mix: number) {
-    const filter = document.getElementById(filterId);
-    const node = filter?.querySelector('[data-lg-mix]');
-    if (!(node instanceof SVGElement)) return;
-    const clamped = Math.min(1, Math.max(0, mix));
-    node.setAttribute('k2', clamped.toFixed(3));
-    node.setAttribute('k3', (1 - clamped).toFixed(3));
-    node.setAttribute('data-lg-mix', clamped.toFixed(3));
-  }
-
-  function applyMixToLenses() {
-    document.querySelectorAll<HTMLElement>('[data-lg-mode="lens"]').forEach((node) => {
-      const id = node.getAttribute('data-liquid-lens');
-      if (id) setMix(id, mixValue);
-    });
-  }
-
-  function isFrostedMode() {
-    return document.documentElement.getAttribute('data-glass-mode') === 'frosted';
-  }
-
-  // ---- debug overlay (?lgdebug=1) -----------------------------------------
-  // Renders only when the query parameter is present, so it cannot affect the
-  // normal appearance. The counters are collected inside applyLenses(), but the
-  // DOM is only written from a throttled timer: a per-frame write here would
-  // feed the page's mutation-driven visibility observers (e.g. the floating TOC
-  // watches class changes) and spin applyLenses every frame.
-  const lgDebug = new URLSearchParams(location.search).get('lgdebug') === '1';
-  let lgDebugEl: HTMLDivElement | null = null;
-  let lgDebugCost = 0;
-
-  function renderLgDebug() {
-    if (!lgDebug) return;
-    if (!lgDebugEl) {
-      lgDebugEl = document.createElement('div');
-      lgDebugEl.id = 'lg-debug';
-      lgDebugEl.style.cssText =
-        'position:fixed;left:8px;bottom:8px;z-index:2147483647;padding:6px 10px;border-radius:8px;' +
-        'background:rgba(0,0,0,0.72);color:#e2e8f0;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;' +
-        'pointer-events:none;white-space:pre';
-      document.body.appendChild(lgDebugEl);
-    }
-    const lenses = document.querySelectorAll('.liquid-glass').length;
-    const filters = document.querySelectorAll('#liquid-glass-filters filter').length;
-    lgDebugEl.textContent =
-      `lenses   ${lenses}\n` +
-      `maps     ${maps.size}\n` +
-      `filters  ${filters}\n` +
-      `apply    ${lgDebugCost.toFixed(1)}ms`;
-  }
-
-  if (lgDebug) window.setInterval(renderLgDebug, 500);
-
-  function applyLenses() {
-    if (!lgDebug) {
-      applyLensesCore();
-      return;
-    }
-    const t0 = performance.now();
-    applyLensesCore();
-    lgDebugCost = performance.now() - t0;
-  }
-
-  function applyLensesCore() {
-    if (moving || isScrolling) return;
-    lensObserver?.disconnect();
-    tagPanels();
-    applyBackground();
-    document.querySelectorAll('.glass-frost').forEach((node) => node.remove());
-
-    if (isFrostedMode()) {
-      document.querySelectorAll<HTMLElement>(TARGETS).forEach((node) => {
-        const previous = node.getAttribute('data-liquid-lens');
-        if (previous) document.getElementById(previous)?.remove();
-        node.removeAttribute('data-liquid-lens');
-        node.removeAttribute('data-liquid-size');
-        delete node.dataset.lgMode;
-        paintFilter(node, `blur(${FROSTED_BLUR}px)`);
-      });
-      lensObserver?.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style', 'hidden'] });
-      return;
-    }
-
-    document.querySelectorAll<HTMLElement>(TARGETS).forEach((node) => {
-      const shown = node.matches('.liquid-glass-bar') || onScreen.get(node) !== false;
-      if (!shown) {
-        if (node.dataset.lgMode !== 'cheap') {
-          node.dataset.lgMode = 'cheap';
-          paintFilter(node, cheapFilter(node));
-        }
-        return;
-      }
-      const existing = node.getAttribute('data-liquid-lens');
-      const box = node.getBoundingClientRect();
-      const rawW = Math.round(box.width);
-      const rawH = Math.round(box.height);
-      if (rawW < 48 || rawH < 36) return;
-
-      // 阶梯尺寸量化：8px 步长，4px 圆角步长
-      const qW = quantize(rawW, 8);
-      const qH = quantize(rawH, 8);
-      const rawRadius = parseFloat(getComputedStyle(node).borderTopLeftRadius) || 0;
-      const radius = quantize(Math.round(Math.max(12, Math.min(rawRadius || Math.min(rawW, rawH) / 2, Math.min(rawW, rawH) / 2))), 4);
-
-      node.dataset.lgQW = String(qW);
-      node.dataset.lgQH = String(qH);
-
-      const frost = node.matches('.liquid-glass-bar') ? 0 : FROST;
-      const sizeKey = `${qW}x${qH}x${radius}@${frost}`;
-
-      if (existing && node.getAttribute('data-liquid-size') === sizeKey) {
-        if (node.dataset.lgMode !== 'lens') {
-          setMix(existing, mixValue);
-          node.dataset.lgMode = 'lens';
-          paintFilter(node, `url(#${existing})`);
-        }
-        return;
-      }
-
-      const previous = node.getAttribute('data-liquid-lens');
-      if (previous) document.getElementById(previous)?.remove();
-
-      const id = mountFilter(qW, qH, radius, frost, rawW, rawH);
-      setMix(id, mixValue);
-      node.setAttribute('data-liquid-lens', id);
-      node.setAttribute('data-liquid-size', sizeKey);
-      node.dataset.lgMode = 'lens';
-      paintFilter(node, `url(#${id})`);
-    });
-
-    lensObserver?.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style', 'hidden'] });
   }
 
   function fitBackground(file: File) {
@@ -718,18 +987,68 @@
       clearBg.dataset.bound = '1';
       clearBg.addEventListener('click', () => {
         localStorage.removeItem(BG_KEY);
+        customBgImage = null;
+        customBgVersion += 1;
         applyBackground();
+        schedule();
       });
     }
   }
 
+  // ---- 调度 -----------------------------------------------------------------
+  const onScreen = new WeakMap<HTMLElement, boolean>();
+  const io = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      const node = entry.target;
+      if (!(node instanceof HTMLElement)) continue;
+      onScreen.set(node, entry.isIntersecting);
+    }
+    requestRingRedraw();
+  }, { rootMargin: '160px 0px' });
+
+  // ResizeObserver 精准监听尺寸真实改变，避免无谓重绘
+  const ro = new ResizeObserver((entries) => {
+    if (isScrolling || moving || paging) return;
+    let anyChanged = false;
+    for (const entry of entries) {
+      const node = entry.target;
+      if (!(node instanceof HTMLElement)) continue;
+      const cr = entry.contentRect;
+      const w = Math.round(cr.width);
+      const h = Math.round(cr.height);
+      const prevW = Number(node.dataset.lgQW || 0);
+      const prevH = Number(node.dataset.lgQH || 0);
+      if (w !== prevW || h !== prevH) {
+        node.dataset.lgQW = String(w);
+        node.dataset.lgQH = String(h);
+        anyChanged = true;
+      }
+    }
+    if (anyChanged) schedule();
+  });
+
+  function tagPanels() {
+    document.querySelectorAll<HTMLElement>(PANELS).forEach((node) => {
+      node.classList.add('liquid-glass');
+      if (node.matches('#navbar > div')) node.classList.add('liquid-glass-bar');
+      ensureRing(node);
+      if (node.dataset.lgWatch !== '1') {
+        node.dataset.lgWatch = '1';
+        io.observe(node);
+        ro.observe(node);
+      }
+    });
+  }
+
+  function isFrostedMode() {
+    return document.documentElement.getAttribute('data-glass-mode') === 'frosted';
+  }
+
   let frame = 0;
+  let ringFrame = 0;
   let moving = false;
   let paging = false;
   let moveTimer = 0;
-  let mixFrame = 0;
-  let mixValue = 1;
-  let fadeToken = 0;
   let isScrolling = false;
   let scrollTimeout = 0;
   let lensObserver: MutationObserver | null = null;
@@ -740,9 +1059,20 @@
     frame = requestAnimationFrame(applyLenses);
   }
 
-  // 滚动与手势 120Hz 硬件解耦：滑动期间暂停贴图重算，依靠 GPU 合成层满帧渲染
+  // 环的重绘很便宜（一个共享 WebGL 上下文 + 每元素一次小 drawImage），
+  // 所以滚动时也可以逐帧跟随壁纸；只有真正昂贵的整轮重排才会被节流。
+  function requestRingRedraw() {
+    if (ringFrame || moving || paging || isFrostedMode()) return;
+    ringFrame = requestAnimationFrame(() => {
+      ringFrame = 0;
+      if (moving || paging) return;
+      drawRings();
+    });
+  }
+
   function onScrollOrTouch() {
     isScrolling = true;
+    requestRingRedraw();
     clearTimeout(scrollTimeout);
     scrollTimeout = window.setTimeout(() => {
       isScrolling = false;
@@ -752,40 +1082,18 @@
 
   window.addEventListener('scroll', onScrollOrTouch, { passive: true });
   window.addEventListener('touchmove', onScrollOrTouch, { passive: true });
+  document.addEventListener('scroll', onScrollOrTouch, { passive: true, capture: true });
 
-  function animateMix(to: number, done?: () => void) {
-    const token = ++fadeToken;
-    cancelAnimationFrame(mixFrame);
-    const from = mixValue;
-    if (Math.abs(from - to) < 0.001) {
-      mixValue = to;
-      applyMixToLenses();
-      done?.();
-      return;
-    }
-    const start = performance.now();
-    const step = (now: number) => {
-      if (token !== fadeToken) return;
-      const t = Math.min(1, (now - start) / MIX_MS);
-      const eased = t * t * (3 - 2 * t);
-      mixValue = from + (to - from) * eased;
-      applyMixToLenses();
-      if (t < 1) {
-        mixFrame = requestAnimationFrame(step);
-        return;
-      }
-      mixValue = to;
-      done?.();
-    };
-    mixFrame = requestAnimationFrame(step);
-  }
+  // 入场动画 / 展开动画期间元素的屏幕位置一直在变，动画收尾后必须补一次环重绘，
+  // 否则环会停在动画中途的位置上。
+  document.addEventListener('animationend', requestRingRedraw, true);
+  document.addEventListener('transitionend', requestRingRedraw, true);
 
   function endMotion() {
     const root = document.documentElement;
     if (paging || root.classList.contains('is-animating') || root.classList.contains('is-changing')) return;
     moving = false;
     applyLenses();
-    animateMix(1);
   }
 
   function beginMotion() {
@@ -793,25 +1101,40 @@
     if (!moving) {
       moving = true;
       cancelAnimationFrame(frame);
+      cancelAnimationFrame(ringFrame);
+      ringFrame = 0;
     }
     moveTimer = window.setTimeout(endMotion, 180);
+  }
+
+  // 切换材质是一次离散的用户操作，必须立刻生效。这里先清掉滚动/动画节流闩锁再
+  // 同步跑一轮，否则 applyLensesCore 会被 moving/isScrolling 提前挡掉，环要等到
+  // 下一次 scroll-end / animationend 才回来（实测约 0.7s 的空窗）。
+  function forceApplyLenses() {
+    moving = false;
+    paging = false;
+    isScrolling = false;
+    clearTimeout(moveTimer);
+    clearTimeout(scrollTimeout);
+    cancelAnimationFrame(frame);
+    cancelAnimationFrame(ringFrame);
+    ringFrame = 0;
+    applyLenses();
   }
 
   window.setGlassMode = function(mode: 'liquid' | 'frosted') {
     localStorage.setItem(GLASS_MODE_KEY, mode);
     document.documentElement.setAttribute('data-glass-mode', mode);
-    if (mode === 'frosted') {
-      document.querySelectorAll<HTMLElement>(TARGETS).forEach((node) => {
-        const previous = node.getAttribute('data-liquid-lens');
-        if (previous) document.getElementById(previous)?.remove();
-        node.removeAttribute('data-liquid-lens');
-        node.removeAttribute('data-liquid-size');
-        delete node.dataset.lgMode;
-        paintFilter(node, `blur(${FROSTED_BLUR}px)`);
+    const frosted = mode === 'frosted';
+    document.querySelectorAll<HTMLElement>(TARGETS).forEach((node) => applyBlur(node, frosted));
+    if (frosted) {
+      cancelAnimationFrame(ringFrame);
+      ringFrame = 0;
+      document.querySelectorAll<HTMLCanvasElement>('canvas.lg-ring').forEach((canvas) => {
+        setRingVisible(canvas, false);
       });
-      document.getElementById('liquid-glass-filters')?.replaceChildren();
     } else {
-      schedule();
+      forceApplyLenses();
     }
     window.dispatchEvent(new CustomEvent('glass-mode-changed', { detail: { mode } }));
   };
@@ -826,6 +1149,10 @@
   schedule();
   bindBgControls();
   applyBackground();
+  window.addEventListener('load', () => {
+    schedule();
+    for (const delay of [120, 420, 900]) window.setTimeout(requestRingRedraw, delay);
+  });
   document.addEventListener('astro:after-swap', () => {
     bindBgControls();
     applyBackground();
@@ -838,17 +1165,37 @@
   });
   document.addEventListener('swup:animation:out:start', beginMotion);
   document.addEventListener('swup:animation:in:end', endMotion);
-  window.addEventListener('resize', schedule);
+  window.addEventListener('resize', () => {
+    refreshWallpaper();
+    schedule();
+  });
+
+  function isRingNode(node: Node | null): boolean {
+    if (!node) return false;
+    if (!(node instanceof Element)) return false;
+    return node.classList.contains('lg-ring') || !!node.closest('#lg-debug');
+  }
 
   lensObserver = new MutationObserver((records) => {
     if (moving || paging || isScrolling) return;
     for (const record of records) {
-      const target = record.target;
-      if (!(target instanceof Node)) continue;
+      if (isRingNode(record.target)) continue;
+      if (record.type === 'childList') {
+        let onlyRings = true;
+        for (const node of record.addedNodes) {
+          if (!isRingNode(node)) { onlyRings = false; break; }
+        }
+        if (onlyRings) {
+          for (const node of record.removedNodes) {
+            if (!isRingNode(node)) { onlyRings = false; break; }
+          }
+        }
+        if (onlyRings) continue;
+      }
       // A textContent write on a single-text-node element mutates the Text node
       // itself (characterData), so resolve through parentElement before matching.
-      const el = target instanceof Element ? target : target.parentElement;
-      if (el && (el.closest('#liquid-glass-defs') || el.closest('#lg-debug'))) continue;
+      const el = record.target instanceof Element ? record.target : record.target.parentElement;
+      if (el && (el.closest('#lg-debug'))) continue;
       schedule();
       return;
     }
@@ -858,7 +1205,7 @@
     childList: true,
     subtree: true,
     attributes: true,
-    attributeFilter: ['class', 'style', 'hidden']
+    attributeFilter: ['class', 'style', 'hidden'],
   });
 
   new MutationObserver(() => {
