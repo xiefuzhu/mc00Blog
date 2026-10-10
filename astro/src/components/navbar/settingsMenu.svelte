@@ -21,7 +21,7 @@ let isOpen = $state(false);
 let expandedSection = $state<AccordionSection>(null);
 
 // 材质模式
-let glassMode = $state<"liquid" | "frosted">("frosted");
+let glassMode = $state<"liquid" | "frosted">("liquid");
 
 // 主题模式
 let themeMode = $state<LIGHT_DARK_MODE>(siteConfig.defaultTheme || SYSTEM_MODE);
@@ -116,7 +116,7 @@ onMount(() => {
     if (typeof window !== "undefined" && typeof (window as any).getGlassMode === "function") {
         glassMode = (window as any).getGlassMode();
     } else if (typeof localStorage !== "undefined") {
-        glassMode = (localStorage.getItem("glass-mode") as "liquid" | "frosted") || "frosted";
+        glassMode = (localStorage.getItem("glass-mode") as "liquid" | "frosted") || "liquid";
     }
 
     // 主题

@@ -62,6 +62,14 @@
   const FROSTED_BLUR = 5; // 25% blur standard calibration (5px based on 20px Gaussian standard)
   const MIX_MS = 200;
 
+  // 色散（chromatic dispersion）：R/G/B 三通道使用不同的位移比例，
+  // 在折射边缘产生真实的彩色分离（红蓝错位）而非单纯提高饱和度。
+  const DISPERSION_R = 0.92;
+  const DISPERSION_G = 1;
+  const DISPERSION_B = 1.09;
+  const DISPERSION_SATURATE = 6;
+  const SPECULAR_SLOPE = 0.5;
+
   // 几何计算辅助函数
   const convexSquircle = (x: number) =>
     Math.pow(1 - Math.pow(Math.min(1, Math.max(0, 1 - x)), 4), 0.25);
@@ -379,8 +387,10 @@
     const key = `${width}x${height}x${radius}`;
     const hit = maps.get(key);
     if (hit) return hit;
-    const bezel = Math.max(10, Math.min(radius * 0.46, 26));
-    const profile = bezelProfile(64, bezel);
+    // 更宽的折射边缘（bezel）让弯曲带更明显；更厚的玻璃（thickness）提升位移峰值强度。
+    // bezel 始终小于 radius，避免内圈半径变负。
+    const bezel = Math.min(radius - 1, Math.max(11, Math.min(radius * 0.6, 34)));
+    const profile = bezelProfile(96, bezel);
     const scale = Math.max(...profile.map((v) => Math.abs(v)), 1);
     const entry = {
       disp: gpuRenderer.render(width, height, radius, bezel, profile, scale, false),
@@ -402,14 +412,27 @@
     filter.setAttribute('width', '100%');
     filter.setAttribute('height', '100%');
     filter.setAttribute('color-interpolation-filters', 'sRGB');
+    // 三通道色散：同一张位移贴图分别以 R/G/B 三种比例位移后再按通道重组。
+    // feColorMatrix 每路只保留单一颜色通道（同时保留 alpha），
+    // feBlend mode="screen" 在互不重叠的通道间等价于无损相加，重组后 alpha 仍为 1。
+    const scaleR = (map.scale * DISPERSION_R).toFixed(2);
+    const scaleG = (map.scale * DISPERSION_G).toFixed(2);
+    const scaleB = (map.scale * DISPERSION_B).toFixed(2);
     filter.innerHTML = `
       <feGaussianBlur in="SourceGraphic" stdDeviation="${frost}" result="blurred"></feGaussianBlur>
       <feImage href="${map.disp}" x="0" y="0" width="${actualW}" height="${actualH}" preserveAspectRatio="none" result="dispmap"></feImage>
-      <feDisplacementMap in="blurred" in2="dispmap" scale="${map.scale.toFixed(2)}" xChannelSelector="R" yChannelSelector="G" result="displaced"></feDisplacementMap>
-      <feColorMatrix in="displaced" type="saturate" values="5" result="sat"></feColorMatrix>
+      <feDisplacementMap in="blurred" in2="dispmap" scale="${scaleR}" xChannelSelector="R" yChannelSelector="G" result="dispR"></feDisplacementMap>
+      <feColorMatrix in="dispR" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="chanR"></feColorMatrix>
+      <feDisplacementMap in="blurred" in2="dispmap" scale="${scaleG}" xChannelSelector="R" yChannelSelector="G" result="dispG"></feDisplacementMap>
+      <feColorMatrix in="dispG" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="chanG"></feColorMatrix>
+      <feDisplacementMap in="blurred" in2="dispmap" scale="${scaleB}" xChannelSelector="R" yChannelSelector="G" result="dispB"></feDisplacementMap>
+      <feColorMatrix in="dispB" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="chanB"></feColorMatrix>
+      <feBlend in="chanR" in2="chanG" mode="screen" result="dispRG"></feBlend>
+      <feBlend in="dispRG" in2="chanB" mode="screen" result="displaced"></feBlend>
+      <feColorMatrix in="displaced" type="saturate" values="${DISPERSION_SATURATE}" result="sat"></feColorMatrix>
       <feImage href="${map.spec}" x="0" y="0" width="${actualW}" height="${actualH}" preserveAspectRatio="none" result="spec"></feImage>
       <feComposite in="sat" in2="spec" operator="in" result="specSat"></feComposite>
-      <feComponentTransfer in="spec" result="specFade"><feFuncA type="linear" slope="0.42"></feFuncA></feComponentTransfer>
+      <feComponentTransfer in="spec" result="specFade"><feFuncA type="linear" slope="${SPECULAR_SLOPE}"></feFuncA></feComponentTransfer>
       <feBlend in="specSat" in2="displaced" mode="normal" result="withSat"></feBlend>
       <feBlend in="specFade" in2="withSat" mode="normal" result="glass"></feBlend>
       <feGaussianBlur in="SourceGraphic" stdDeviation="${frost}" result="plain"></feGaussianBlur>
@@ -794,7 +817,7 @@
   };
 
   window.getGlassMode = function(): 'liquid' | 'frosted' {
-    return (localStorage.getItem(GLASS_MODE_KEY) as 'liquid' | 'frosted') || 'frosted';
+    return (localStorage.getItem(GLASS_MODE_KEY) as 'liquid' | 'frosted') || 'liquid';
   };
 
   const initialMode = window.getGlassMode();

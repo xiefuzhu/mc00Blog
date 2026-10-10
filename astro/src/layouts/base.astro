@@ -144,7 +144,7 @@ const { enabled: analyticsEnabled, code: analyticsCode } = getAnalyticsConfig();
 ---
 
 <!DOCTYPE html>
-<html lang={siteLang} data-glass-mode="frosted" class:list={["text-[14px] md:text-[16px] is-loading", { "bg-(--page-bg)": !enableWallpaperTransparent, "wallpaper-transparent": enableWallpaperTransparent }]}
+<html lang={siteLang} data-glass-mode="liquid" class:list={["text-[14px] md:text-[16px] is-loading", { "bg-(--page-bg)": !enableWallpaperTransparent, "wallpaper-transparent": enableWallpaperTransparent }]}
 >
     <head>
         <meta charset="UTF-8" />
@@ -224,8 +224,8 @@ const { enabled: analyticsEnabled, code: analyticsCode } = getAnalyticsConfig();
             const hue = localStorage.getItem('hue') || configHue;
             // Apply the hue to the document
             document.documentElement.style.setProperty('--hue', hue);
-            // Load glass mode from local storage (default: frosted)
-            const glassMode = localStorage.getItem('glass-mode') || 'frosted';
+            // Load glass mode from local storage (default: liquid)
+            const glassMode = localStorage.getItem('glass-mode') || 'liquid';
             document.documentElement.setAttribute('data-glass-mode', glassMode);
             // Load wallpaper mode from local storage
             const storedWallpaper = localStorage.getItem('wallpaperMode') || 'fullscreen';
